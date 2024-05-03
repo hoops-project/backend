@@ -1,6 +1,9 @@
 package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.GameDto;
+import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +33,7 @@ public class GameController {
    */
   @Operation(summary = "경기 생성")
   @PostMapping("/game/create")
-  public ResponseEntity<?> createGame(@RequestBody @Validated GameDto.CreateRequest request,
+  public ResponseEntity<CreateResponse> createGame(@RequestBody @Validated GameDto.CreateRequest request,
       @RequestHeader("Authorization") String token) throws Exception {
     GameDto.CreateResponse result = this.gameService.createGame(request, token);
     return ResponseEntity.ok(result);
@@ -41,7 +44,7 @@ public class GameController {
    */
   @Operation(summary = "경기 수정")
   @PutMapping("/game/update")
-  public ResponseEntity<?> updateGame(@RequestBody @Validated GameDto.UpdateRequest request,
+  public ResponseEntity<UpdateResponse> updateGame(@RequestBody @Validated GameDto.UpdateRequest request,
       @RequestHeader("Authorization") String token) throws Exception {
     GameDto.UpdateResponse result = this.gameService.updateGame(request, token);
     return ResponseEntity.ok(result);
@@ -52,7 +55,7 @@ public class GameController {
    */
   @Operation(summary = "경기 삭제")
   @DeleteMapping("/game/delete")
-  public ResponseEntity<?> deleteGame(@RequestBody @Validated GameDto.DeleteRequest request,
+  public ResponseEntity<DeleteResponse> deleteGame(@RequestBody @Validated GameDto.DeleteRequest request,
       @RequestHeader("Authorization") String token) throws Exception {
     GameDto.DeleteResponse result = this.gameService.delete(request, token);
     return ResponseEntity.ok(result);

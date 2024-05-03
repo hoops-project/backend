@@ -73,9 +73,10 @@ public class GameDto {
           .startDateTime(request.getStartDateTime())
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
-          .matchFormat(request.getMatchFormat())
           .latitude(request.getLatitude())
           .longitude(request.getLongitude())
+          .cityName(CityName.getCityName(request.getAddress()))
+          .matchFormat(request.getMatchFormat())
           .userEntity(user)
           .build();
     }
@@ -191,7 +192,7 @@ public class GameDto {
           .address(request.getAddress())
           .latitude(request.getLatitude())
           .longitude(request.getLongitude())
-          .cityName(Util.getCityName(request.getAddress()))
+          .cityName(CityName.getCityName(request.getAddress()))
           .matchFormat(request.getMatchFormat())
           .userEntity(game.getUserEntity())
           .build();
