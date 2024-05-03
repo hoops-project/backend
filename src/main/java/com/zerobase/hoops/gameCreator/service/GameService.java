@@ -242,22 +242,8 @@ public class GameService {
       }
     }
 
-    GameEntity gameEntity = GameEntity.builder()
-        .gameId(request.getGameId())
-        .title(request.getTitle())
-        .content(request.getContent())
-        .headCount(request.getHeadCount())
-        .fieldStatus(request.getFieldStatus())
-        .gender(request.getGender())
-        .startDateTime(request.getStartDateTime())
-        .createdDateTime(game.getCreatedDateTime())
-        .inviteYn(request.getInviteYn())
-        .address(request.getAddress())
-        .cityName(Util.getCityName(request.getAddress()))
-        .matchFormat(request.getMatchFormat())
-        .userEntity(game.getUserEntity())
-        .build();
-
+    // 경기 수정
+    GameEntity gameEntity = UpdateRequest.toEntity(request, game);
     this.gameRepository.save(gameEntity);
 
     log.info("updateGame end");
@@ -307,8 +293,6 @@ public class GameService {
       }
     }
 
-
-
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
     List<ParticipantGameEntity> participantGameEntityList =
         this.participantGameRepository.findByStatusInAndGameEntityGameId
@@ -323,23 +307,7 @@ public class GameService {
     }
 
     // 경기 삭제
-    GameEntity gameEntity = GameEntity.builder()
-        .gameId(game.getGameId())
-        .title(game.getTitle())
-        .content(game.getContent())
-        .headCount(game.getHeadCount())
-        .fieldStatus(game.getFieldStatus())
-        .gender(game.getGender())
-        .startDateTime(game.getStartDateTime())
-        .createdDateTime(game.getCreatedDateTime())
-        .deletedDateTime(LocalDateTime.now())
-        .inviteYn(game.getInviteYn())
-        .address(game.getAddress())
-        .cityName(game.getCityName())
-        .matchFormat(game.getMatchFormat())
-        .userEntity(game.getUserEntity())
-        .build();
-
+    GameEntity gameEntity = DeleteRequest.toEntity(game);
     this.gameRepository.save(gameEntity);
 
     // 경기 삭제후 경기 개설한 것이 없다면 CREATOR 제거

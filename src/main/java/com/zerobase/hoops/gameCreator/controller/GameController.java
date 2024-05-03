@@ -2,6 +2,8 @@ package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.GameDto;
 import com.zerobase.hoops.gameCreator.service.GameService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +20,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/game-creator")
 @RequiredArgsConstructor
+@Tag(name = "GameCreator")
 public class GameController {
 
   private final GameService gameService;
 
   /**
-   * 게임 생성
+   * 경기 생성
    */
+  @Operation(summary = "경기 생성")
   @PostMapping("/game/create")
   public ResponseEntity<?> createGame(@RequestBody @Validated GameDto.CreateRequest request,
       @RequestHeader("Authorization") String token) throws Exception {
@@ -33,8 +37,9 @@ public class GameController {
   }
 
   /**
-   * 게임 수정
+   * 경기 수정
    */
+  @Operation(summary = "경기 수정")
   @PutMapping("/game/update")
   public ResponseEntity<?> updateGame(@RequestBody @Validated GameDto.UpdateRequest request,
       @RequestHeader("Authorization") String token) throws Exception {
@@ -43,8 +48,9 @@ public class GameController {
   }
 
   /**
-   * 게임 삭제
+   * 경기 삭제
    */
+  @Operation(summary = "경기 삭제")
   @DeleteMapping("/game/delete")
   public ResponseEntity<?> deleteGame(@RequestBody @Validated GameDto.DeleteRequest request,
       @RequestHeader("Authorization") String token) throws Exception {

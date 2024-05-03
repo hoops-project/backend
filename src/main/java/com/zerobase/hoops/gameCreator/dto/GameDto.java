@@ -7,6 +7,8 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.util.Util;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -52,6 +54,12 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotNull(message = "위도는 필수 입력 값 입니다.")
+    private Double latitude;
+
+    @NotNull(message = "경도는 필수 입력 값 입니다.")
+    private Double longitude;
+
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
@@ -66,6 +74,8 @@ public class GameDto {
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
           .matchFormat(request.getMatchFormat())
+          .latitude(request.getLatitude())
+          .longitude(request.getLongitude())
           .userEntity(user)
           .build();
     }
@@ -95,6 +105,10 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
@@ -110,6 +124,8 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .build();
@@ -152,9 +168,34 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotNull(message = "위도는 필수 입력 값 입니다.")
+    private Double latitude;
+
+    @NotNull(message = "경도는 필수 입력 값 입니다.")
+    private Double longitude;
+
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
+    public static GameEntity toEntity(UpdateRequest request, GameEntity game) {
+      return GameEntity.builder()
+          .gameId(request.getGameId())
+          .title(request.getTitle())
+          .content(request.getContent())
+          .headCount(request.getHeadCount())
+          .fieldStatus(request.getFieldStatus())
+          .gender(request.getGender())
+          .startDateTime(request.getStartDateTime())
+          .createdDateTime(game.getCreatedDateTime())
+          .inviteYn(request.getInviteYn())
+          .address(request.getAddress())
+          .latitude(request.getLatitude())
+          .longitude(request.getLongitude())
+          .cityName(Util.getCityName(request.getAddress()))
+          .matchFormat(request.getMatchFormat())
+          .userEntity(game.getUserEntity())
+          .build();
+    }
   }
 
   @Getter
@@ -181,6 +222,10 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
@@ -196,6 +241,8 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .build();
@@ -211,6 +258,26 @@ public class GameDto {
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;
 
+    public static GameEntity toEntity(GameEntity game) {
+      return GameEntity.builder()
+          .gameId(game.getGameId())
+          .title(game.getTitle())
+          .content(game.getContent())
+          .headCount(game.getHeadCount())
+          .fieldStatus(game.getFieldStatus())
+          .gender(game.getGender())
+          .startDateTime(game.getStartDateTime())
+          .createdDateTime(game.getCreatedDateTime())
+          .deletedDateTime(LocalDateTime.now())
+          .inviteYn(game.getInviteYn())
+          .address(game.getAddress())
+          .latitude(game.getLatitude())
+          .longitude(game.getLongitude())
+          .cityName(game.getCityName())
+          .matchFormat(game.getMatchFormat())
+          .userEntity(game.getUserEntity())
+          .build();
+    }
   }
 
   @Getter
@@ -239,6 +306,10 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
@@ -255,6 +326,8 @@ public class GameDto {
           .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .build();
