@@ -55,12 +55,14 @@ public class WebSecurityConfig {
             .requestMatchers("/api/auth/**")
             .hasAnyRole("USER", "CREATOR", "ADMIN")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/game-creator/game/create")
+            .requestMatchers("/api/game-creator/game/detail")
+            .permitAll()
+            .requestMatchers(
+                "/api/game-creator/game/create",
+                "/api/game-creator/game/update")
             .hasRole("USER")
-            .requestMatchers("/api/game-creator/game/update")
-            .hasRole("CREATOR")
             .requestMatchers("/api/game-creator/game/delete")
-            .hasAnyRole("CREATOR", "ADMIN")
+            .hasAnyRole("USER", "ADMIN")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,

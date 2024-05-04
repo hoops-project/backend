@@ -63,4 +63,15 @@ public class ParticipantGameEntity {
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UserEntity userEntity;
+
+  public static ParticipantGameEntity toGameCreatorEntity(
+      GameEntity gameEntity,
+      UserEntity userEntity) {
+    return ParticipantGameEntity.builder()
+        .status(ParticipantGameStatus.ACCEPT)
+        .createdDateTime(gameEntity.getCreatedDateTime())
+        .gameEntity(gameEntity)
+        .userEntity(userEntity)
+        .build();
+  }
 }

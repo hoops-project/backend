@@ -37,6 +37,7 @@ import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalLong;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -67,27 +68,16 @@ public class GameService {
 
     validationCreateGame(request);
 
-    // CREATOR 확인
-    boolean creatorFlag = false;
-    List<String> roles = user.getRoles();
-    for(String role : roles) {
-      if(role.equals("ROLE_CREATOR")) {
-        creatorFlag = true;
-        break;
-      }
-    }
-
-    // 없으면 CREATOR 추가
-    if(!creatorFlag) {
-      roles.add("ROLE_CREATOR");
-      user.setRoles(roles);
-      userRepository.save(user);
-    }
-
     // 경기 생성
     GameEntity gameEntity = CreateRequest.toEntity(request, user);
 
     gameRepository.save(gameEntity);
+
+    // 경기 개설자는 경기에 참가인 상태로 있어야 함
+    ParticipantGameEntity participantGameEntity =
+        ParticipantGameEntity.toGameCreatorEntity(gameEntity, user);
+
+    participantGameRepository.save(participantGameEntity);
 
     log.info("createGame end");
 
@@ -109,8 +99,7 @@ public class GameService {
 
     long aroundGameCount = gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
-            (beforeDatetime, afterDateTime, request.getAddress())
-        .orElse(0L);
+            (beforeDatetime, afterDateTime, request.getAddress());
 
     /**
      * 주어진 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산해
@@ -185,8 +174,7 @@ public class GameService {
     long aroundGameCount = gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
             (beforeDatetime, afterDateTime, request.getAddress(),
-                request.getGameId())
-        .orElse(0L);
+                request.getGameId());
 
     /**
      * 주어진 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산해
@@ -213,8 +201,7 @@ public class GameService {
      */
     long headCount =
         participantGameRepository.countByStatusAndGameEntityGameId
-                (ACCEPT, request.getGameId())
-            .orElse(0L);
+                (ACCEPT, request.getGameId());
 
     if (request.getHeadCount() < headCount) {
       throw new CustomException(NOT_UPDATE_HEADCOUNT);
@@ -225,16 +212,16 @@ public class GameService {
     if (gender == MALEONLY || gender == FEMALEONLY) {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
-      long count = participantGameRepository
+      long genderCount = participantGameRepository
           .countByStatusAndGameEntityGameIdAndUserEntityGender
-              (ACCEPT, request.getGameId(), queryGender)
-          .orElse(0L);
+              (ACCEPT, request.getGameId(), queryGender);
+
       /**
        * 예) 수정하려는 성별 : MALEONLY
        *     경기에 수락된 인원들중 FEMALE 갯수를 검사
        *     FEMALE이 한명이라도 있으면 안되므로 Exception 발생
        */
-      if (count >= 1) {
+      if (genderCount >= 1) {
         if (gender == MALEONLY) {
           throw new CustomException(NOT_UPDATE_MAN);
         } else {
@@ -261,16 +248,16 @@ public class GameService {
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     // CREATOR 판별
-    boolean creatorFlag = false;
+    boolean userFlag = false;
 
     for (String role : user.getRoles()) {
-      if (role.equals("ROLE_CREATOR")) {
-        creatorFlag = true;
+      if (role.equals("ROLE_USER")) {
+        userFlag = true;
         break;
       }
     }
 
-    validationDeleteGame(user, game, creatorFlag);
+    validationDeleteGame(user, game, userFlag);
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
     List<ParticipantGameEntity> participantGameEntityList =
@@ -289,20 +276,6 @@ public class GameService {
     GameEntity gameEntity = DeleteRequest.toEntity(game);
     gameRepository.save(gameEntity);
 
-    // 경기 삭제후 경기 개설한 것이 없다면 CREATOR 제거
-    if(creatorFlag) {
-      long gameCreateCount =
-          gameRepository.countByDeletedDateTimeNullAndUserEntityUserId(user.getUserId())
-              .orElse(0L);
-
-      if (gameCreateCount == 0) {
-        List<String> roles = user.getRoles();
-        roles.remove("ROLE_CREATOR");
-        user.setRoles(roles);
-        userRepository.save(user);
-      }
-    }
-
     log.info("deleteGame end");
 
     return DeleteResponse.toDto(gameEntity);
@@ -312,9 +285,11 @@ public class GameService {
   /**
    * 경기 삭제 전 validation 체크
    */
-  private void validationDeleteGame(UserEntity user, GameEntity game, boolean creatorFlag) {
-    // CREATOR 일때 관리자 일때는 PASS
-    if(creatorFlag) {
+  private void validationDeleteGame(UserEntity user, GameEntity game,
+      boolean userFlag) {
+    // USER 일때
+    // 관리자 일때는 PASS
+    if(userFlag) {
       // 자신이 경기 개최자가 아니면 삭제 못하게
       if(!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
         throw new CustomException(NOT_GAME_CREATOR);

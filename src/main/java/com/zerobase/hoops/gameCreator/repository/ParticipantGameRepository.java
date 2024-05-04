@@ -14,13 +14,13 @@ import org.springframework.stereotype.Repository;
 public interface ParticipantGameRepository extends
     JpaRepository<ParticipantGameEntity, Long> {
 
-  OptionalLong countByStatusAndGameEntityGameId(ParticipantGameStatus participantGameStatus,
+  long countByStatusAndGameEntityGameId(ParticipantGameStatus participantGameStatus,
       Long gameId);
 
   List<ParticipantGameEntity> findByStatusInAndGameEntityGameId(
       List<ParticipantGameStatus> accept, Long gameId);
 
-  OptionalLong countByStatusAndGameEntityGameIdAndUserEntityGender(ParticipantGameStatus participantGameStatus, Long gameId, GenderType queryGender);
+  long countByStatusAndGameEntityGameIdAndUserEntityGender(ParticipantGameStatus participantGameStatus, Long gameId, GenderType queryGender);
 }
 
 

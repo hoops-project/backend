@@ -162,7 +162,7 @@ class GameServiceTest {
 
     // aroundGameCount를 0으로 설정하여 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository.countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(any(), any(), anyString()))
-        .thenReturn(OptionalLong.of(0L));
+        .thenReturn(0L);
 
     // CREATOR 추가
     when(userRepository.save(any())).thenReturn(creatorUser);
@@ -264,12 +264,12 @@ class GameServiceTest {
     when(gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
             (any(), any(), anyString(), anyLong()))
-        .thenReturn(OptionalLong.of(0L));
+        .thenReturn(0L);
 
     // 현재 경기에 수락된 인원수가 없다고 가정
     when(participantGameRepository.countByStatusAndGameEntityGameId
         (eq(ACCEPT), anyLong()))
-        .thenReturn(OptionalLong.of(0L));
+        .thenReturn(0L);
 
     ArgumentCaptor<GameEntity> gameEntityArgumentCaptor = ArgumentCaptor.forClass(
         GameEntity.class);
