@@ -1,7 +1,84 @@
 package com.zerobase.hoops.reports.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.reports.dto.ReportDto;
+import com.zerobase.hoops.reports.repository.ReportRepository;
+import com.zerobase.hoops.reports.service.ReportService;
+import com.zerobase.hoops.security.TokenProvider;
+import com.zerobase.hoops.users.repository.UserRepository;
+import com.zerobase.hoops.users.service.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+@WebMvcTest(ReportController.class)
 class ReportControllerTest {
-  // 로그인 완성 되면 진행 예정
+
+  @MockBean
+  private ReportRepository reportRepository;
+
+  @MockBean
+  private UserRepository userRepository;
+
+  @MockBean
+  private ReportService reportService;
+
+  @MockBean
+  private UserService userService;
+
+  @Autowired
+  private MockMvc mockMvc;
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @MockBean
+  private TokenProvider tokenProvider;
+
+
+  @WithMockUser
+  @Test
+  @DisplayName("회원가입 성공")
+  void report_success() throws Exception {
+    //given
+    given(userRepository.existsByEmail(anyString()))
+        .willReturn(true);
+
+    //when
+    ReportDto reportDto = ReportDto.builder()
+        .userEmail("test@example.com")
+        .reportedUserEmail("reported@example.com")
+        .content("ReasonReasonReasonReasonReasonReasonReasonReasonReason")
+        .build();
+
+    // 결과 확인
+    ResultActions resultActions =
+        mockMvc.perform(
+                post("/api/report/user")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(
+                        reportDto)
+                    )
+            )
+            //.andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title")
+                .value("유저신고"))
+            .andExpect(jsonPath("$.detail")
+                .value("Success"));
+  }
 }
