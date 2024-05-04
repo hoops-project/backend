@@ -88,6 +88,8 @@ public class GameDto {
   @Builder
   public static class CreateResponse {
 
+    private Long gameId;
+
     private String title;
 
     private String content;
@@ -114,8 +116,11 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static CreateResponse toDto(GameEntity gameEntity) {
       return CreateResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -129,6 +134,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }
@@ -139,6 +145,8 @@ public class GameDto {
   @AllArgsConstructor
   @Builder
   public static class DetailResponse {
+    private Long gameId;
+
     private String title;
 
     private String content;
@@ -171,6 +179,7 @@ public class GameDto {
 
     public static DetailResponse toDto(GameEntity gameEntity){
       return DetailResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -263,6 +272,7 @@ public class GameDto {
   @AllArgsConstructor
   @Builder
   public static class UpdateResponse {
+    private Long gameId;
 
     private String title;
 
@@ -290,8 +300,11 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static UpdateResponse toDto(GameEntity gameEntity) {
       return UpdateResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -305,6 +318,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }
@@ -348,6 +362,8 @@ public class GameDto {
   @Builder
   public static class DeleteResponse {
 
+    private Long gameId;
+
     private String title;
 
     private String content;
@@ -376,8 +392,11 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static DeleteResponse toDto(GameEntity gameEntity) {
       return DeleteResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -392,6 +411,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }

@@ -38,7 +38,7 @@ public class GameController {
   @PostMapping("/game/create")
   public ResponseEntity<CreateResponse> createGame(
       @RequestBody @Validated GameDto.CreateRequest request,
-      @RequestHeader("Authorization") String token) throws Exception {
+      @RequestHeader("Authorization") String token) {
     GameDto.CreateResponse result = this.gameService.createGame(request, token);
     return ResponseEntity.ok(result);
   }
@@ -48,7 +48,7 @@ public class GameController {
    */
   @Operation(summary = "경기 상세 조회")
   @GetMapping("/game/detail")
-  public ResponseEntity<DetailResponse> getGameDetail(@RequestParam("gameId") Long gameId) throws Exception {
+  public ResponseEntity<DetailResponse> getGameDetail(@RequestParam("gameId") Long gameId) {
     GameDto.DetailResponse result = this.gameService.getGameDetail(gameId);
     return ResponseEntity.ok(result);
   }
@@ -60,7 +60,7 @@ public class GameController {
   @PutMapping("/game/update")
   public ResponseEntity<UpdateResponse> updateGame(
       @RequestBody @Validated GameDto.UpdateRequest request,
-      @RequestHeader("Authorization") String token) throws Exception {
+      @RequestHeader("Authorization") String token) {
     GameDto.UpdateResponse result = this.gameService.updateGame(request, token);
     return ResponseEntity.ok(result);
   }
@@ -72,8 +72,8 @@ public class GameController {
   @DeleteMapping("/game/delete")
   public ResponseEntity<DeleteResponse> deleteGame(
       @RequestBody @Validated GameDto.DeleteRequest request,
-      @RequestHeader("Authorization") String token) throws Exception {
-    GameDto.DeleteResponse result = this.gameService.delete(request, token);
+      @RequestHeader("Authorization") String token) {
+    GameDto.DeleteResponse result = this.gameService.deleteGame(request, token);
     return ResponseEntity.ok(result);
   }
 

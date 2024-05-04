@@ -57,10 +57,10 @@ public class ParticipantGameEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "game_id")
+  @JoinColumn(name = "game_id", nullable = false)
   private GameEntity gameEntity;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private UserEntity userEntity;
 }

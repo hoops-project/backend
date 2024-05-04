@@ -57,15 +57,12 @@ public class GameService {
   /**
    * 경기 생성
    */
-  public CreateResponse createGame(CreateRequest request, String token)
-      throws Exception {
+  public CreateResponse createGame(CreateRequest request, String token) {
     log.info("createGame start");
-    // 아이디로 유저 조회
-    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
+    // 이메일로 유저 조회
+    var email = tokenProvider.parseClaims(token.substring(7)).getSubject();
 
-    String id = String.valueOf(objectId);
-
-    var user = userRepository.findByIdAndDeleteDateTimeNull(id)
+    var user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     validationCreateGame(request);
@@ -110,7 +107,7 @@ public class GameService {
     LocalDateTime afterDateTime = startDatetime.plusMinutes(30);
     LocalDateTime nowDateTime = LocalDateTime.now();
 
-    long aroundGameCount = this.gameRepository
+    long aroundGameCount = gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
             (beforeDatetime, afterDateTime, request.getAddress())
         .orElse(0L);
@@ -133,25 +130,21 @@ public class GameService {
    * 경기 상세 조회
    */
   public DetailResponse getGameDetail(Long gameId) {
-    var game = this.gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+    var game = gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
-
     return DetailResponse.toDto(game);
   }
 
   /**
    * 경기 수정
    */
-  public UpdateResponse updateGame(UpdateRequest request, String token)
-      throws Exception {
+  public UpdateResponse updateGame(UpdateRequest request, String token) {
     log.info("updateGame start");
 
-    // 아이디로 유저 조회
-    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
+    // 이메일로 유저 조회
+    var email = tokenProvider.parseClaims(token.substring(7)).getSubject();
 
-    String id = String.valueOf(objectId);
-
-    var user = this.userRepository.findByIdAndDeleteDateTimeNull(id)
+    var user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
@@ -232,7 +225,7 @@ public class GameService {
     if (gender == MALEONLY || gender == FEMALEONLY) {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
-      long count = this.participantGameRepository
+      long count = participantGameRepository
           .countByStatusAndGameEntityGameIdAndUserEntityGender
               (ACCEPT, request.getGameId(), queryGender)
           .orElse(0L);
@@ -254,20 +247,17 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  public DeleteResponse delete(DeleteRequest request, String token)
-      throws Exception {
+  public DeleteResponse deleteGame(DeleteRequest request, String token) {
     log.info("deleteGame start");
 
-    // 아이디로 유저 조회
-    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
+    // 이메일로 유저 조회
+    var email = tokenProvider.parseClaims(token.substring(7)).getSubject();
 
-    String id = String.valueOf(objectId);
-
-    var user = userRepository.findByIdAndDeleteDateTimeNull(id)
+    var user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    var game = this.gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+    var game = gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     // CREATOR 판별
