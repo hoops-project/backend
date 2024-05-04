@@ -136,6 +136,63 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
+  public static class DetailResponse {
+    private String title;
+
+    private String content;
+
+    private Long headCount;
+
+    private FieldStatus fieldStatus;
+
+    private Gender gender;
+
+    private LocalDateTime startDateTime;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime deletedDateTime;
+
+    private Boolean inviteYn;
+
+    private String address;
+
+    private Double latitude;
+
+    private Double longitude;
+
+    private CityName cityName;
+
+    private MatchFormat matchFormat;
+
+    private Long userId;
+
+    public static DetailResponse toDto(GameEntity gameEntity){
+      return DetailResponse.builder()
+          .title(gameEntity.getTitle())
+          .content(gameEntity.getContent())
+          .headCount(gameEntity.getHeadCount())
+          .fieldStatus(gameEntity.getFieldStatus())
+          .gender(gameEntity.getGender())
+          .startDateTime(gameEntity.getStartDateTime())
+          .createdDateTime(gameEntity.getCreatedDateTime())
+          .deletedDateTime(gameEntity.getDeletedDateTime())
+          .inviteYn(gameEntity.getInviteYn())
+          .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
+          .cityName(gameEntity.getCityName())
+          .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
   public static class UpdateRequest {
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;

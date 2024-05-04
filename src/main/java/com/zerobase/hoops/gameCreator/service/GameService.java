@@ -25,6 +25,7 @@ import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
@@ -58,10 +59,12 @@ public class GameService {
    */
   public CreateResponse createGame(CreateRequest request, String token) throws Exception {
     log.info("createGame start");
-    // 이메일로 유저 조회
-    String email = this.tokenProvider.parseClaims(token.substring(7)).getSubject();
+    // 아이디로 유저 조회
+    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
 
-    var user = this.userRepository.findByEmail(email)
+    String id = String.valueOf(objectId);
+
+    var user = userRepository.findByIdAndDeleteDateTimeNull(id)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     validationCreateGame(request);
@@ -80,13 +83,13 @@ public class GameService {
     if(!creatorFlag) {
       roles.add("ROLE_CREATOR");
       user.setRoles(roles);
-      this.userRepository.save(user);
+      userRepository.save(user);
     }
 
     // 경기 생성
     GameEntity gameEntity = CreateRequest.toEntity(request, user);
 
-    this.gameRepository.save(gameEntity);
+    gameRepository.save(gameEntity);
 
     log.info("createGame end");
 
@@ -106,7 +109,7 @@ public class GameService {
     LocalDateTime afterDateTime = startDatetime.plusMinutes(30);
     LocalDateTime nowDateTime = LocalDateTime.now();
 
-    Long aroundGameCount = this.gameRepository
+    long aroundGameCount = this.gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
             (beforeDatetime, afterDateTime, request.getAddress())
         .orElse(0L);
@@ -126,27 +129,39 @@ public class GameService {
   }
 
   /**
+   * 경기 상세 조회
+   */
+  public DetailResponse getGameDetail(Long gameId) {
+    var game = this.gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+        .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+    return DetailResponse.toDto(game);
+  }
+
+  /**
    * 경기 수정
    */
   public UpdateResponse updateGame(UpdateRequest request, String token) throws Exception {
     log.info("updateGame start");
 
-    // 이메일로 유저 조회
-    String email = this.tokenProvider.parseClaims(token.substring(7)).getSubject();
+    // 아이디로 유저 조회
+    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
 
-    var user = this.userRepository.findByEmail(email)
+    String id = String.valueOf(objectId);
+
+    var user = this.userRepository.findByIdAndDeleteDateTimeNull(id)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
     var game =
-        this.gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+        gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     validationUpdateGame(request, user, game);
 
     // 경기 수정
     GameEntity gameEntity = UpdateRequest.toEntity(request, game);
-    this.gameRepository.save(gameEntity);
+    gameRepository.save(gameEntity);
 
     log.info("updateGame end");
 
@@ -172,7 +187,7 @@ public class GameService {
     LocalDateTime afterDateTime = startDatetime.plusMinutes(30);
     LocalDateTime nowDateTime = LocalDateTime.now();
 
-    Long aroundGameCount = this.gameRepository
+    long aroundGameCount = gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
             (beforeDatetime, afterDateTime, request.getAddress(), request.getGameId())
         .orElse(0L);
@@ -200,8 +215,8 @@ public class GameService {
      *     현재 경기에 수락된 인원수 : 8
      *     이 경우 Exception 발생
      */
-    Long headCount =
-        this.participantGameRepository.countByStatusAndGameEntityGameId
+    long headCount =
+        participantGameRepository.countByStatusAndGameEntityGameId
                 (ACCEPT, request.getGameId())
             .orElse(0L);
 
@@ -214,7 +229,7 @@ public class GameService {
     if(gender == MALEONLY || gender == FEMALEONLY) {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
-      Long count = this.participantGameRepository
+      long count = this.participantGameRepository
           .countByStatusAndGameEntityGameIdAndUserEntityGender
               (ACCEPT, request.getGameId(), queryGender)
           .orElse(0L);
@@ -239,14 +254,16 @@ public class GameService {
   public DeleteResponse delete(DeleteRequest request, String token) throws Exception {
     log.info("deleteGame start");
 
-    // 이메일로 유저 조회
-    String email = this.tokenProvider.parseClaims(token.substring(7)).getSubject();
+    // 아이디로 유저 조회
+    var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
 
-    var user = this.userRepository.findByEmail(email)
+    String id = String.valueOf(objectId);
+
+    var user = userRepository.findByIdAndDeleteDateTimeNull(id)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    var game = this.gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+    var game = gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     // CREATOR 판별
@@ -263,32 +280,32 @@ public class GameService {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
     List<ParticipantGameEntity> participantGameEntityList =
-        this.participantGameRepository.findByStatusInAndGameEntityGameId
+        participantGameRepository.findByStatusInAndGameEntityGameId
             (List.of(ACCEPT, APPLY), request.getGameId());
 
     if(!participantGameEntityList.isEmpty()) {
       for(ParticipantGameEntity entity : participantGameEntityList) {
         entity.setStatus(DELETE);
         entity.setDeletedDateTime(LocalDateTime.now());
-        this.participantGameRepository.save(entity);
+        participantGameRepository.save(entity);
       }
     }
 
     // 경기 삭제
     GameEntity gameEntity = DeleteRequest.toEntity(game);
-    this.gameRepository.save(gameEntity);
+    gameRepository.save(gameEntity);
 
     // 경기 삭제후 경기 개설한 것이 없다면 CREATOR 제거
     if(creatorFlag) {
-      Long gameCreateCount =
-          this.gameRepository.countByDeletedDateTimeNullAndUserEntityUserId(user.getUserId())
+      long gameCreateCount =
+          gameRepository.countByDeletedDateTimeNullAndUserEntityUserId(user.getUserId())
               .orElse(0L);
 
       if(gameCreateCount == 0) {
         List<String> roles = user.getRoles();
         roles.remove("ROLE_CREATOR");
         user.setRoles(roles);
-        this.userRepository.save(user);
+        userRepository.save(user);
       }
     }
 
@@ -318,5 +335,6 @@ public class GameService {
       }
     }
   }
+
 
 }
