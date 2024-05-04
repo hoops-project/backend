@@ -104,9 +104,9 @@ class ReportServiceTest {
     ReportEntity savedReportEntity = reportEntityCaptor.getValue();
     assertThat(savedReportEntity.getContent()).isEqualTo(
         reportDto.getContent());
-    assertThat(savedReportEntity.getUser_id()).isEqualTo(
+    assertThat(savedReportEntity.getUserId()).isEqualTo(
         userEntity.getEmail());
-    assertThat(savedReportEntity.getReported_id()).isEqualTo(
+    assertThat(savedReportEntity.getReportedId()).isEqualTo(
         reportedUserEntity.getEmail());
   }
 

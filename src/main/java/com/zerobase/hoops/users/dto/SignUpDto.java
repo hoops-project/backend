@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -74,7 +75,7 @@ public class SignUpDto {
           .nickName(request.getNickName())
           .playStyle(PlayStyleType.valueOf(request.getPlayStyle()))
           .ability(AbilityType.valueOf(request.getAbility()))
-          .roles(List.of("ROLE_USER"))
+          .roles(new ArrayList<>(List.of("ROLE_USER")))
           .build();
     }
   }

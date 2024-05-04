@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
     ),
     tags = {
         @Tag(name = "1. USER", description = "회원 기능"),
+        @Tag(name = "2. AUTH", description = "인증/인가 기능")
     }
 )
 @Configuration

@@ -77,21 +77,15 @@ public class UserService implements UserDetailsService {
           userRepository.save(Request.toEntity(request));
 
       return UserDto.fromEntity(signUpUser);
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }
   }
 
   public boolean idCheck(String id) {
-    try {
-      boolean isExistId = userRepository.existsById(id);
-      if (isExistId) {
-        throw new CustomException(ErrorCode.DUPLICATED_ID);
-      }
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
+    boolean isExistId = userRepository.existsById(id);
+    if (isExistId) {
+      throw new CustomException(ErrorCode.DUPLICATED_ID);
     }
 
     return true;
@@ -145,10 +139,9 @@ public class UserService implements UserDetailsService {
       throw new CustomException(ErrorCode.WRONG_EMAIL);
     }
 
-    return (validatedEmail && emailRepository
-        .getCertificationNumber(email)
-        .equals(certificationNumber)
-    );
+    return emailRepository
+            .getCertificationNumber(email)
+            .equals(certificationNumber);
   }
 
   @Override

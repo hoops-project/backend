@@ -3,7 +3,6 @@ package com.zerobase.hoops.reports.dto;
 import com.zerobase.hoops.entity.ReportEntity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
@@ -27,8 +26,8 @@ public class ReportDto {
 
   public ReportEntity toEntity() {
     return ReportEntity.builder()
-        .user_id(this.userEmail)
-        .reported_id(this.reportedUserEmail)
+        .userId(this.userEmail)
+        .reportedId(this.reportedUserEmail)
         .content(this.content)
         .build();
   }
