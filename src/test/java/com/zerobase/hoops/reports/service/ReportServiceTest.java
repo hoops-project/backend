@@ -57,7 +57,7 @@ class ReportServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(Collections.singletonList("ROLE_USER"))
-        .createDateTime(LocalDateTime.now())
+        .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
         .build();
     reportedUserEntity = UserEntity.builder()
@@ -71,7 +71,7 @@ class ReportServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(Collections.singletonList("ROLE_USER"))
-        .createDateTime(LocalDateTime.now())
+        .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
         .build();
   }

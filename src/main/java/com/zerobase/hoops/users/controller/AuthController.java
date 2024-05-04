@@ -1,6 +1,7 @@
 package com.zerobase.hoops.users.controller;
 
 import com.zerobase.hoops.users.dto.LogInDto;
+import com.zerobase.hoops.users.dto.LogInDto.Response;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.service.AuthService;
@@ -30,7 +31,7 @@ public class AuthController {
    */
   @Operation(summary = "로그인")
   @PostMapping("/login")
-  public ResponseEntity<?> logIn(
+  public ResponseEntity<Response> logIn(
       @RequestBody @Validated LogInDto.Request request
   ) {
     UserDto userDto = authService.logInUser(request);

@@ -23,6 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "blacklist_user")
 public class BlackListUserEntity {
+
   @Id
   @GeneratedValue
   private Long id;
@@ -33,7 +34,7 @@ public class BlackListUserEntity {
 
   private LocalDate endedAt;
 
-  public void testBlackList(){
+  public void testBlackList() {
     this.endedAt = LocalDate.now();
   }
 }

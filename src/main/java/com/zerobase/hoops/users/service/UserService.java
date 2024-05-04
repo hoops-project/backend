@@ -121,11 +121,11 @@ public class UserService implements UserDetailsService {
 
   public void confirmEmail(
       String id, String email, String certificationNumber) {
-    if (!isConfirm(email, certificationNumber)) {
+    if (!checkCertificationNumber(email, certificationNumber)) {
       throw new CustomException(ErrorCode.INVALID_NUMBER);
     }
 
-    UserEntity user = userRepository.findById(id)
+    UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     user.confirm();
 
@@ -133,27 +133,28 @@ public class UserService implements UserDetailsService {
     userRepository.save(user);
   }
 
-  private boolean isConfirm(String email, String certificationNumber) {
+  private boolean checkCertificationNumber(
+      String email, String certificationNumber) {
     boolean validatedEmail = emailRepository.hasKey(email);
     if (!validatedEmail) {
       throw new CustomException(ErrorCode.WRONG_EMAIL);
     }
 
     return emailRepository
-            .getCertificationNumber(email)
-            .equals(certificationNumber);
+        .getCertificationNumber(email)
+        .equals(certificationNumber);
   }
 
   @Override
   public UserDetails loadUserByUsername(String email)
       throws UsernameNotFoundException {
-    return this.userRepository.findByEmail(email)
+    return userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
   public void checkBlackList(String email) {
-    Optional<BlackListUserEntity> blackUser = this.blackListUserRepository.findByEmail(
-        email);
+    Optional<BlackListUserEntity> blackUser =
+        blackListUserRepository.findByEmail(email);
     if (blackUser.isPresent()) {
       int comparison = blackUser.get().getEndedAt()
           .compareTo(LocalDate.now());
@@ -162,7 +163,7 @@ public class UserService implements UserDetailsService {
         throw new CustomException(ErrorCode.BAN_FOR_10DAYS);
       } else {
         // 시간 지남
-        this.blackListUserRepository.deleteAllById(
+        blackListUserRepository.deleteAllById(
             Collections.singleton(blackUser.get().getId()));
       }
     }

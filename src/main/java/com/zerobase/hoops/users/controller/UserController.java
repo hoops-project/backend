@@ -1,6 +1,7 @@
 package com.zerobase.hoops.users.controller;
 
 import com.zerobase.hoops.users.dto.SignUpDto;
+import com.zerobase.hoops.users.dto.SignUpDto.Response;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,7 @@ public class UserController {
    */
   @Operation(summary = "회원 가입")
   @PostMapping("/signup")
-  public ResponseEntity<?> signUp(
+  public ResponseEntity<Response> signUp(
       @RequestBody @Validated SignUpDto.Request request
   ) {
     UserDto signUpUser = userService.signUpUser(request);
@@ -42,7 +43,7 @@ public class UserController {
    */
   @Operation(summary = "ID 중복 검사")
   @PostMapping("/check/id")
-  public ResponseEntity<?> idCheck(
+  public ResponseEntity<Boolean> idCheck(
       @RequestParam(name = "id") String id
   ) {
     boolean idCheck = userService.idCheck(id);
@@ -55,7 +56,7 @@ public class UserController {
    */
   @Operation(summary = "EMAIL 중복 검사")
   @PostMapping("/check/email")
-  public ResponseEntity<?> emailCheck(
+  public ResponseEntity<Boolean> emailCheck(
       @RequestParam(name = "email") String email
   ) {
     boolean idCheck = userService.emailCheck(email);
@@ -68,7 +69,7 @@ public class UserController {
    */
   @Operation(summary = "별명 중복 검사")
   @PostMapping("/check/nickname")
-  public ResponseEntity<?> nickNameCheck(
+  public ResponseEntity<Boolean> nickNameCheck(
       @RequestParam(name = "nickName") String nickName
   ) {
     boolean nickNameCheck = userService.nickNameCheck(nickName);
@@ -81,7 +82,7 @@ public class UserController {
    */
   @Operation(summary = "이메일 인증")
   @GetMapping("/signup/confirm")
-  public ResponseEntity<?> confirmCertificationNumber(
+  public ResponseEntity<URI> confirmCertificationNumber(
       @RequestParam(name = "id") String id,
       @RequestParam(name = "email") String email,
       @RequestParam(name = "certificationNumber") String certificationNumber

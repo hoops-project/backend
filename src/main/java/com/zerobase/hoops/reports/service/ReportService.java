@@ -1,6 +1,5 @@
 package com.zerobase.hoops.reports.service;
 
-import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.reports.dto.ReportDto;

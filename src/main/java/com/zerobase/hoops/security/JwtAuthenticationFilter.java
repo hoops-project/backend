@@ -38,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     String accessToken = resolveTokenFromRequest(request);
 
-    if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(accessToken)) {
+    if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(
+        accessToken)) {
       response.setStatus(HttpStatus.UNAUTHORIZED.value());
       response.setContentType("application/json");
       String errorMessage = objectMapper.writeValueAsString(

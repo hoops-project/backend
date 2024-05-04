@@ -2,6 +2,7 @@ package com.zerobase.hoops.reports.controller;
 
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.service.ReportService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/report")
 @RequiredArgsConstructor
+@Tag(name = "4. REPORT")
 public class ReportController {
 
   private final ReportService reportService;

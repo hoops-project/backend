@@ -82,17 +82,13 @@ public class UserEntity implements UserDetails {
 
   @CreatedDate
   @Column(nullable = false)
-  private LocalDateTime createDateTime;
+  private LocalDateTime createdDateTime;
 
-  private LocalDateTime deleteDateTime;
+  private LocalDateTime deletedDateTime;
 
   @ColumnDefault("false")
   @Column(nullable = false)
   private boolean emailAuth;
-
-  public void verify() {
-    this.emailAuth = true;
-  }
 
   public void confirm() {
     this.emailAuth = true;

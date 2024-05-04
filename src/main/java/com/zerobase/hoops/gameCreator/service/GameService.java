@@ -57,7 +57,8 @@ public class GameService {
   /**
    * 경기 생성
    */
-  public CreateResponse createGame(CreateRequest request, String token) throws Exception {
+  public CreateResponse createGame(CreateRequest request, String token)
+      throws Exception {
     log.info("createGame start");
     // 아이디로 유저 조회
     var objectId = tokenProvider.parseClaims(token.substring(7)).get("id");
@@ -141,7 +142,8 @@ public class GameService {
   /**
    * 경기 수정
    */
-  public UpdateResponse updateGame(UpdateRequest request, String token) throws Exception {
+  public UpdateResponse updateGame(UpdateRequest request, String token)
+      throws Exception {
     log.info("updateGame start");
 
     // 아이디로 유저 조회
@@ -189,21 +191,22 @@ public class GameService {
 
     long aroundGameCount = gameRepository
         .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
-            (beforeDatetime, afterDateTime, request.getAddress(), request.getGameId())
+            (beforeDatetime, afterDateTime, request.getAddress(),
+                request.getGameId())
         .orElse(0L);
 
     /**
      * 주어진 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산해
      * 시간 범위에 해당하는 해당 주소에서 예정된 경기를 못찾을시
      */
-    if(aroundGameCount == 0) {
+    if (aroundGameCount == 0) {
       /**
        *  예) 현재 시간 : 2024-05-02T06:50:00
        *      수정하려는 경기 시작 시간 : 2024-05-02T07:00:00
        *      2024-05-02T06:30:00 보다 2024-05-02T06:50:00 이후 이므로
        *      Exception 발생
        */
-      if(beforeDatetime.isBefore(nowDateTime)) {
+      if (beforeDatetime.isBefore(nowDateTime)) {
         throw new CustomException(NOT_AFTER_THIRTY_MINUTE);
       }
     } else { // 시간 범위에 해당하는 해당 주소에서 예정된 경기를 찾을시
@@ -220,13 +223,13 @@ public class GameService {
                 (ACCEPT, request.getGameId())
             .orElse(0L);
 
-    if(request.getHeadCount() < headCount) {
+    if (request.getHeadCount() < headCount) {
       throw new CustomException(NOT_UPDATE_HEADCOUNT);
     }
 
     // 수정하려는 성별이 ALL 이면 이 메서드 통과
     Gender gender = request.getGender();
-    if(gender == MALEONLY || gender == FEMALEONLY) {
+    if (gender == MALEONLY || gender == FEMALEONLY) {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
       long count = this.participantGameRepository
@@ -238,8 +241,8 @@ public class GameService {
        *     경기에 수락된 인원들중 FEMALE 갯수를 검사
        *     FEMALE이 한명이라도 있으면 안되므로 Exception 발생
        */
-      if(count >= 1) {
-        if(gender == MALEONLY) {
+      if (count >= 1) {
+        if (gender == MALEONLY) {
           throw new CustomException(NOT_UPDATE_MAN);
         } else {
           throw new CustomException(NOT_UPDATE_WOMAN);
@@ -251,7 +254,8 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  public DeleteResponse delete(DeleteRequest request, String token) throws Exception {
+  public DeleteResponse delete(DeleteRequest request, String token)
+      throws Exception {
     log.info("deleteGame start");
 
     // 아이디로 유저 조회
@@ -263,14 +267,14 @@ public class GameService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    var game = gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+    var game = this.gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     // CREATOR 판별
     boolean creatorFlag = false;
 
-    for(String role : user.getRoles()) {
-      if(role.equals("ROLE_CREATOR")) {
+    for (String role : user.getRoles()) {
+      if (role.equals("ROLE_CREATOR")) {
         creatorFlag = true;
         break;
       }
@@ -283,8 +287,8 @@ public class GameService {
         participantGameRepository.findByStatusInAndGameEntityGameId
             (List.of(ACCEPT, APPLY), request.getGameId());
 
-    if(!participantGameEntityList.isEmpty()) {
-      for(ParticipantGameEntity entity : participantGameEntityList) {
+    if (!participantGameEntityList.isEmpty()) {
+      for (ParticipantGameEntity entity : participantGameEntityList) {
         entity.setStatus(DELETE);
         entity.setDeletedDateTime(LocalDateTime.now());
         participantGameRepository.save(entity);
@@ -301,7 +305,7 @@ public class GameService {
           gameRepository.countByDeletedDateTimeNullAndUserEntityUserId(user.getUserId())
               .orElse(0L);
 
-      if(gameCreateCount == 0) {
+      if (gameCreateCount == 0) {
         List<String> roles = user.getRoles();
         roles.remove("ROLE_CREATOR");
         user.setRoles(roles);

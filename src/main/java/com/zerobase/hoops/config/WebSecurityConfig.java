@@ -49,7 +49,7 @@ public class WebSecurityConfig {
                 "/swagger-ui/**", "/v3/api-docs/**",
                 "/api/auth/login",
                 //로그인 개발되면 해당 부분 삭제
-                "/report/user",
+                "/report/user", "/ws",
                 //--------------------
                 "/h2-console/**").permitAll()
             .requestMatchers("/api/auth/**")

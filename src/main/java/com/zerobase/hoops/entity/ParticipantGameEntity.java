@@ -30,6 +30,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class ParticipantGameEntity {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)

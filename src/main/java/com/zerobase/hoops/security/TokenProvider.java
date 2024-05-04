@@ -61,7 +61,8 @@ public class TokenProvider {
     return refreshToken;
   }
 
-  public String generateToken(String id, String email, List<String> roles, Long expireTime) {
+  public String generateToken(String id, String email, List<String> roles,
+      Long expireTime) {
 
     Claims claims = Jwts.claims().setSubject(email);
     claims.put("id", id);
@@ -85,7 +86,8 @@ public class TokenProvider {
   public Claims parseClaims(String token) {
     try {
       return Jwts.parserBuilder()
-          .setSigningKey(getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
+          .setSigningKey(
+              getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
           .build()
           .parseClaimsJws(token)
           .getBody();

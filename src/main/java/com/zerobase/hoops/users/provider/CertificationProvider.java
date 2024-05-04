@@ -11,12 +11,9 @@ public class CertificationProvider {
       throws NoSuchAlgorithmException {
     String certificationNumber;
 
-    do {
-      int sum = SecureRandom.getInstanceStrong().nextInt(999999);
-      certificationNumber = String.valueOf(sum);
-    } while (certificationNumber.length() != 6);
+    int sum = SecureRandom.getInstanceStrong().nextInt(999999);
+    certificationNumber = String.format("%06d", sum);
 
     return certificationNumber;
   }
-
 }
