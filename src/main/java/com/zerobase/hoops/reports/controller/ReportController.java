@@ -24,7 +24,7 @@ public class ReportController {
 
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/user")
-  public ResponseEntity<?> report(
+  public ResponseEntity<ApiResponse> report(
       @RequestBody @Valid ReportDto request) {
     this.reportService.reportUser(request);
     return ResponseEntity.ok().body(
