@@ -7,13 +7,19 @@ import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
+import com.zerobase.hoops.users.repository.AuthRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,6 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+  private final AuthRepository authRepository;
   private final UserRepository userRepository;
 
   private final TokenProvider tokenProvider;
@@ -56,5 +63,84 @@ public class AuthService {
             userDto.getEmail(), userDto.getRoles());
 
     return new TokenDto(userDto.getId(), accessToken, refreshToken);
+  }
+
+  public TokenDto refreshToken(
+      HttpServletRequest request, UserEntity userEntity
+  ) {
+
+    String expiredAccessToken = validateAccessTokenExistHeader(request);
+    String refreshToken = validateRefreshTokenExistHeader(request);
+
+    Claims claims = tokenProvider.parseClaims(refreshToken);
+    String id = claims.get("id", String.class);
+    String email = claims.get("sub", String.class);
+    List<String> roles = (List<String>) claims.get("roles");
+
+    if (!tokenUserMatch(expiredAccessToken, refreshToken)) {
+      throw new CustomException(ErrorCode.NOT_MATCHED_TOKEN);
+    }
+
+    if(!userEntity.getId().equals(id)) {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+
+    try {
+      authRepository.findById(id);
+    } catch (Exception e) {
+      throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
+    }
+
+    userRepository.findById(id)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    String responseAccessToken =
+        tokenProvider.createAccessToken(id, email, roles);
+
+    return new TokenDto(id, responseAccessToken, refreshToken);
+  }
+
+  private String validateAccessTokenExistHeader(HttpServletRequest request) {
+    String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (!ObjectUtils.isEmpty(token) && token.startsWith("Bearer ")) {
+      return token.substring("Bearer ".length());
+    } else {
+      throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
+    }
+  }
+
+  private String validateRefreshTokenExistHeader(HttpServletRequest request) {
+    String token = request.getHeader("refreshToken");
+    if (!ObjectUtils.isEmpty(token)) {
+      return token;
+    } else {
+      throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
+    }
+  }
+
+  public void logOutUser(
+      HttpServletRequest request, UserEntity userEntity) {
+    String accessToken = validateAccessTokenExistHeader(request);
+    String refreshToken = validateRefreshTokenExistHeader(request);
+
+    Claims claims = tokenProvider.parseClaims(accessToken);
+    String id = claims.get("id", String.class);
+
+    if(tokenUserMatch(accessToken, refreshToken) && id.equals(userEntity.getId())) {
+      authRepository.deleteById(id);
+    } else {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+
+    tokenProvider.addToLogOutList(accessToken);
+  }
+
+  private boolean tokenUserMatch(String accessToken, String refreshToken) {
+    Claims accessClaims = tokenProvider.parseClaims(accessToken);
+    Claims refreshClaims = tokenProvider.parseClaims(refreshToken);
+    String accessId = accessClaims.get("id", String.class);
+    String refreshId = refreshClaims.get("id", String.class);
+
+    return accessId.equals(refreshId);
   }
 }

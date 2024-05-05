@@ -145,6 +145,12 @@ public class UserService implements UserDetailsService {
         .equals(certificationNumber);
   }
 
+  public UserDto getUserInfo(String userId) {
+    UserEntity userEntity = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    return UserDto.fromEntity(userEntity);
+  }
+
   @Override
   public UserDetails loadUserByUsername(String email)
       throws UsernameNotFoundException {

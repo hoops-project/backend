@@ -16,4 +16,12 @@ public class AuthRepository {
   ) {
     redisTemplate.opsForValue().set(id, refreshToken, duration);
   }
+
+  public void findById(String id) {
+    redisTemplate.opsForValue().get(id);
+  }
+
+  public void deleteById(String id) {
+    redisTemplate.delete(id);
+  }
 }
