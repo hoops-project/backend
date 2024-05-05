@@ -2,6 +2,7 @@ package com.zerobase.hoops.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.users.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,27 +39,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     String accessToken = resolveTokenFromRequest(request);
 
-    if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(
-        accessToken)) {
-      response.setStatus(HttpStatus.UNAUTHORIZED.value());
-      response.setContentType("application/json");
-      String errorMessage = objectMapper.writeValueAsString(
-          Map.of("error", "Unauthorized", "message",
-              "Your token is blacklisted."));
-      response.getWriter().write(errorMessage);
-    }
+    try {
+      if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(
+          accessToken)) {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json");
+        String errorMessage = objectMapper.writeValueAsString(
+            Map.of("error", "Unauthorized", "message",
+                "Your token is invalid."));
+        response.getWriter().write(errorMessage);
 
-    if (StringUtils.hasText(accessToken) &&
-        tokenProvider.validateToken(accessToken)) {
-      Authentication auth = tokenProvider.getAuthentication(accessToken);
+        // 요청 헤더에 access token 이 없으면 Exception 발생
+      } else if (!StringUtils.hasText(accessToken)) {
+        log.warn("Not have Access Token!");
 
-      SecurityContextHolder.getContext().setAuthentication(auth);
+        // 유효 기간이 지나지 않았으면 인증 세팅 진행
+      } else if (tokenProvider.validateToken(accessToken)) {
+        Authentication auth = tokenProvider.getAuthentication(accessToken);
 
-      // (블랙리스트 체크)
-      userService.checkBlackList(tokenProvider.getUsername(accessToken));
+        // 토큰의 인증정보 세팅
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-      log.info(String.format("[%s] -> %s",
-          tokenProvider.getUsername(accessToken), request.getRequestURI()));
+        // 블랙리스트 체크
+        userService.checkBlackList(tokenProvider.getUsername(accessToken));
+
+        log.info(String.format("[%s] -> %s",
+            tokenProvider.getUsername(accessToken), request.getRequestURI()));
+      }
+    } catch (ExpiredJwtException e) {
+      log.warn("에러 메세지 : " + e.getMessage());
     }
 
     filterChain.doFilter(request, response);
