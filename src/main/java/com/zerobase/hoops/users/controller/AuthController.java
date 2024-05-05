@@ -57,7 +57,7 @@ public class AuthController {
    */
   @Operation(summary = "refresh")
   @PostMapping("/refresh-token")
-  public ResponseEntity<?> refreshToken(
+  public ResponseEntity<Response> refreshToken(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
@@ -77,7 +77,7 @@ public class AuthController {
    */
   @Operation(summary = "로그아웃")
   @PostMapping("/logout")
-  public ResponseEntity<?> logOut(
+  public ResponseEntity<HttpStatus> logOut(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
