@@ -1,5 +1,5 @@
 insert into users(id, email, password, name, birthday, gender, nick_name, created_date_time, play_style, ability, email_auth)
-values ('bob','bob@gmail.com', '1234', '밥', '2024-04-28','MALE', '별명1', '2024-04-28T00:30:00', 'AGGRESSIVE', 'SHOOT', true);
+values ('string2','123@gmail.com', '$2a$10$tYr9aE53aTLWEN3rZZ4F8ejpwiu./6q9V3Sl6udx0/.KCLE3.cYPu', 'string', '2022-05-04','MALE', 'string2', '2024-04-28T00:30:00', 'BALANCE', 'SHOOT', true);
 
 insert into users(id, email, password, name, birthday, gender, nick_name, created_date_time, play_style, ability, email_auth)
 values ('jona','jona@gmail.com', '1234', '밥', '2024-04-28','FEMALE', '별명2',
@@ -49,3 +49,20 @@ INSERT INTO user_roles (user_id, roles) VALUES (7, 'ROLE_USER');
 INSERT INTO user_roles (user_id, roles) VALUES (8, 'ROLE_USER');
 INSERT INTO user_roles (user_id, roles) VALUES (9, 'ROLE_USER');
 INSERT INTO user_roles (user_id, roles) VALUES (10, 'ROLE_USER');
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+VALUES
+(5, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-05 08:00:00', NULL, TRUE, '인천 문학 경기장2', 'SEOUL', 'FIVEONFIVE', 1);
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+VALUES
+(6, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'MALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장', 'SEOUL', 'FIVEONFIVE', 2);
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+VALUES
+(7, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-07 08:00:00', NULL, TRUE, '인천 문학 경기장', 'SEOUL', 'FIVEONFIVE', 3);
+
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+VALUES
+(8, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-09 08:00:00', NULL, TRUE, '서울 a 경기장', 'INCHEON', 'FIVEONFIVE', 3);
