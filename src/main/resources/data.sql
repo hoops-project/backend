@@ -50,19 +50,29 @@ INSERT INTO user_roles (user_id, roles) VALUES (8, 'ROLE_USER');
 INSERT INTO user_roles (user_id, roles) VALUES (9, 'ROLE_USER');
 INSERT INTO user_roles (user_id, roles) VALUES (10, 'ROLE_USER');
 
-INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address,latitude,longitude, city_name, match_format, user_id)
 VALUES
-(5, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-04 08:00:00', NULL, TRUE, '인천 문학 경기장2', 'SEOUL', 'FIVEONFIVE', 1);
+(5, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-04 08:00:00', NULL, TRUE, '인천 문학 경기장2',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 1);
 
-INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(6, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'MALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장', 'SEOUL', 'FIVEONFIVE', 2);
+(6, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'MALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
 
-INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(7, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-07 08:00:00', NULL, TRUE, '인천 문학 경기장', 'SEOUL', 'FIVEONFIVE', 3);
+(10, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'FEMALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
 
 
-INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, city_name, match_format, user_id)
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(8, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-09 08:00:00', NULL, TRUE, '서울 a 경기장', 'INCHEON', 'FIVEONFIVE', 3);
+(7, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-07 08:00:00', NULL, TRUE, '인천 문학 경기장',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 3);
+
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
+VALUES
+(8, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'ALL', '2024-05-10 10:00:00', '2024-05-09 08:00:00', NULL, TRUE, '서울 a 경기장',1.0, 1.0, 'INCHEON', 'THREEONTHREE', 3);
+
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
+VALUES
+(9, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-09 08:00:00', '2024-05-09 08:00:00', TRUE, '삭제된 서울 a 경기장',1.0, 1.0, 'INCHEON', 'FIVEONFIVE', 3);
