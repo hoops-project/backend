@@ -51,7 +51,7 @@ class ReportControllerTest {
 
   @WithMockUser
   @Test
-  @DisplayName("회원가입 성공")
+  @DisplayName("신고 성공")
   void report_success() throws Exception {
     //given
     given(userRepository.existsByEmail(anyString()))
