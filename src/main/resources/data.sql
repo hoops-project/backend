@@ -56,16 +56,16 @@ VALUES
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(6, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'MALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
+(6, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'MALEONLY', '2024-05-06 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(10, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'FEMALEONLY', '2024-05-05 10:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
+(10, 'Example Game', 'This is an example game content 2.', 10, 'INDOOR', 'FEMALEONLY', '2024-05-06 11:00:00', '2024-05-08 08:00:00', NULL, TRUE, '서울 abc 경기장',1.0, 1.0, 'SEOUL', 'THREEONTHREE', 2);
 
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
-(7, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 10:00:00', '2024-05-07 08:00:00', NULL, TRUE, '인천 문학 경기장',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 3);
+(7, 'Example Game', 'This is an example game content 3.', 10, 'INDOOR', 'MALEONLY', '2024-05-10 11:00:00', '2024-05-07 08:00:00', NULL, TRUE, '인천 문학 경기장',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 3);
 
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
