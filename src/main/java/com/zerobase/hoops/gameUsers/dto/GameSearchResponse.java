@@ -24,6 +24,8 @@ public class GameSearchResponse {
   private LocalDateTime deletedDateTime;
   private Boolean inviteYn;
   private String address;
+  private Double latitude;
+  private Double longitude;
   private CityName cityName;
   private MatchFormat matchFormat;
 
@@ -38,6 +40,8 @@ public class GameSearchResponse {
         .startDateTime(gameEntity.getStartDateTime())
         .inviteYn(gameEntity.getInviteYn())
         .address(gameEntity.getAddress())
+        .latitude(gameEntity.getLatitude())
+        .longitude(gameEntity.getLongitude())
         .cityName(gameEntity.getCityName())
         .matchFormat(gameEntity.getMatchFormat())
         .build();
