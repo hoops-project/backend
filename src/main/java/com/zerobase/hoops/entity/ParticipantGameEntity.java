@@ -57,10 +57,21 @@ public class ParticipantGameEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "game_id")
+  @JoinColumn(name = "game_id", nullable = false)
   private GameEntity gameEntity;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private UserEntity userEntity;
+
+  public static ParticipantGameEntity toGameCreatorEntity(
+      GameEntity gameEntity,
+      UserEntity userEntity) {
+    return ParticipantGameEntity.builder()
+        .status(ParticipantGameStatus.ACCEPT)
+        .createdDateTime(gameEntity.getCreatedDateTime())
+        .gameEntity(gameEntity)
+        .userEntity(userEntity)
+        .build();
+  }
 }

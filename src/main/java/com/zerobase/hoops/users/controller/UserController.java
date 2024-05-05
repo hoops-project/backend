@@ -6,9 +6,7 @@ import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.net.URI;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -82,15 +80,13 @@ public class UserController {
    */
   @Operation(summary = "이메일 인증")
   @GetMapping("/signup/confirm")
-  public ResponseEntity<URI> confirmCertificationNumber(
+  public ResponseEntity<String> confirmCertificationNumber(
       @RequestParam(name = "id") String id,
       @RequestParam(name = "email") String email,
       @RequestParam(name = "certificationNumber") String certificationNumber
-  ) throws Exception {
+  ) {
     userService.confirmEmail(id, email, certificationNumber);
 
-    URI loginPage = new URI("/api/user/login");
-
-    return ResponseEntity.status(HttpStatus.FOUND).location(loginPage).build();
+    return ResponseEntity.ok("인증이 성공적으로 완료되었습니다.");
   }
 }

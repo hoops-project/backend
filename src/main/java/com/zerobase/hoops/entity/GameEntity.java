@@ -71,6 +71,12 @@ public class GameEntity {
   @Column(nullable = false)
   private String address;
 
+  @Column(nullable = false)
+  private Double latitude;
+
+  @Column(nullable = false)
+  private Double longitude;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private CityName cityName;
@@ -80,6 +86,6 @@ public class GameEntity {
   private MatchFormat matchFormat;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private UserEntity userEntity;
 }

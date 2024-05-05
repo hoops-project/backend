@@ -53,6 +53,12 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotNull(message = "위도는 필수 입력 값 입니다.")
+    private Double latitude;
+
+    @NotNull(message = "경도는 필수 입력 값 입니다.")
+    private Double longitude;
+
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
@@ -66,6 +72,9 @@ public class GameDto {
           .startDateTime(request.getStartDateTime())
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
+          .latitude(request.getLatitude())
+          .longitude(request.getLongitude())
+          .cityName(CityName.getCityName(request.getAddress()))
           .matchFormat(request.getMatchFormat())
           .userEntity(user)
           .build();
@@ -78,6 +87,8 @@ public class GameDto {
   @AllArgsConstructor
   @Builder
   public static class CreateResponse {
+
+    private Long gameId;
 
     private String title;
 
@@ -97,12 +108,19 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static CreateResponse toDto(GameEntity gameEntity) {
       return CreateResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -112,8 +130,71 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class DetailResponse {
+    private Long gameId;
+
+    private String title;
+
+    private String content;
+
+    private Long headCount;
+
+    private FieldStatus fieldStatus;
+
+    private Gender gender;
+
+    private LocalDateTime startDateTime;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime deletedDateTime;
+
+    private Boolean inviteYn;
+
+    private String address;
+
+    private Double latitude;
+
+    private Double longitude;
+
+    private CityName cityName;
+
+    private MatchFormat matchFormat;
+
+    private Long userId;
+
+    public static DetailResponse toDto(GameEntity gameEntity){
+      return DetailResponse.builder()
+          .gameId(gameEntity.getGameId())
+          .title(gameEntity.getTitle())
+          .content(gameEntity.getContent())
+          .headCount(gameEntity.getHeadCount())
+          .fieldStatus(gameEntity.getFieldStatus())
+          .gender(gameEntity.getGender())
+          .startDateTime(gameEntity.getStartDateTime())
+          .createdDateTime(gameEntity.getCreatedDateTime())
+          .deletedDateTime(gameEntity.getDeletedDateTime())
+          .inviteYn(gameEntity.getInviteYn())
+          .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
+          .cityName(gameEntity.getCityName())
+          .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }
@@ -155,9 +236,34 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotNull(message = "위도는 필수 입력 값 입니다.")
+    private Double latitude;
+
+    @NotNull(message = "경도는 필수 입력 값 입니다.")
+    private Double longitude;
+
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
+    public static GameEntity toEntity(UpdateRequest request, GameEntity game) {
+      return GameEntity.builder()
+          .gameId(request.getGameId())
+          .title(request.getTitle())
+          .content(request.getContent())
+          .headCount(request.getHeadCount())
+          .fieldStatus(request.getFieldStatus())
+          .gender(request.getGender())
+          .startDateTime(request.getStartDateTime())
+          .createdDateTime(game.getCreatedDateTime())
+          .inviteYn(request.getInviteYn())
+          .address(request.getAddress())
+          .latitude(request.getLatitude())
+          .longitude(request.getLongitude())
+          .cityName(CityName.getCityName(request.getAddress()))
+          .matchFormat(request.getMatchFormat())
+          .userEntity(game.getUserEntity())
+          .build();
+    }
   }
 
   @Getter
@@ -166,6 +272,7 @@ public class GameDto {
   @AllArgsConstructor
   @Builder
   public static class UpdateResponse {
+    private Long gameId;
 
     private String title;
 
@@ -185,12 +292,19 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static UpdateResponse toDto(GameEntity gameEntity) {
       return UpdateResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -200,8 +314,11 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }
@@ -216,6 +333,26 @@ public class GameDto {
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;
 
+    public static GameEntity toEntity(GameEntity game) {
+      return GameEntity.builder()
+          .gameId(game.getGameId())
+          .title(game.getTitle())
+          .content(game.getContent())
+          .headCount(game.getHeadCount())
+          .fieldStatus(game.getFieldStatus())
+          .gender(game.getGender())
+          .startDateTime(game.getStartDateTime())
+          .createdDateTime(game.getCreatedDateTime())
+          .deletedDateTime(LocalDateTime.now())
+          .inviteYn(game.getInviteYn())
+          .address(game.getAddress())
+          .latitude(game.getLatitude())
+          .longitude(game.getLongitude())
+          .cityName(game.getCityName())
+          .matchFormat(game.getMatchFormat())
+          .userEntity(game.getUserEntity())
+          .build();
+    }
   }
 
   @Getter
@@ -224,6 +361,8 @@ public class GameDto {
   @AllArgsConstructor
   @Builder
   public static class DeleteResponse {
+
+    private Long gameId;
 
     private String title;
 
@@ -245,12 +384,19 @@ public class GameDto {
 
     private String address;
 
+    private Double latitude;
+
+    private Double longitude;
+
     private CityName cityName;
 
     private MatchFormat matchFormat;
 
+    private Long userId;
+
     public static DeleteResponse toDto(GameEntity gameEntity) {
       return DeleteResponse.builder()
+          .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -261,8 +407,11 @@ public class GameDto {
           .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .latitude(gameEntity.getLatitude())
+          .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .userId(gameEntity.getUserEntity().getUserId())
           .build();
     }
   }
