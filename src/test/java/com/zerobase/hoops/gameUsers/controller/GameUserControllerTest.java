@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.post;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -19,13 +20,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
+import com.zerobase.hoops.gameUsers.dto.UserJoinsGameDto;
 import com.zerobase.hoops.gameUsers.service.GameUserService;
+import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.service.UserService;
 import java.time.LocalDate;
@@ -40,6 +47,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(GameUserController.class)
 class GameUserControllerTest {
@@ -55,6 +64,44 @@ class GameUserControllerTest {
 
   @MockBean
   private TokenProvider tokenProvider;
+
+  @MockBean
+  private JwtTokenExtract jwtTokenExtract;
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @DisplayName("게임 참가 요청 성공")
+  @WithMockUser
+  @Test
+  void participateInGame_validRequest_shouldSucceed() throws Exception {
+    // Given
+    Long gameId = 1L;
+    UserJoinsGameDto.Request request = new UserJoinsGameDto.Request(
+        gameId);
+    ParticipateGameDto participateGameDto = ParticipateGameDto.builder()
+        .participantId(1L)
+        .status(ParticipantGameStatus.APPLY)
+        .gameEntity(mock(GameEntity.class))
+        .userEntity(mock(UserEntity.class))
+        .build();
+
+    // When
+    when(gameUserService.participateInGame(gameId)).thenReturn(
+        participateGameDto);
+
+    // then
+    mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/game-user/game-in-out")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.participantGameStatus")
+            .value("APPLY"));
+
+  }
+
 
   @DisplayName("필터 검색 테스트")
   @WithMockUser
