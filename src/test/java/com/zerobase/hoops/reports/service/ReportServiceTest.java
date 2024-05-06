@@ -10,6 +10,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
+import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
@@ -40,6 +41,8 @@ class ReportServiceTest {
   @InjectMocks
   private ReportService reportService;
 
+  @Mock
+  private JwtTokenExtract jwtTokenExtract;
 
   private UserEntity userEntity;
   private UserEntity reportedUserEntity;
@@ -81,17 +84,17 @@ class ReportServiceTest {
   void reportUser_validUsers_shouldSaveReport() {
     // Given
     ReportDto reportDto = ReportDto.builder()
-        .userEmail("user@example.com")
         .reportedUserEmail("reported@example.com")
-        // content의 최소 및 최대 글자 제한 수 유효성 검사는 Controller 에서 진행
         .content(
             "Reason")
         .build();
 
+    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
     when(userRepository.findByEmail("user@example.com")).thenReturn(
         Optional.of(userEntity));
     when(userRepository.findByEmail("reported@example.com")).thenReturn(
         Optional.of(reportedUserEntity));
+
 
     ArgumentCaptor<ReportEntity> reportEntityCaptor = ArgumentCaptor.forClass(
         ReportEntity.class);
@@ -104,9 +107,9 @@ class ReportServiceTest {
     ReportEntity savedReportEntity = reportEntityCaptor.getValue();
     assertThat(savedReportEntity.getContent()).isEqualTo(
         reportDto.getContent());
-    assertThat(savedReportEntity.getUserId()).isEqualTo(
+    assertThat(savedReportEntity.getUserEmail()).isEqualTo(
         userEntity.getEmail());
-    assertThat(savedReportEntity.getReportedId()).isEqualTo(
+    assertThat(savedReportEntity.getReportedEmail()).isEqualTo(
         reportedUserEntity.getEmail());
   }
 
@@ -115,10 +118,10 @@ class ReportServiceTest {
   void reportUser_invalidReportedUser_shouldThrowException() {
     // Given
     ReportDto reportDto = ReportDto.builder()
-        .userEmail("user@example.com")
         .reportedUserEmail("reported@example.com")
         .content("Reason")
         .build();
+    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
     when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(userEntity));
     when(userRepository.findByEmail("reported@example.com")).thenReturn(Optional.empty());
 

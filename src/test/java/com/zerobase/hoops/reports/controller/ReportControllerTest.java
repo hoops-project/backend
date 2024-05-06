@@ -59,7 +59,6 @@ class ReportControllerTest {
 
     //when
     ReportDto reportDto = ReportDto.builder()
-        .userEmail("test@example.com")
         .reportedUserEmail("reported@example.com")
         .content("ReasonReasonReasonReasonReasonReasonReasonReasonReason")
         .build();
