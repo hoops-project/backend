@@ -31,9 +31,9 @@ public class ReportEntity {
 
   private String content;
 
-  private String userId;
+  private String userEmail;
 
-  private String reportedId;
+  private String reportedEmail;
 
   @CreatedDate
   private LocalDateTime createdDateTime;
