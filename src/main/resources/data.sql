@@ -52,7 +52,12 @@ INSERT INTO user_roles (user_id, roles) VALUES (10, 'ROLE_USER');
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address,latitude,longitude, city_name, match_format, user_id)
 VALUES
-(5, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-04 08:00:00', NULL, TRUE, '인천 문학 경기장2',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 1);
+(4, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-04 08:00:00', NULL, TRUE, '인천 문학 경기장2',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 4);
+
+
+INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address,latitude,longitude, city_name, match_format, user_id)
+VALUES
+(5, 'Example Game', 'This is an example game content.', 10, 'INDOOR', 'MALEONLY', '2024-05-04 10:00:00', '2024-05-04 08:00:00', NULL, TRUE, '인천 문학 경기장2',1.0, 1.0, 'SEOUL', 'FIVEONFIVE', 4);
 
 INSERT INTO game (game_id, title, content, head_count, field_status, gender, start_date_time, created_date_time, deleted_date_time, invite_yn, address, latitude,longitude,city_name, match_format, user_id)
 VALUES
@@ -87,4 +92,27 @@ VALUES
     (10, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 8, 7),
     (11, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 8, 8),
     (12, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 8, 9),
-    (13, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 8, 10);
+    (14, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 8, 10),
+    (15, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 1),
+    (16, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 3),
+    (17, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 4),
+    (18, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 5),
+    (19, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 6),
+    (20, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 7),
+    (21, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 8),
+    (22, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 9),
+    (23, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 5, 10),
+    (25, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 1),
+    (26, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 3),
+    (27, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 4),
+    (28, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 5),
+    (29, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 6),
+    (30, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 7),
+    (31, 'APPLY', '2024-05-06T10:00:00', null,null,null,null,null,null, 4, 8),
+    (32, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 1),
+    (33, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 2),
+    (34, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 3),
+    (35, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 4),
+    (36, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 5),
+    (37, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 6),
+    (38, 'ACCEPT', '2024-05-06T10:00:00', null,null,null,null,null,null, 7, 7);
