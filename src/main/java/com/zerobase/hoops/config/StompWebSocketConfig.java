@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chat.config;
+package com.zerobase.hoops.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

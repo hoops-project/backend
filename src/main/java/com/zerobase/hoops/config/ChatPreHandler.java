@@ -1,9 +1,7 @@
-package com.zerobase.hoops.chat.config;
+package com.zerobase.hoops.config;
 
-import static com.zerobase.hoops.chat.exception.ChatErrorCode.EXPIRED_TOKEN;
-import static com.zerobase.hoops.chat.exception.ChatErrorCode.NOT_VALIDATE_TOKEN;
 
-import com.zerobase.hoops.chat.exception.ChatCustomException;
+import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.security.TokenProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -19,6 +17,9 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
+
+import static com.zerobase.hoops.exception.ErrorCode.EXPIRED_TOKEN;
+import static com.zerobase.hoops.exception.ErrorCode.INVALID_TOKEN;
 
 @RequiredArgsConstructor
 @Component
@@ -45,7 +46,7 @@ public class ChatPreHandler implements ChannelInterceptor {
           accessor.getFirstNativeHeader("Authorization"));
 
       if (!this.validateAccessToken(jwtToken)) {
-        throw new ChatCustomException(NOT_VALIDATE_TOKEN);
+        throw new CustomException(INVALID_TOKEN);
       }
 
       String senderId = this.getSenderId(jwtToken);
@@ -123,7 +124,7 @@ public class ChatPreHandler implements ChannelInterceptor {
         Claims claims = tokenProvider.parseClaims(accessToken);
         return claims.get("id", String.class);
       } catch (ExpiredJwtException | MalformedJwtException e) {
-        throw new ChatCustomException(EXPIRED_TOKEN);
+        throw new CustomException(EXPIRED_TOKEN);
       }
     }
 

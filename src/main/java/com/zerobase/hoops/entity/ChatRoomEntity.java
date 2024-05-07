@@ -5,13 +5,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity(name = "chatting_room")
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ChatRoomEntity {
 
   @Id
@@ -19,7 +19,7 @@ public class ChatRoomEntity {
   @Column(name = "room_id")
   private Long roomId;
 
-  @Setter
+
   private String roomName;
 
 }

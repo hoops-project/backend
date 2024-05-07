@@ -1,16 +1,16 @@
 package com.zerobase.hoops.chat.service;
 
-import static com.zerobase.hoops.chat.exception.ChatErrorCode.NOT_FOUND_USER;
 
 import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.Content;
 import com.zerobase.hoops.chat.domain.dto.MessageDTO;
 import com.zerobase.hoops.chat.domain.repository.ChatRoomRepository;
 import com.zerobase.hoops.chat.domain.repository.MessageRepository;
-import com.zerobase.hoops.chat.exception.ChatCustomException;
 import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.MessageEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +31,8 @@ public class ChatService {
    * @return
    */
   public ChatRoomDTO createChatRoom(String name) {
-    ChatRoomEntity chattingRoom = new ChatRoomEntity();
-    chattingRoom.setRoomName(name);
+    ChatRoomEntity chattingRoom = ChatRoomEntity.builder()
+            .roomName(name).build();
     return ChatRoomDTO.entityToDto(
         chatRoomRepository.save(chattingRoom));
   }
@@ -56,7 +56,7 @@ public class ChatService {
 
   public UserEntity findUser(String senderId) {
     return userRepository.findById(senderId)
-        .orElseThrow(()-> new ChatCustomException(NOT_FOUND_USER));
+        .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
 }

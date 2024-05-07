@@ -28,7 +28,7 @@ public class MessageEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "message_id")
+  @Column(name = "message_id", nullable = false)
   private Long messageId;
 
   @Column(columnDefinition = "TEXT")
