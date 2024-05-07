@@ -202,7 +202,6 @@ class GameServiceTest {
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());
 
     GameEntity savedGameEntity = gameEntityArgumentCaptor.getValue();
-
     assertEquals(savedGameEntity.getTitle(), createdGameEntity.getTitle());
     assertEquals(savedGameEntity.getContent(), createdGameEntity.getContent());
     assertEquals(savedGameEntity.getHeadCount(), createdGameEntity.getHeadCount());

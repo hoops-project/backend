@@ -24,6 +24,9 @@ public interface ParticipantGameRepository extends
 
   List<ParticipantGameEntity> findByStatusAndGameEntityGameId(
       ParticipantGameStatus participantGameStatus, Long gameId);
+
+  Optional<ParticipantGameEntity> findByParticipantIdAndStatus(Long participantId,
+      ParticipantGameStatus participantGameStatus);
 }
 
 

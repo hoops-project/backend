@@ -1,15 +1,26 @@
 package com.zerobase.hoops.gameCreator.service;
 
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.KICKOUT;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.REJECT;
+import static org.assertj.core.api.Assertions.allOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptRequest;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutRequest;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectRequest;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -21,14 +32,17 @@ import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
+import io.jsonwebtoken.Jwts;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,12 +66,13 @@ class ParticipantGameServiceTest {
   private GameRepository gameRepository;
 
   private UserEntity createdUser;
+  private UserEntity applyedUser;
 
   private GameEntity createdGameEntity;
 
   private ParticipantGameEntity creatorParticipantGameEntity;
 
-  private ParticipantGameEntity deletedPartEntity;
+  private String token;
 
   @BeforeEach
   void setUp() {
@@ -70,6 +85,21 @@ class ParticipantGameServiceTest {
         .birthday(LocalDate.of(1990, 1, 1))
         .gender(GenderType.MALE)
         .nickName("test")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(true)
+        .build();
+    applyedUser = UserEntity.builder()
+        .userId(2L)
+        .id("test1")
+        .password("Testpass12!@")
+        .email("test1@example.com")
+        .name("test1")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("test1")
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
@@ -99,6 +129,7 @@ class ParticipantGameServiceTest {
         .gameEntity(createdGameEntity)
         .userEntity(createdUser)
         .build();
+    token = "sampleToken";
   }
 
   @Test
@@ -113,16 +144,228 @@ class ParticipantGameServiceTest {
         .map(DetailResponse::toDto)
         .toList();
 
+    when(tokenProvider.parseClaims(anyString()))
+        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+
+    when(userRepository.findByEmail(anyString())).thenReturn(
+        Optional.ofNullable(createdUser));
+
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
     when(participantGameRepository.findByStatusAndGameEntityGameId
         (eq(ACCEPT), anyLong())).thenReturn(participantList);
 
     // when
     List<DetailResponse> result = participantGameService
-        .getParticipantList(gameId);
+        .getParticipantList(gameId, token);
 
     // Then
     assertThat(result).containsExactlyElementsOf(detailResponseList);
+  }
 
+  @Test
+  @DisplayName("경기 참가 희망자 수락")
+  void acceptParticipant_success() {
+    // Given
+    Long gameId = 1L;
+
+    AcceptRequest request = AcceptRequest.builder()
+        .participantId(2L)
+        .build();
+
+    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    ParticipantGameEntity acceptPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    Long count = 1L;
+
+    when(tokenProvider.parseClaims(anyString()))
+        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+
+    when(userRepository.findByEmail(anyString())).thenReturn(
+        Optional.ofNullable(createdUser));
+
+    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(APPLY)))
+        .thenReturn(Optional.ofNullable(applyPartEntity));
+
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull
+        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+
+    when(participantGameRepository.countByStatusAndGameEntityGameId
+        (eq(ACCEPT), anyLong())).thenReturn(count);
+
+    when(participantGameRepository.save(any()))
+        .thenReturn(acceptPartEntity);
+
+    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
+        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+
+    // when
+    participantGameService.acceptParticipant(request, token);
+
+    // Then
+    verify(participantGameRepository)
+        .save(participantGameEntityArgumentCaptor.capture());
+
+    ParticipantGameEntity result
+        = participantGameEntityArgumentCaptor.getValue();
+
+    assertEquals(acceptPartEntity.getParticipantId(),
+        result.getParticipantId());
+    assertEquals(acceptPartEntity.getStatus(), result.getStatus());
+    assertEquals(acceptPartEntity.getCreatedDateTime(),
+        result.getCreatedDateTime());
+    assertEquals(acceptPartEntity.getGameEntity().getGameId(),
+        result.getGameEntity().getGameId());
+    assertEquals(acceptPartEntity.getUserEntity().getUserId(),
+        result.getUserEntity().getUserId());
+  }
+
+  @Test
+  @DisplayName("경기 참가 희망자 거절")
+  void rejectParticipant_success() {
+    // Given
+    Long gameId = 1L;
+
+    RejectRequest request = RejectRequest.builder()
+        .participantId(2L)
+        .build();
+
+    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    ParticipantGameEntity rejectPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(REJECT)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .rejectedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    when(tokenProvider.parseClaims(anyString()))
+        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+
+    when(userRepository.findByEmail(anyString())).thenReturn(
+        Optional.ofNullable(createdUser));
+
+    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(APPLY)))
+        .thenReturn(Optional.ofNullable(applyPartEntity));
+
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull
+        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+
+    when(participantGameRepository.save(any()))
+        .thenReturn(rejectPartEntity);
+
+    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
+        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+
+    // when
+    participantGameService.rejectParticipant(request, token);
+
+    // Then
+    verify(participantGameRepository)
+        .save(participantGameEntityArgumentCaptor.capture());
+
+    ParticipantGameEntity result
+        = participantGameEntityArgumentCaptor.getValue();
+
+    assertEquals(rejectPartEntity.getParticipantId(),
+        result.getParticipantId());
+    assertEquals(rejectPartEntity.getStatus(), result.getStatus());
+    assertEquals(rejectPartEntity.getCreatedDateTime(),
+        result.getCreatedDateTime());
+    assertEquals(rejectPartEntity.getGameEntity().getGameId(),
+        result.getGameEntity().getGameId());
+    assertEquals(rejectPartEntity.getUserEntity().getUserId(),
+        result.getUserEntity().getUserId());
+  }
+
+  @Test
+  @DisplayName("경기 참가자 강퇴")
+  void kickoutParticipant_success() {
+    // Given
+    Long gameId = 1L;
+
+    KickoutRequest request = KickoutRequest.builder()
+        .participantId(2L)
+        .build();
+
+    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    ParticipantGameEntity rejectPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(KICKOUT)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
+        .kickoutDateTime(LocalDateTime.of(2024, 10, 10, 12, 40, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    when(tokenProvider.parseClaims(anyString()))
+        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+
+    when(userRepository.findByEmail(anyString())).thenReturn(
+        Optional.ofNullable(createdUser));
+
+    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(ACCEPT)))
+        .thenReturn(Optional.ofNullable(applyPartEntity));
+
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull
+        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+
+    when(participantGameRepository.save(any()))
+        .thenReturn(rejectPartEntity);
+
+    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
+        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+
+    // when
+    participantGameService.kickoutParticipant(request, token);
+
+    // Then
+    verify(participantGameRepository)
+        .save(participantGameEntityArgumentCaptor.capture());
+
+    ParticipantGameEntity result
+        = participantGameEntityArgumentCaptor.getValue();
+
+    assertEquals(rejectPartEntity.getParticipantId(),
+        result.getParticipantId());
+    assertEquals(rejectPartEntity.getStatus(), result.getStatus());
+    assertEquals(rejectPartEntity.getCreatedDateTime(),
+        result.getCreatedDateTime());
+    assertEquals(rejectPartEntity.getGameEntity().getGameId(),
+        result.getGameEntity().getGameId());
+    assertEquals(rejectPartEntity.getUserEntity().getUserId(),
+        result.getUserEntity().getUserId());
   }
 
 }

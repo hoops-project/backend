@@ -46,6 +46,10 @@ public enum ErrorCode {
       + " 설정했던 시작 시간 보다 이후여야 합니다."),
   NOT_DELETE_STARTDATE(HttpStatus.BAD_REQUEST.value(),  "경기 시작 시간 30분 전에 "
       + "경기 삭제 가능 합니다."),
+  NOT_PARTICIPANT_FOUND(HttpStatus.NOT_FOUND.value(), "경기 참가 내역을 불러올수 없습니다."),
+  ALREADY_GAME_START(HttpStatus.BAD_REQUEST.value(), "경기가 이미 시작되었습니다."),
+  NOT_UPDATE_CREATOR(HttpStatus.BAD_REQUEST.value(), "경기 개설자는 수락 상태로 있어야 합니다."),
+  FULL_PARTICIPANT(HttpStatus.BAD_REQUEST.value(), "경기에 참가자가 다 찼습니다."),
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
