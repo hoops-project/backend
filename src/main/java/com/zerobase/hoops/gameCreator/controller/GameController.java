@@ -36,9 +36,8 @@ public class GameController {
   @Operation(summary = "경기 생성")
   @PostMapping("/game/create")
   public ResponseEntity<CreateResponse> createGame(
-      @RequestBody @Validated GameDto.CreateRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.CreateResponse result = gameService.createGame(request, token);
+      @RequestBody @Validated GameDto.CreateRequest request) {
+    GameDto.CreateResponse result = gameService.createGame(request);
     return ResponseEntity.ok(result);
   }
 
@@ -58,9 +57,8 @@ public class GameController {
   @Operation(summary = "경기 수정")
   @PutMapping("/game/update")
   public ResponseEntity<UpdateResponse> updateGame(
-      @RequestBody @Validated GameDto.UpdateRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.UpdateResponse result = gameService.updateGame(request, token);
+      @RequestBody @Validated GameDto.UpdateRequest request) {
+    GameDto.UpdateResponse result = gameService.updateGame(request);
     return ResponseEntity.ok(result);
   }
 
@@ -70,9 +68,8 @@ public class GameController {
   @Operation(summary = "경기 삭제")
   @DeleteMapping("/game/delete")
   public ResponseEntity<DeleteResponse> deleteGame(
-      @RequestBody @Validated GameDto.DeleteRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.DeleteResponse result = gameService.deleteGame(request, token);
+      @RequestBody @Validated GameDto.DeleteRequest request) {
+    GameDto.DeleteResponse result = gameService.deleteGame(request);
     return ResponseEntity.ok(result);
   }
 

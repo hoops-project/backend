@@ -64,7 +64,7 @@ public class WebSecurityConfig {
             .hasRole("USER")
             .requestMatchers("/api/game-creator/game/delete")
             .hasAnyRole("USER", "ADMIN")
-            .requestMatchers("/api/game-creator/participant/list")
+            .requestMatchers("/api/game-creator/participant/**")
             .hasRole("USER")
             .anyRequest().authenticated()
         )

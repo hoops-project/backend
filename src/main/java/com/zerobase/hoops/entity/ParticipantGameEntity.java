@@ -70,8 +70,43 @@ public class ParticipantGameEntity {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(gameEntity.getCreatedDateTime())
+        .acceptedDateTime(gameEntity.getCreatedDateTime())
         .gameEntity(gameEntity)
         .userEntity(userEntity)
+        .build();
+  }
+
+  public static ParticipantGameEntity setAccept(ParticipantGameEntity entity) {
+    return ParticipantGameEntity.builder()
+        .participantId(entity.getParticipantId())
+        .status(ParticipantGameStatus.ACCEPT)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(LocalDateTime.now())
+        .gameEntity(entity.getGameEntity())
+        .userEntity(entity.getUserEntity())
+        .build();
+  }
+
+  public static ParticipantGameEntity setReject(ParticipantGameEntity entity) {
+    return ParticipantGameEntity.builder()
+        .participantId(entity.getParticipantId())
+        .status(ParticipantGameStatus.REJECT)
+        .createdDateTime(entity.getCreatedDateTime())
+        .rejectedDateTime(LocalDateTime.now())
+        .gameEntity(entity.getGameEntity())
+        .userEntity(entity.getUserEntity())
+        .build();
+  }
+
+  public static ParticipantGameEntity setKickout(ParticipantGameEntity entity) {
+    return ParticipantGameEntity.builder()
+        .participantId(entity.getParticipantId())
+        .status(ParticipantGameStatus.KICKOUT)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(entity.getAcceptedDateTime())
+        .kickoutDateTime(LocalDateTime.now())
+        .gameEntity(entity.getGameEntity())
+        .userEntity(entity.getUserEntity())
         .build();
   }
 }

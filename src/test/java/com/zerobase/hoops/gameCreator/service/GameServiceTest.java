@@ -24,12 +24,11 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
-import com.zerobase.hoops.security.TokenProvider;
+import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
-import io.jsonwebtoken.Jwts;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.parameters.P;
 
 @ExtendWith(MockitoExtension.class)
 class GameServiceTest {
@@ -52,7 +50,7 @@ class GameServiceTest {
   private GameService gameService;
 
   @Mock
-  private TokenProvider tokenProvider;
+  private JwtTokenExtract jwtTokenExtract;
 
   @Mock
   private UserRepository userRepository;
@@ -162,7 +160,6 @@ class GameServiceTest {
   @DisplayName("경기 생성 성공")
   public void testCreateGame_success() {
     // Given
-    String token = "sampleToken";
     CreateRequest request = CreateRequest.builder()
         .title("테스트제목")
         .content("테스트내용")
@@ -177,12 +174,7 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
-
-    // 유저
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(requestUser));
+    getCurrentUser();
 
     // aroundGameCount를 0으로 설정하여 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository.countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(any(), any(), anyString()))
@@ -196,13 +188,12 @@ class GameServiceTest {
         GameEntity.class);
 
     // when
-    gameService.createGame(request, token);
+    gameService.createGame(request);
 
     // Then
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());
 
     GameEntity savedGameEntity = gameEntityArgumentCaptor.getValue();
-
     assertEquals(savedGameEntity.getTitle(), createdGameEntity.getTitle());
     assertEquals(savedGameEntity.getContent(), createdGameEntity.getContent());
     assertEquals(savedGameEntity.getHeadCount(), createdGameEntity.getHeadCount());
@@ -245,15 +236,14 @@ class GameServiceTest {
     assertEquals(detailResponse.getLongitude(), createdGameEntity.getLongitude());
     assertEquals(detailResponse.getCityName(), createdGameEntity.getCityName());
     assertEquals(detailResponse.getMatchFormat(), createdGameEntity.getMatchFormat());
-    assertEquals(detailResponse.getUserId(),
-        createdGameEntity.getUserEntity().getUserId());
+    assertEquals(detailResponse.getLoginId(),
+        createdGameEntity.getUserEntity().getId());
   }
 
   @Test
   @DisplayName("경기 수정 성공")
   void updateGame_success() {
     // Given
-    String token = "sampleToken";
     UpdateRequest updateRequest = UpdateRequest.builder()
         .gameId(1L)
         .title("수정테스트제목")
@@ -272,12 +262,7 @@ class GameServiceTest {
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
-
-    // 유저
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(requestUser));
+    getCurrentUser();
 
     // 경기
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
@@ -301,7 +286,7 @@ class GameServiceTest {
         GameEntity.class);
 
     // when
-    gameService.updateGame(updateRequest, token);
+    gameService.updateGame(updateRequest);
 
     // Then
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());
@@ -329,7 +314,6 @@ class GameServiceTest {
   @DisplayName("경기 삭제 성공")
   void deleteGame_success() {
     //Given
-    String token = "sampleToken";
     DeleteRequest deleteRequest = DeleteRequest.builder()
         .gameId(1L)
         .build();
@@ -337,12 +321,7 @@ class GameServiceTest {
     List<ParticipantGameEntity> groupList = new ArrayList<>();
     groupList.add(creatorParticipantGameEntity);
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
-
-    // 유저
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(requestUser));
+    getCurrentUser();
 
     // 경기
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
@@ -361,7 +340,7 @@ class GameServiceTest {
         GameEntity.class);
 
     // when
-    gameService.deleteGame(deleteRequest, token);
+    gameService.deleteGame(deleteRequest);
 
     // Then
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());
@@ -373,4 +352,12 @@ class GameServiceTest {
         updatedGameEntity.getUserEntity().getUserId());
 
   }
+
+  private void getCurrentUser() {
+    when(jwtTokenExtract.currentUser()).thenReturn(requestUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(requestUser));
+  }
+
 }
