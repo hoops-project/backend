@@ -113,8 +113,13 @@ class GameUserControllerTest {
     FieldStatus fieldStatus = INDOOR;
     Gender gender = ALL;
     MatchFormat matchFormat = THREEONTHREE;
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    GameEntity gameEntity = new GameEntity();
+    gameEntity.setUserEntity(userEntity);
+
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(mock(GameEntity.class)));
+        GameSearchResponse.of(gameEntity,userEntity.getUserId()));
 
     // When
     when(gameUserService.findFilteredGames(any(), any(), any(),
@@ -163,8 +168,11 @@ class GameUserControllerTest {
     gameEntity.setLongitude(126.9780);
     gameEntity.setCityName(cityName);
     gameEntity.setMatchFormat(matchFormat);
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    gameEntity.setUserEntity(userEntity);
     List<GameSearchResponse> expectedGames = Arrays.asList(
-        GameSearchResponse.of(gameEntity));
+        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
 
     // When
     when(gameUserService.findFilteredGames(eq(localDate), eq(cityName),

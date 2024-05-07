@@ -129,8 +129,18 @@ class GameUserServiceTest {
   @DisplayName("GameUserService 필터 테스트 1")
   @Test
   void findFilteredGames_whenAllFiltersAreNull_shouldReturnAllGames() {
-    List<GameEntity> gameEntities = Arrays.asList(new GameEntity(),
-        new GameEntity());
+    // Given
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+
+    GameEntity gameEntity1 = new GameEntity();
+    gameEntity1.setUserEntity(userEntity);
+    GameEntity gameEntity2 = new GameEntity();
+    gameEntity2.setUserEntity(userEntity);
+
+    List<GameEntity> gameEntities = Arrays.asList(gameEntity1,gameEntity2);
+
+    // When
     when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
@@ -138,20 +148,32 @@ class GameUserServiceTest {
         null,
         null, null, null, null);
 
+    // Then
     assertEquals(gameEntities.size(), result.size());
   }
 
   @DisplayName("GameUserService 필터 테스트 2")
   @Test
   void findFilteredGames_whenSomeFiltersAreProvided_shouldReturnFilteredGames() {
+    // Given
     LocalDate date = LocalDate.now();
     CityName cityName = CityName.SEOUL;
     FieldStatus fieldStatus = FieldStatus.INDOOR;
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.FIVEONFIVE;
 
-    List<GameEntity> gameEntities = Arrays.asList(new GameEntity(),
-        new GameEntity());
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+
+    GameEntity gameEntity1 = new GameEntity();
+    gameEntity1.setUserEntity(userEntity);
+    GameEntity gameEntity2 = new GameEntity();
+    gameEntity2.setUserEntity(userEntity);
+
+    List<GameEntity> gameEntities = Arrays.asList(gameEntity1,
+        gameEntity2);
+
+    // When
     when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
@@ -159,6 +181,7 @@ class GameUserServiceTest {
         date,
         cityName, fieldStatus, gender, matchFormat);
 
+    // Then
     assertEquals(gameEntities.size(), result.size());
   }
 
@@ -167,18 +190,34 @@ class GameUserServiceTest {
   void searchAddress_shouldReturnUpcomingGamesForGivenAddress() {
     // Given
     String address = "123 Example St";
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+
+    GameEntity gameEntity1 = GameEntity.builder()
+        .userEntity(userEntity)
+        .gameId(1L)
+        .address(address)
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .build();
+
+    GameEntity gameEntity2 = GameEntity.builder()
+        .userEntity(userEntity)
+        .gameId(2L)
+        .address(address)
+        .startDateTime(LocalDateTime.now().plusDays(2))
+        .build();
+
     List<GameEntity> upcomingGames = Arrays.asList(
-        GameEntity.builder().gameId(1L).address(address)
-            .startDateTime(LocalDateTime.now().plusHours(1)).build(),
-        GameEntity.builder().gameId(2L).address(address)
-            .startDateTime(LocalDateTime.now().plusDays(2)).build()
+        gameEntity1,
+        gameEntity2
     );
+
+    // When
     when(
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
             eq(address), any(LocalDateTime.class))).thenReturn(
         upcomingGames);
 
-    // When
     List<GameSearchResponse> result = gameUserService.searchAddress(
         address);
 
