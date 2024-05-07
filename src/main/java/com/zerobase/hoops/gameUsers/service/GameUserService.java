@@ -88,6 +88,11 @@ public class GameUserService {
 
   private void checkValidated(Long gameId, GameEntity game,
       UserEntity user) {
+    if (gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserId(
+        gameId,
+        user.getUserId())) {
+      throw new CustomException(ErrorCode.DUPLICATED_TRY_TO_JOIN_GAME);
+    }
     if (gameCheckOutRepository.countByStatusAndGameEntityGameId(
         ParticipantGameStatus.ACCEPT, gameId) >= game.getHeadCount()) {
       throw new CustomException(ErrorCode.FULL_PEOPLE_GAME);
@@ -138,5 +143,8 @@ public class GameUserService {
     }
     return spec;
   }
+
+
+
 }
 

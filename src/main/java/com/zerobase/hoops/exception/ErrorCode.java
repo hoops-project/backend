@@ -52,6 +52,7 @@ public enum ErrorCode {
   OVER_TIME_GAME(HttpStatus.BAD_REQUEST.value(), "신청 가능한 시간이 이미 지났습니다. 더 이상 신청할 수 없습니다."),
   ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST.value(), "여성만 신청 가능한 경기 입니다."),
   ONLY_MALE_GAME(HttpStatus.BAD_REQUEST.value(), "남성만 신청 가능한 경기 입니다."),
+  DUPLICATED_TRY_TO_JOIN_GAME(HttpStatus.BAD_REQUEST.value(), "경기 신청이 이미 등록되어 있습니다."),
 
 
 
