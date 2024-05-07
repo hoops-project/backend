@@ -148,7 +148,7 @@ class ParticipantGameServiceTest {
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     when(participantGameRepository.findByStatusAndGameEntityGameId
-        (eq(ACCEPT), anyLong())).thenReturn(participantList);
+        (eq(APPLY), anyLong())).thenReturn(participantList);
 
     // when
     List<DetailResponse> result = participantGameService
