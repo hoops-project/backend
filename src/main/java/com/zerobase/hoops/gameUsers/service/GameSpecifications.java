@@ -1,4 +1,4 @@
-package com.zerobase.hoops.gameUsers.repository;
+package com.zerobase.hoops.gameUsers.service;
 
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;

@@ -53,18 +53,17 @@ class ReportControllerTest {
   @Test
   @DisplayName("신고 성공")
   void report_success() throws Exception {
-    //given
+    // Given
     given(userRepository.existsByEmail(anyString()))
         .willReturn(true);
 
-    //when
+    // When
     ReportDto reportDto = ReportDto.builder()
-        .userEmail("test@example.com")
         .reportedUserEmail("reported@example.com")
         .content("ReasonReasonReasonReasonReasonReasonReasonReasonReason")
         .build();
 
-    // 결과 확인
+    // Then
     ResultActions resultActions =
         mockMvc.perform(
                 post("/api/report/user")
