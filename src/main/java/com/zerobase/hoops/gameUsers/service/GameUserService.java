@@ -37,6 +37,33 @@ public class GameUserService {
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
+  public List<GameSearchResponse> myCurrentGameList() {
+    List<ParticipantGameEntity> userGameList = checkMyGameList();
+
+    List<GameEntity> games = userGameList.stream()
+        .map(ParticipantGameEntity::getGameEntity)
+        .filter(
+            game -> game.getStartDateTime().isAfter(LocalDateTime.now()))
+        .toList();
+
+    Long userId = jwtTokenExtract.currentUser().getUserId();
+
+    return getGameSearchResponses(games, userId);
+  }
+
+  public List<GameSearchResponse> myLastGameList() {
+    List<ParticipantGameEntity> userGameList = checkMyGameList();
+
+    List<GameEntity> games = userGameList.stream()
+        .map(ParticipantGameEntity::getGameEntity)
+        .filter(
+            game -> game.getStartDateTime().isBefore(LocalDateTime.now()))
+        .toList();
+
+    Long userId = jwtTokenExtract.currentUser().getUserId();
+
+    return getGameSearchResponses(games, userId);
+  }
 
   public List<GameSearchResponse> findFilteredGames(
       LocalDate localDate,
@@ -65,6 +92,13 @@ public class GameUserService {
     return getGameSearchResponses(allFromDateToday, userId);
   }
 
+  private static List<GameSearchResponse> getGameSearchResponses(
+      List<GameEntity> gameListNow, Long userId) {
+    List<GameSearchResponse> gameList = new ArrayList<>();
+    gameListNow.forEach(
+        (e) -> gameList.add(GameSearchResponse.of(e, userId)));
+    return gameList;
+  }
   @Transactional
   public ParticipateGameDto participateInGame(Long gameId) {
     Long userId = jwtTokenExtract.currentUser().getUserId();
@@ -109,13 +143,6 @@ public class GameUserService {
     }
   }
 
-  private static List<GameSearchResponse> getGameSearchResponses(
-      List<GameEntity> gameListNow, Long userId) {
-    List<GameSearchResponse> gameList = new ArrayList<>();
-    gameListNow.forEach(
-        (e) -> gameList.add(GameSearchResponse.of(e, userId)));
-    return gameList;
-  }
 
   private static Specification<GameEntity> getGameEntitySpecification(
       LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
@@ -144,7 +171,17 @@ public class GameUserService {
     return spec;
   }
 
+  private List<ParticipantGameEntity> checkMyGameList() {
+    Long userId = jwtTokenExtract.currentUser().getUserId();
 
+    UserEntity user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(
+            ErrorCode.USER_NOT_FOUND));
+
+    return gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
+            user.getUserId(), ParticipantGameStatus.ACCEPT)
+        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
+  }
 
 }
 

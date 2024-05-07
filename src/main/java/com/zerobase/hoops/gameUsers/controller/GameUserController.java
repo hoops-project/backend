@@ -58,4 +58,16 @@ public class GameUserController {
         gameUserService.participateInGame(request.getGameId()));
   }
 
+  @PreAuthorize("hasRole('USER')")
+  @GetMapping("/my-current-game-list")
+  public ResponseEntity<List<GameSearchResponse>> myCurrentGameList() {
+    return ResponseEntity.ok(gameUserService.myCurrentGameList());
+  }
+
+  @PreAuthorize("hasRole('USER')")
+  @GetMapping("/my-last-game-list")
+  public ResponseEntity<List<GameSearchResponse>> myLastGameList() {
+    return ResponseEntity.ok(gameUserService.myLastGameList());
+  }
+
 }
