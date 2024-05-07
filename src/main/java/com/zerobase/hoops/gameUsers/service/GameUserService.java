@@ -37,6 +37,7 @@ public class GameUserService {
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
+
   public List<GameSearchResponse> findFilteredGames(
       LocalDate localDate,
       CityName cityName,
@@ -49,7 +50,9 @@ public class GameUserService {
 
     List<GameEntity> gameListNow = gameUserRepository.findAll(spec);
 
-    return getGameSearchResponses(gameListNow);
+    Long userId = null;
+
+    return getGameSearchResponses(gameListNow, userId);
   }
 
   public List<GameSearchResponse> searchAddress(String address) {
@@ -57,7 +60,9 @@ public class GameUserService {
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
             address, LocalDateTime.now());
 
-    return getGameSearchResponses(allFromDateToday);
+    Long userId = null;
+
+    return getGameSearchResponses(allFromDateToday, userId);
   }
 
   @Transactional
@@ -100,9 +105,10 @@ public class GameUserService {
   }
 
   private static List<GameSearchResponse> getGameSearchResponses(
-      List<GameEntity> gameListNow) {
+      List<GameEntity> gameListNow, Long userId) {
     List<GameSearchResponse> gameList = new ArrayList<>();
-    gameListNow.forEach((e) -> gameList.add(GameSearchResponse.of(e)));
+    gameListNow.forEach(
+        (e) -> gameList.add(GameSearchResponse.of(e, userId)));
     return gameList;
   }
 
