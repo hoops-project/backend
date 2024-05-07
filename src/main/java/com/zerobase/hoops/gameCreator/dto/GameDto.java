@@ -116,7 +116,7 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    private Long userId;
+    private String loginId;
 
     public static CreateResponse toDto(GameEntity gameEntity) {
       return CreateResponse.builder()
@@ -134,7 +134,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
-          .userId(gameEntity.getUserEntity().getUserId())
+          .loginId(gameEntity.getUserEntity().getId())
           .build();
     }
   }
@@ -175,7 +175,7 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    private Long userId;
+    private String loginId;
 
     public static DetailResponse toDto(GameEntity gameEntity){
       return DetailResponse.builder()
@@ -194,7 +194,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
-          .userId(gameEntity.getUserEntity().getUserId())
+          .loginId(gameEntity.getUserEntity().getId())
           .build();
     }
   }
@@ -300,7 +300,7 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    private Long userId;
+    private String loginId;
 
     public static UpdateResponse toDto(GameEntity gameEntity) {
       return UpdateResponse.builder()
@@ -318,7 +318,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
-          .userId(gameEntity.getUserEntity().getUserId())
+          .loginId(gameEntity.getUserEntity().getId())
           .build();
     }
   }
@@ -392,7 +392,7 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    private Long userId;
+    private String loginId;
 
     public static DeleteResponse toDto(GameEntity gameEntity) {
       return DeleteResponse.builder()
@@ -411,7 +411,7 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
-          .userId(gameEntity.getUserEntity().getUserId())
+          .loginId(gameEntity.getUserEntity().getId())
           .build();
     }
   }
