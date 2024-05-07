@@ -27,6 +27,7 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -54,7 +55,7 @@ class ParticipantGameServiceTest {
   private ParticipantGameService participantGameService;
 
   @Mock
-  private TokenProvider tokenProvider;
+  private JwtTokenExtract jwtTokenExtract;
 
   @Mock
   private UserRepository userRepository;
@@ -71,8 +72,6 @@ class ParticipantGameServiceTest {
   private GameEntity createdGameEntity;
 
   private ParticipantGameEntity creatorParticipantGameEntity;
-
-  private String token;
 
   @BeforeEach
   void setUp() {
@@ -129,7 +128,6 @@ class ParticipantGameServiceTest {
         .gameEntity(createdGameEntity)
         .userEntity(createdUser)
         .build();
-    token = "sampleToken";
   }
 
   @Test
@@ -144,11 +142,7 @@ class ParticipantGameServiceTest {
         .map(DetailResponse::toDto)
         .toList();
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
-
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(createdUser));
+    getCurrentUser();
 
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
         .thenReturn(Optional.ofNullable(createdGameEntity));
@@ -158,7 +152,7 @@ class ParticipantGameServiceTest {
 
     // when
     List<DetailResponse> result = participantGameService
-        .getParticipantList(gameId, token);
+        .getParticipantList(gameId);
 
     // Then
     assertThat(result).containsExactlyElementsOf(detailResponseList);
@@ -193,13 +187,9 @@ class ParticipantGameServiceTest {
 
     Long count = 1L;
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+    getCurrentUser();
 
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(createdUser));
-
-    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(APPLY)))
+    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(APPLY)))
         .thenReturn(Optional.ofNullable(applyPartEntity));
 
     when(gameRepository.findByGameIdAndDeletedDateTimeNull
@@ -215,7 +205,7 @@ class ParticipantGameServiceTest {
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    participantGameService.acceptParticipant(request, token);
+    participantGameService.acceptParticipant(request);
 
     // Then
     verify(participantGameRepository)
@@ -262,13 +252,9 @@ class ParticipantGameServiceTest {
         .userEntity(applyedUser)
         .build();
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+    getCurrentUser();
 
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(createdUser));
-
-    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(APPLY)))
+    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(APPLY)))
         .thenReturn(Optional.ofNullable(applyPartEntity));
 
     when(gameRepository.findByGameIdAndDeletedDateTimeNull
@@ -281,7 +267,7 @@ class ParticipantGameServiceTest {
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    participantGameService.rejectParticipant(request, token);
+    participantGameService.rejectParticipant(request);
 
     // Then
     verify(participantGameRepository)
@@ -329,13 +315,9 @@ class ParticipantGameServiceTest {
         .userEntity(applyedUser)
         .build();
 
-    when(tokenProvider.parseClaims(anyString()))
-        .thenReturn(Jwts.claims().setSubject("test@example.com"));
+    getCurrentUser();
 
-    when(userRepository.findByEmail(anyString())).thenReturn(
-        Optional.ofNullable(createdUser));
-
-    when(participantGameRepository.findByIdAndStatus(anyLong(), eq(ACCEPT)))
+    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(ACCEPT)))
         .thenReturn(Optional.ofNullable(applyPartEntity));
 
     when(gameRepository.findByGameIdAndDeletedDateTimeNull
@@ -348,7 +330,7 @@ class ParticipantGameServiceTest {
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    participantGameService.kickoutParticipant(request, token);
+    participantGameService.kickoutParticipant(request);
 
     // Then
     verify(participantGameRepository)
@@ -366,6 +348,13 @@ class ParticipantGameServiceTest {
         result.getGameEntity().getGameId());
     assertEquals(rejectPartEntity.getUserEntity().getUserId(),
         result.getUserEntity().getUserId());
+  }
+
+  private void getCurrentUser() {
+    when(jwtTokenExtract.currentUser()).thenReturn(createdUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(createdUser));
   }
 
 }

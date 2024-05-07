@@ -70,6 +70,7 @@ public class ParticipantGameEntity {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(gameEntity.getCreatedDateTime())
+        .acceptedDateTime(gameEntity.getCreatedDateTime())
         .gameEntity(gameEntity)
         .userEntity(userEntity)
         .build();

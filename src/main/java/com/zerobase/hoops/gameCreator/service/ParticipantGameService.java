@@ -20,6 +20,7 @@ import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutRequest;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectRequest;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
+import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
@@ -40,9 +41,9 @@ public class ParticipantGameService {
 
   private final UserRepository userRepository;
 
-  private final TokenProvider tokenProvider;
+  private final JwtTokenExtract jwtTokenExtract;
 
-  private static UserEntity userEntity;
+  private static UserEntity user;
 
   private static GameEntity gameEntity;
 
@@ -51,19 +52,19 @@ public class ParticipantGameService {
   /**
    * 경기 참가 희망자 리스트 조회
    */
-  public List<DetailResponse> getParticipantList(Long gameId, String token) {
+  public List<DetailResponse> getParticipantList(Long gameId) {
     log.info("getParticipantList start");
 
-    setUpUser(token);
+    setUpUser();
 
-    var game =
+    GameEntity game =
         gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
             .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
-    validationCreatorCheck(userEntity, game);
+    validationCreatorCheck(user, game);
 
     List<ParticipantGameEntity> list = participantGameRepository
-        .findByStatusAndGameEntityGameId(ACCEPT, gameId);
+        .findByStatusAndGameEntityGameId(APPLY, gameId);
 
     List<DetailResponse> detailResponseList = list.stream()
         .map(DetailResponse::toDto)
@@ -76,16 +77,16 @@ public class ParticipantGameService {
   /**
    * 경기 참가 희망자 수락
    */
-  public void acceptParticipant(AcceptRequest request, String token) {
+  public void acceptParticipant(AcceptRequest request) {
     log.info("acceptParticipant start");
 
-    setUpUser(token);
+    setUpUser();
 
     setUpParticipant(request.getParticipantId());
 
-    validationCreatorCheck(userEntity, gameEntity);
+    validationCreatorCheck(user, gameEntity);
 
-    validationCheck(userEntity, gameEntity);
+    validationCheck(user, gameEntity);
 
     long count = participantGameRepository.countByStatusAndGameEntityGameId
         (ACCEPT, request.getParticipantId());
@@ -106,16 +107,16 @@ public class ParticipantGameService {
   /**
    * 경기 참가 희망자 거절
    */
-  public void rejectParticipant(RejectRequest request, String token) {
+  public void rejectParticipant(RejectRequest request) {
     log.info("rejectParticipant start");
 
-    setUpUser(token);
+    setUpUser();
 
     setUpParticipant(request.getParticipantId());
 
-    validationCreatorCheck(userEntity, gameEntity);
+    validationCreatorCheck(user, gameEntity);
 
-    validationCheck(userEntity, gameEntity);
+    validationCheck(user, gameEntity);
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGameEntity);
@@ -128,10 +129,10 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 강퇴
    */
-  public void kickoutParticipant(KickoutRequest request, String token) {
+  public void kickoutParticipant(KickoutRequest request) {
     log.info("kickoutParticipant start");
 
-    setUpUser(token);
+    setUpUser();
 
     participantGameEntity = participantGameRepository
         .findByParticipantIdAndStatus(request.getParticipantId(), ACCEPT)
@@ -141,9 +142,9 @@ public class ParticipantGameService {
             (participantGameEntity.getGameEntity().getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
-    validationCreatorCheck(userEntity, gameEntity);
+    validationCreatorCheck(user, gameEntity);
 
-    validationCheck(userEntity, gameEntity);
+    validationCheck(user, gameEntity);
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setKickout(participantGameEntity);
@@ -153,10 +154,10 @@ public class ParticipantGameService {
     log.info("kickoutParticipant end");
   }
 
-  public void setUpUser(String token) {
-    String email = tokenProvider.parseClaims(token.substring(7)).getSubject();
+  public void setUpUser() {
+    Long userId = jwtTokenExtract.currentUser().getUserId();
 
-    userEntity = userRepository.findByEmail(email)
+    user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
 

@@ -2,6 +2,7 @@ package com.zerobase.hoops.gameCreator.dto;
 
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -62,6 +63,7 @@ public class ParticipantDto {
   @Builder
   public static class AcceptRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
+    @Min(1)
     private Long participantId;
   }
 
@@ -72,6 +74,7 @@ public class ParticipantDto {
   @Builder
   public static class RejectRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
+    @Min(1)
     private Long participantId;
   }
 
@@ -82,6 +85,7 @@ public class ParticipantDto {
   @Builder
   public static class KickoutRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
+    @Min(1)
     private Long participantId;
   }
 

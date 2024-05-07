@@ -50,6 +50,10 @@ public enum ErrorCode {
   ALREADY_GAME_START(HttpStatus.BAD_REQUEST.value(), "경기가 이미 시작되었습니다."),
   NOT_UPDATE_CREATOR(HttpStatus.BAD_REQUEST.value(), "경기 개설자는 수락 상태로 있어야 합니다."),
   FULL_PARTICIPANT(HttpStatus.BAD_REQUEST.value(), "경기에 참가자가 다 찼습니다."),
+  NOT_CREATE_THREEONTHREEE(HttpStatus.BAD_REQUEST.value(),  "3:3 경기는 인원이 6 ~ "
+      + "9명 으로 설정해야 합니다."),
+  NOT_CREATE_FIVEONFIVE(HttpStatus.BAD_REQUEST.value(),  "5:5 경기는 인원이 10 ~ "
+      + "15명 으로 설정해야 합니다."),
 
   // 게임 참가자
   FULL_PEOPLE_GAME(HttpStatus.BAD_REQUEST.value(),"신청 가능한 인원이 초과되어 더 이상 신청할 수 없습니다."),
