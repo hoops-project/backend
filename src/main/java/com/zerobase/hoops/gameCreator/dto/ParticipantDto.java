@@ -2,6 +2,9 @@ package com.zerobase.hoops.gameCreator.dto;
 
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.users.type.AbilityType;
+import com.zerobase.hoops.users.type.GenderType;
+import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -26,9 +29,13 @@ public class ParticipantDto {
 
     private LocalDateTime createdDateTime;
 
-    private Long gameId;
+    private GenderType gender;
 
-    private Long userId;
+    private String nickName;
+
+    private PlayStyleType playStyle;
+
+    private AbilityType ability;
 
     public static ParticipantDto.DetailResponse toDto(
         ParticipantGameEntity participantGameEntity){
@@ -36,8 +43,10 @@ public class ParticipantDto {
           .participantId(participantGameEntity.getParticipantId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
-          .gameId(participantGameEntity.getGameEntity().getGameId())
-          .userId(participantGameEntity.getUserEntity().getUserId())
+          .gender(participantGameEntity.getUserEntity().getGender())
+          .nickName(participantGameEntity.getUserEntity().getNickName())
+          .playStyle(participantGameEntity.getUserEntity().getPlayStyle())
+          .ability(participantGameEntity.getUserEntity().getAbility())
           .build();
     }
 
@@ -50,8 +59,10 @@ public class ParticipantDto {
       return Objects.equals(participantId, that.participantId) &&
           Objects.equals(status, that.status) &&
           Objects.equals(createdDateTime, that.createdDateTime) &&
-          Objects.equals(gameId, that.gameId) &&
-          Objects.equals(userId, that.userId);
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability);
     }
 
   }

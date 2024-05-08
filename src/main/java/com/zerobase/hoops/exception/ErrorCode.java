@@ -61,7 +61,8 @@ public enum ErrorCode {
   ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST.value(), "여성만 신청 가능한 경기 입니다."),
   ONLY_MALE_GAME(HttpStatus.BAD_REQUEST.value(), "남성만 신청 가능한 경기 입니다."),
 
-
+  // 친구
+  NOT_SELF_FRIEND(HttpStatus.BAD_REQUEST.value(), "자기 자신을 친구 신청 할수 없습니다."),
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");

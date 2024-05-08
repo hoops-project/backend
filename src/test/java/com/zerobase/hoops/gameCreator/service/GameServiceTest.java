@@ -236,8 +236,8 @@ class GameServiceTest {
     assertEquals(detailResponse.getLongitude(), createdGameEntity.getLongitude());
     assertEquals(detailResponse.getCityName(), createdGameEntity.getCityName());
     assertEquals(detailResponse.getMatchFormat(), createdGameEntity.getMatchFormat());
-    assertEquals(detailResponse.getLoginId(),
-        createdGameEntity.getUserEntity().getId());
+    assertEquals(detailResponse.getNickName(),
+        createdGameEntity.getUserEntity().getNickName());
   }
 
   @Test
