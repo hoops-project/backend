@@ -13,10 +13,6 @@ public class ReportDto {
 
 
   @NotBlank
-  @Email(message = "본인의 올바른 이메일 주소를 입력해주세요")
-  private String userEmail;
-
-  @NotBlank
   @Email(message = "신고하려는 유저의 올바른 이메일 주소를 입력해주세요")
   private String reportedUserEmail;
 
@@ -24,10 +20,10 @@ public class ReportDto {
   @Size(min = 30, max = 255, message = "최소 30자 이상 255자 이하로 신고 내용을 작성해주세요")
   private String content;
 
-  public ReportEntity toEntity() {
+  public ReportEntity toEntity(String user) {
     return ReportEntity.builder()
-        .userId(this.userEmail)
-        .reportedId(this.reportedUserEmail)
+        .userEmail(user)
+        .reportedEmail(this.reportedUserEmail)
         .content(this.content)
         .build();
   }

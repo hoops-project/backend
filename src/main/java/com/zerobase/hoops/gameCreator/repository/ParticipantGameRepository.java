@@ -21,6 +21,12 @@ public interface ParticipantGameRepository extends
       List<ParticipantGameStatus> accept, Long gameId);
 
   long countByStatusAndGameEntityGameIdAndUserEntityGender(ParticipantGameStatus participantGameStatus, Long gameId, GenderType queryGender);
+
+  List<ParticipantGameEntity> findByStatusAndGameEntityGameId(
+      ParticipantGameStatus participantGameStatus, Long gameId);
+
+  Optional<ParticipantGameEntity> findByParticipantIdAndStatus(Long participantId,
+      ParticipantGameStatus participantGameStatus);
 }
 
 

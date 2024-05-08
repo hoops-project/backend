@@ -48,8 +48,9 @@ public class WebSecurityConfig {
             .requestMatchers("/", "/api/user/**",
                 "/swagger-ui/**", "/v3/api-docs/**",
                 "/api/auth/login",
+                "/api/game-user/**",
                 //로그인 개발되면 해당 부분 삭제
-                "/report/user", "/ws",
+                "/ws",
                 //--------------------
                 "/h2-console/**").permitAll()
             .requestMatchers("/api/auth/**")
@@ -63,6 +64,8 @@ public class WebSecurityConfig {
             .hasRole("USER")
             .requestMatchers("/api/game-creator/game/delete")
             .hasAnyRole("USER", "ADMIN")
+            .requestMatchers("/api/game-creator/participant/**")
+            .hasRole("USER")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,

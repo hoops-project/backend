@@ -46,6 +46,22 @@ public enum ErrorCode {
       + " 설정했던 시작 시간 보다 이후여야 합니다."),
   NOT_DELETE_STARTDATE(HttpStatus.BAD_REQUEST.value(),  "경기 시작 시간 30분 전에 "
       + "경기 삭제 가능 합니다."),
+  NOT_PARTICIPANT_FOUND(HttpStatus.NOT_FOUND.value(), "경기 참가 내역을 불러올수 없습니다."),
+  ALREADY_GAME_START(HttpStatus.BAD_REQUEST.value(), "경기가 이미 시작되었습니다."),
+  NOT_UPDATE_CREATOR(HttpStatus.BAD_REQUEST.value(), "경기 개설자는 수락 상태로 있어야 합니다."),
+  FULL_PARTICIPANT(HttpStatus.BAD_REQUEST.value(), "경기에 참가자가 다 찼습니다."),
+  NOT_CREATE_THREEONTHREEE(HttpStatus.BAD_REQUEST.value(),  "3:3 경기는 인원이 6 ~ "
+      + "9명 으로 설정해야 합니다."),
+  NOT_CREATE_FIVEONFIVE(HttpStatus.BAD_REQUEST.value(),  "5:5 경기는 인원이 10 ~ "
+      + "15명 으로 설정해야 합니다."),
+
+  // 게임 참가자
+  FULL_PEOPLE_GAME(HttpStatus.BAD_REQUEST.value(),"신청 가능한 인원이 초과되어 더 이상 신청할 수 없습니다."),
+  OVER_TIME_GAME(HttpStatus.BAD_REQUEST.value(), "신청 가능한 시간이 이미 지났습니다. 더 이상 신청할 수 없습니다."),
+  ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST.value(), "여성만 신청 가능한 경기 입니다."),
+  ONLY_MALE_GAME(HttpStatus.BAD_REQUEST.value(), "남성만 신청 가능한 경기 입니다."),
+
+
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");

@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/game-creator")
 @RequiredArgsConstructor
@@ -37,9 +36,8 @@ public class GameController {
   @Operation(summary = "경기 생성")
   @PostMapping("/game/create")
   public ResponseEntity<CreateResponse> createGame(
-      @RequestBody @Validated GameDto.CreateRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.CreateResponse result = this.gameService.createGame(request, token);
+      @RequestBody @Validated GameDto.CreateRequest request) {
+    GameDto.CreateResponse result = gameService.createGame(request);
     return ResponseEntity.ok(result);
   }
 
@@ -49,7 +47,7 @@ public class GameController {
   @Operation(summary = "경기 상세 조회")
   @GetMapping("/game/detail")
   public ResponseEntity<DetailResponse> getGameDetail(@RequestParam("gameId") Long gameId) {
-    GameDto.DetailResponse result = this.gameService.getGameDetail(gameId);
+    GameDto.DetailResponse result = gameService.getGameDetail(gameId);
     return ResponseEntity.ok(result);
   }
 
@@ -59,9 +57,8 @@ public class GameController {
   @Operation(summary = "경기 수정")
   @PutMapping("/game/update")
   public ResponseEntity<UpdateResponse> updateGame(
-      @RequestBody @Validated GameDto.UpdateRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.UpdateResponse result = this.gameService.updateGame(request, token);
+      @RequestBody @Validated GameDto.UpdateRequest request) {
+    GameDto.UpdateResponse result = gameService.updateGame(request);
     return ResponseEntity.ok(result);
   }
 
@@ -71,9 +68,8 @@ public class GameController {
   @Operation(summary = "경기 삭제")
   @DeleteMapping("/game/delete")
   public ResponseEntity<DeleteResponse> deleteGame(
-      @RequestBody @Validated GameDto.DeleteRequest request,
-      @RequestHeader("Authorization") String token) {
-    GameDto.DeleteResponse result = this.gameService.deleteGame(request, token);
+      @RequestBody @Validated GameDto.DeleteRequest request) {
+    GameDto.DeleteResponse result = gameService.deleteGame(request);
     return ResponseEntity.ok(result);
   }
 
