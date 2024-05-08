@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,11 +43,11 @@ public class WebSecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         .headers(header -> header
-            .frameOptions(options -> options.disable()))
+            .frameOptions(FrameOptionsConfig::disable))
         .authorizeHttpRequests(request -> request
-            .requestMatchers("/", "/api/user/**",
+            .requestMatchers("/**", "/api/user/**",
                 "/swagger-ui/**", "/v3/api-docs/**",
-                "/api/auth/login",
+                "/api/auth/login", "/api/oauth2/**/**",
                 "/api/game-user/**",
                 //로그인 개발되면 해당 부분 삭제
                 "/ws",
@@ -90,8 +90,6 @@ public class WebSecurityConfig {
   public AuthenticationManager authenticationManager(
       AuthenticationConfiguration authenticationConfiguration)
       throws Exception {
-    ProviderManager auth =
-        (ProviderManager) authenticationConfiguration.getAuthenticationManager();
-    return auth;
+    return authenticationConfiguration.getAuthenticationManager();
   }
 }
