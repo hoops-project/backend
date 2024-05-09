@@ -6,10 +6,12 @@ import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.NoSuchAlgorithmException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -88,5 +90,31 @@ public class UserController {
     userService.confirmEmail(id, email, certificationNumber);
 
     return ResponseEntity.ok("인증이 성공적으로 완료되었습니다.");
+  }
+
+  /**
+   * 아이디 찾기
+   */
+  @Operation(summary = "아이디 찾기")
+  @GetMapping("/find/id")
+  public ResponseEntity<String> findId(
+      @RequestParam(name = "email") String email
+  ) {
+    String id = userService.findId(email);
+
+    return ResponseEntity.ok(id);
+  }
+
+  /**
+   * 비밀번호 찾기
+   */
+  @Operation(summary = "비밀번호 찾기")
+  @PatchMapping("/find/password")
+  public ResponseEntity<Boolean> findPassword(
+      @RequestParam(name = "id") String id
+  ) throws NoSuchAlgorithmException {
+    boolean success = userService.findPassword(id);
+
+    return ResponseEntity.ok(success);
   }
 }

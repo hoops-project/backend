@@ -175,4 +175,32 @@ public class UserService implements UserDetailsService {
     }
   }
 
+  public String findId(String email) {
+    UserEntity user =
+        userRepository.findByEmail(email)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    return user.getId();
+  }
+
+  public boolean findPassword(String id) throws NoSuchAlgorithmException {
+    UserEntity user =
+        userRepository.findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    String newPassword = CertificationProvider.createCertificationNumber();
+    String encodedNewPassword = passwordEncoder.encode(newPassword);
+    user.passwordEdit(encodedNewPassword);
+    userRepository.save(user);
+
+    String email = user.getEmail();
+
+    boolean isSuccess =
+        emailProvider.sendTemporaryPasswordMail(email, newPassword);
+    if (!isSuccess) {
+      throw new CustomException(ErrorCode.MAIL_SEND_FAIL);
+    }
+
+    return isSuccess;
+  }
 }
