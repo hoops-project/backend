@@ -24,6 +24,7 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -59,28 +60,29 @@ public class FriendService {
 
     // 이미 친구 신청, 수락 상태이면 신청 불가
     int count =
-        friendRepository.findByFriendIdAndStatusIn(request.getFriendUserId(),
+        friendRepository.countByFriendUserEntityUserIdAndStatusIn
+            (request.getFriendUserId(),
             List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
 
     if(count >= 1) {
       throw new CustomException(ALREADY_APPLY_ACCEPT_STATUS);
     }
 
-    // 자신 친구 목록 최대 50명 체크
+    // 자신 친구 목록 최대 30명 체크
     int selfFriendCount = friendRepository
-        .findByUserEntityUserIdAndStatus
+        .countByUserEntityUserIdAndStatus
             (user.getUserId(), FriendStatus.ACCEPT);
 
-    if(selfFriendCount >= 50) {
+    if(selfFriendCount >= 30) {
       throw new CustomException(SELF_FRIEND_FULL);
     }
 
-    // 상대방 친구 목록 최대 50명 체크
+    // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .findByFriendUserEntityUserIdAndStatus
+        .countByUserEntityUserIdAndStatus
             (request.getFriendUserId(), FriendStatus.ACCEPT);
 
-    if(friendCount >= 50) {
+    if(friendCount >= 30) {
       throw new CustomException(OTHER_FRIEND_FULL);
     }
 
@@ -136,21 +138,21 @@ public class FriendService {
       throw new CustomException(NOT_SELF_RECEIVE);
     }
 
-    // 자신의 친구 목록 최대 50개 체크
+    // 자신의 친구 목록 최대 30개 체크
     int selfFriendCount = friendRepository
-        .findByFriendUserEntityUserIdAndStatus
+        .countByUserEntityUserIdAndStatus
             (user.getUserId(), FriendStatus.ACCEPT);
 
-    if(selfFriendCount >= 50) {
+    if(selfFriendCount >= 30) {
       throw new CustomException(SELF_FRIEND_FULL);
     }
 
-    // 상대방 친구 목록 최대 50명 체크
+    // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .findByUserEntityUserIdAndStatus
+        .countByUserEntityUserIdAndStatus
             (friendEntity.getUserEntity().getUserId(), FriendStatus.ACCEPT);
 
-    if(friendCount >= 50) {
+    if(friendCount >= 30) {
       throw new CustomException(OTHER_FRIEND_FULL);
     }
 
@@ -209,10 +211,12 @@ public class FriendService {
     Long friendUserId = selfFriendEntity.getFriendUserEntity().getUserId();
 
     FriendEntity otherFriendEntity =
-        friendRepository.
-                findByStatusAndUserEntityUserIdAndFriendUseEntityUserId
-                (friendUserId, userId, FriendStatus.ACCEPT)
+        friendRepository.findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus
+                (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+
+    System.out.println(selfFriendEntity);
+    System.out.println(otherFriendEntity);
 
     // 자신이 받은 친구만 삭제 가능
     if(!Objects.equals(user.getUserId(),
@@ -241,6 +245,15 @@ public class FriendService {
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
-  
-  
+
+  /**
+   * 친구 검색
+   */
+  public List<SearchResponse> searchNickName(String nickName) {
+    setUpUser();
+
+    List<SearchResponse> result = new ArrayList<>();
+
+    return result;
+  }
 }

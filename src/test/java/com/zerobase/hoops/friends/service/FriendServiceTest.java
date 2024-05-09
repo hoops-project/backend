@@ -114,23 +114,17 @@ class FriendServiceTest {
     getCurrentUser();
 
     // 친구 신청, 수락 상태가 없다고 가정
-    when(friendRepository.findByFriendIdAndStatusIn
+    when(friendRepository.countByFriendUserEntityUserIdAndStatusIn
             (anyLong(), any()))
         .thenReturn(0);
     
-    // 자신의 친구 목록에 10명이 있다고 가정
-    when(friendRepository.findByUserEntityUserIdAndStatus
-        (anyLong(), eq(ACCEPT))).thenReturn(10);
-
-    // 상대방의 친구 목록에 10명이 있다고 가정
-    when(friendRepository.findByFriendUserEntityUserIdAndStatus
-        (anyLong(), eq(ACCEPT))).thenReturn(10);
-
+    // 자신 및 상대방 친구목록에 10명이 있다고 가정
+    when(friendRepository.countByUserEntityUserIdAndStatus
+        (anyLong(), eq(ACCEPT)))
+        .thenReturn(10)
+        .thenReturn(10);
 
     when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity));
-
-    FriendEntity friendEntity = ApplyRequest.toEntity(userEntity, friendUserEntity
-    );
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
       FriendEntity savedFriendEntity = invocation.getArgument(0);
@@ -142,7 +136,7 @@ class FriendServiceTest {
     ApplyResponse response = friendService.applyFriend(request);
 
     // Then
-    assertEquals(1L, response.getFriendId());
+    assertEquals(friendEntity.getFriendId(), response.getFriendId());
     assertEquals(friendEntity.getStatus(),
         response.getStatus());
     assertEquals(friendEntity.getUserEntity().getNickName(),
@@ -224,7 +218,7 @@ class FriendServiceTest {
         .thenReturn(Optional.ofNullable(friendEntity));
 
     // 자신 또는 상대방의 친구 목록에 10명이 있다고 가정
-    when(friendRepository.findByFriendUserEntityUserIdAndStatus
+    when(friendRepository.countByUserEntityUserIdAndStatus
         (anyLong(), eq(ACCEPT))).thenReturn(10).thenReturn(10);
 
     when(friendRepository.save(any())).thenReturn(selfEntity)
@@ -346,7 +340,7 @@ class FriendServiceTest {
         (anyLong(), eq(ACCEPT)))
         .thenReturn(Optional.ofNullable(selfEntity));
 
-    when(friendRepository.findByStatusAndUserEntityUserIdAndFriendUseEntityUserId
+    when(friendRepository.findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus
         (anyLong(), anyLong(), eq(ACCEPT)))
         .thenReturn(Optional.ofNullable(otherEntity));
 

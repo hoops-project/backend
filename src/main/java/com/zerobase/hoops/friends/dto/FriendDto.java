@@ -5,6 +5,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -258,14 +259,14 @@ public class FriendDto {
           .build();
     }
 
-    public static FriendEntity toOtherEntity(FriendEntity friendEntity,
+    public static FriendEntity toOtherEntity(FriendEntity selfFriendEntity,
         FriendEntity otherFriendEntity) {
       return FriendEntity.builder()
           .friendId(otherFriendEntity.getFriendId())
           .status(FriendStatus.DELETE)
-          .createdDateTime(friendEntity.getCreatedDateTime())
-          .acceptedDateTime(friendEntity.getAcceptedDateTime())
-          .deletedDateTime(friendEntity.getDeletedDateTime())
+          .createdDateTime(otherFriendEntity.getCreatedDateTime())
+          .acceptedDateTime(otherFriendEntity.getAcceptedDateTime())
+          .deletedDateTime(selfFriendEntity.getDeletedDateTime())
           .userEntity(otherFriendEntity.getUserEntity())
           .friendUserEntity(otherFriendEntity.getFriendUserEntity())
           .build();
@@ -302,6 +303,33 @@ public class FriendDto {
           .deletedDateTime(friendEntity.getDeletedDateTime())
           .nickName(friendEntity.getUserEntity().getNickName())
           .friendNickName(friendEntity.getFriendUserEntity().getNickName())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class SearchResponse {
+
+    private Long userId;
+
+    private LocalDate birthday;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime acceptedDateTime;
+
+    private LocalDateTime deletedDateTime;
+
+    private String nickName;
+
+    private String friendNickName;
+
+    public static SearchResponse toDto(FriendEntity friendEntity) {
+      return SearchResponse.builder()
           .build();
     }
   }

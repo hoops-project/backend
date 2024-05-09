@@ -10,12 +10,12 @@ public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
 
   Optional<FriendEntity> findByFriendIdAndStatus(Long friendId, FriendStatus friendStatus);
 
-  int findByFriendIdAndStatusIn(Long friendUserId, List<FriendStatus> apply);
+  int countByFriendUserEntityUserIdAndStatus(Long friendUserId, FriendStatus friendStatus);
 
-  int findByFriendUserEntityUserIdAndStatus(Long friendUserId, FriendStatus friendStatus);
+  int countByUserEntityUserIdAndStatus(Long userId, FriendStatus friendStatus);
 
-  int findByUserEntityUserIdAndStatus(Long userId, FriendStatus friendStatus);
-
-  Optional<FriendEntity> findByStatusAndUserEntityUserIdAndFriendUseEntityUserId(Long friendUserId,
+  Optional<FriendEntity> findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus(Long friendUserId,
       Long userId, FriendStatus friendStatus);
+
+  int countByFriendUserEntityUserIdAndStatusIn(Long friendUserId, List<FriendStatus> apply);
 }
