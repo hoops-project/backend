@@ -43,10 +43,4 @@ public class GameSpecifications {
     return (root, query, criteriaBuilder) ->
         criteriaBuilder.isNull(root.get("deletedDateTime"));
   }
-
-  public static Specification<GameEntity> withDate(LocalDate date) {
-    return (root, query, criteriaBuilder) ->
-        criteriaBuilder.equal(
-            root.get("startDateTime").as(LocalDate.class), date);
-  }
 }
