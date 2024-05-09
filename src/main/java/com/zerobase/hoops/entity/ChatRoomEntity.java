@@ -1,10 +1,6 @@
 package com.zerobase.hoops.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity(name = "chatting_room")
@@ -20,6 +16,8 @@ public class ChatRoomEntity {
   private Long roomId;
 
 
-  private String roomName;
+  @OneToOne
+  @JoinColumn(name = "game_id")
+  private GameEntity gameEntity;
 
 }

@@ -17,6 +17,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -29,8 +30,8 @@ public class StompChatController {
   private final ChatService chatService;
   private final SimpMessageSendingOperations messagingTemplate;
 
-  @MessageMapping("/enter/{roomId}")
-  public void enter(@DestinationVariable Long roomId
+  @MessageMapping("/enter/{gameId}")
+  public void enter(@DestinationVariable Long gameId
       , SimpMessageHeaderAccessor accessor
   ) {
 
@@ -39,26 +40,28 @@ public class StompChatController {
 
     UserEntity user = chatService.findUser(senderId);
 
-    messagingTemplate.convertAndSend("/sub/" + roomId,
+    messagingTemplate.convertAndSend("/sub/" + gameId,
         user.getNickName() + "님이 입장했습니다");
   }
 
-  @MessageMapping("/send/{roomId}")
-  public void chat(@DestinationVariable Long roomId
+  @MessageMapping("/send/{gameId}")
+  public void chat(@DestinationVariable Long gameId
       , @Payload Content content
       , SimpMessageHeaderAccessor accessor
   ) {
     String userLoginId = (String) accessor.getSessionAttributes()
         .get("senderId");
-    MessageDTO messageDTO = chatService.createMessage(roomId, content,
+
+    MessageDTO messageDTO = chatService.createMessage(gameId, content,
         userLoginId);
-    messagingTemplate.convertAndSend("/sub/" + roomId, messageDTO);
+
+    messagingTemplate.convertAndSend("/sub/" + gameId, messageDTO);
   }
 
   @PostMapping("/chat/create")
   public ResponseEntity<ChatRoomDTO> createChatRoom(
-      @RequestParam String name) {
-    ChatRoomDTO roomDTO = chatService.createChatRoom(name);
+      @RequestBody Long gameId) {
+    ChatRoomDTO roomDTO = chatService.createChatRoom(gameId);
 
     return ResponseEntity.ok(roomDTO);
   }
