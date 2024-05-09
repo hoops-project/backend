@@ -76,8 +76,8 @@ public class UserEntity implements UserDetails {
   private AbilityType ability;
 
   @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name =
-      "user_id"))
+  @CollectionTable(
+      name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
   private List<String> roles;
 
   @CreatedDate
@@ -92,6 +92,12 @@ public class UserEntity implements UserDetails {
 
   public void confirm() {
     this.emailAuth = true;
+  }
+
+  public void passwordEdit(String password) {
+    if (!password.isEmpty()) {
+      this.password = password;
+    }
   }
 
   @Override

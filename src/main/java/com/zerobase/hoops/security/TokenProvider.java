@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class TokenProvider {
 
-  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60;
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 5;
   private static final long BLACK_TOKEN_EXPIRE_TIME = 1000L * 60 * 2;
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
   private final UserService userService;

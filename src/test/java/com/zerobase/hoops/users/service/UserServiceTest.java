@@ -10,6 +10,7 @@ import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.users.repository.EmailRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import org.junit.jupiter.api.BeforeEach;
@@ -232,5 +233,33 @@ class UserServiceTest {
 
     // then
     assertEquals("유효하지 않은 인증번호입니다.", exception.getMessage());
+  }
+
+  @Test
+  void findId() {
+    // given
+    String email = "test@hoops.com";
+
+    // when
+    String id = userService.findId(email);
+
+    // then
+    assertEquals(id, "testUser");
+  }
+
+  @Test
+  void findPassword() throws NoSuchAlgorithmException {
+    // given
+    String id = "testUser";
+
+    // when
+    boolean isSuccess = userService.findPassword(id);
+    UserEntity user =
+        userRepository.findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // then
+    assertTrue(isSuccess);
+    assertFalse(passwordEncoder.matches("Abcdefg123$%", user.getPassword()));
   }
 }
