@@ -33,7 +33,6 @@ public class ParticipateGameDto {
 
   public static ParticipateGameDto fromEntity(
       ParticipantGameEntity participantGameEntity) {
-
     return ParticipateGameDto.builder()
         .participantId(participantGameEntity.getParticipantId())
         .status(participantGameEntity.getStatus())

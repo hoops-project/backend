@@ -20,7 +20,6 @@ import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +40,8 @@ public class GameUserService {
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
-  public Page<GameSearchResponse> myCurrentGameList(int size) {
+
+  public Page<GameSearchResponse> myCurrentGameList(int page, int size) {
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
@@ -51,10 +51,10 @@ public class GameUserService {
         .toList();
 
     Long userId = jwtTokenExtract.currentUser().getUserId();
-    return getPageGameSearchResponses(games, userId, size);
+    return getPageGameSearchResponses(games, userId, page, size);
   }
 
-  public List<GameSearchResponse> myLastGameList() {
+  public Page<GameSearchResponse> myLastGameList(int page, int size) {
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
@@ -65,15 +65,12 @@ public class GameUserService {
 
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
-    return getGameSearchResponses(games, userId);
+    return getPageGameSearchResponses(games, userId, page, size);
   }
 
-  public List<GameSearchResponse> findFilteredGames(
-      LocalDate localDate,
-      CityName cityName,
-      FieldStatus fieldStatus,
-      Gender gender,
-      MatchFormat matchFormat) {
+  public Page<GameSearchResponse> findFilteredGames(
+      LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
+      Gender gender, MatchFormat matchFormat, int page, int size) {
 
     Specification<GameEntity> spec = getGameEntitySpecification(
         localDate, cityName, fieldStatus, gender, matchFormat);
@@ -82,7 +79,7 @@ public class GameUserService {
 
     Long userId = null;
 
-    return getGameSearchResponses(gameListNow, userId);
+    return getPageGameSearchResponses(gameListNow, userId, page, size);
   }
 
   public List<GameSearchResponse> searchAddress(String address) {
@@ -96,17 +93,23 @@ public class GameUserService {
   }
 
   private static Page<GameSearchResponse> getPageGameSearchResponses(
-      List<GameEntity> gameListNow, Long userId, int size) {
+      List<GameEntity> gameListNow, Long userId, int page, int size) {
     List<GameSearchResponse> gameList = new ArrayList<>();
     gameListNow.forEach(
         (e) -> gameList.add(GameSearchResponse.of(e, userId)));
 
-    int start = 0;
-    int end = Math.min(size, gameList.size());
+    int totalSize = gameList.size();
+    int totalPages = (int) Math.ceil((double) totalSize / size);
+    int lastPage = totalPages == 0 ? 1 : totalPages;
 
-    List<GameSearchResponse> pageContent = gameList.subList(0, end);
-    PageRequest pageable = PageRequest.of(start, end);
-    return new PageImpl<>(pageContent, pageable, gameList.size());
+    page = Math.min(page, lastPage);
+
+    int start = (page - 1) * size;
+    int end = Math.min(page * size, totalSize);
+
+    List<GameSearchResponse> pageContent = gameList.subList(start, end);
+    PageRequest pageable = PageRequest.of(page - 1, size);
+    return new PageImpl<>(pageContent, pageable, totalSize);
   }
 
   private static List<GameSearchResponse> getGameSearchResponses(
