@@ -2,6 +2,7 @@ package com.zerobase.hoops.users.oauth2.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.users.dto.KakaoDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.UserDto;
@@ -11,6 +12,8 @@ import com.zerobase.hoops.users.oauth2.dto.KakaoUserInfoDto.KakaoAccount;
 import com.zerobase.hoops.users.oauth2.dto.KakaoUserInfoDto.Properties;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
-public class OAuthService {
+public class OAuth2Service {
 
   private final UserRepository userRepository;
   private final AuthService authService;
@@ -38,6 +41,8 @@ public class OAuthService {
   String authorizationUri;
   @Value("${spring.security.oauth2.client.provider.kakao.token-uri}")
   String tokenRequestUri;
+  @Value("${admin-key}")
+  String adminId;
 
   public String responseUrl() {
     return authorizationUri + "?client_id=" + clientId +
@@ -45,8 +50,9 @@ public class OAuthService {
         + "&response_type=code";
   }
 
-  public UserDto kakaoLogin(String code) throws IOException {
-    KakaoUserInfoDto kakaoUser = getKakaoUserInfoDto(code);
+  public UserDto kakaoLogin(String code, HttpSession session)
+      throws IOException {
+    KakaoUserInfoDto kakaoUser = getKakaoUserInfoDto(code, session);
     Properties properties = kakaoUser.getProperties();
     KakaoAccount kakaoAccount = kakaoUser.getKakao_account();
     String id = "kakao_" + kakaoUser.getId().toString();
@@ -68,11 +74,12 @@ public class OAuthService {
     return authService.logInUser(logInDto);
   }
 
-  private KakaoUserInfoDto getKakaoUserInfoDto(String code)
+  private KakaoUserInfoDto getKakaoUserInfoDto(String code, HttpSession session)
       throws JsonProcessingException {
     ResponseEntity<String> accessTokenResponse = requestAccessToken(code);
-    KakaoOAuthTokenDto oAuthToken = getAccessToken(accessTokenResponse);
-    ResponseEntity<String> userInfoResponse = requestUserInfo(oAuthToken);
+    KakaoOAuthTokenDto kakaoOAuthTokenDto = getAccessToken(accessTokenResponse);
+    ResponseEntity<String> userInfoResponse =
+        requestUserInfo(kakaoOAuthTokenDto, session);
 
     return getUserInfo(userInfoResponse);
   }
@@ -80,8 +87,8 @@ public class OAuthService {
   public ResponseEntity<String> requestAccessToken(String code) {
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headersAccess = new HttpHeaders();
-    headersAccess.add("Content-type", "application/x-www-form-urlencoded;"
-        + "charset=utf-8");
+    headersAccess.add("Content-type",
+        "application/x-www-form-urlencoded;charset=utf-8");
 
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("grant_type", "authorization_code");
@@ -105,16 +112,21 @@ public class OAuthService {
   }
 
   public ResponseEntity<String> requestUserInfo(
-      KakaoOAuthTokenDto oAuthTokenDto) {
+      KakaoOAuthTokenDto oAuthTokenDto, HttpSession session
+  ) {
     HttpHeaders headers = new HttpHeaders();
     RestTemplate restTemplate = new RestTemplate();
-    headers.add("Authorization", "Bearer " + oAuthTokenDto.getAccess_token());
+    headers.add("Authorization",
+        "Bearer " + oAuthTokenDto.getAccess_token());
 
     HttpEntity<MultiValueMap<String, String>> request =
         new HttpEntity<>(headers);
 
-    return restTemplate.exchange("https://kapi"
-        + ".kakao.com/v2/user/me", HttpMethod.GET, request, String.class);
+    session.setAttribute("kakaoToken", oAuthTokenDto.getAccess_token());
+    session.setAttribute("kakaoRefreshToken", oAuthTokenDto.getRefresh_token());
+
+    return restTemplate.exchange("https://kapi.kakao.com/v2/user/me",
+        HttpMethod.GET, request, String.class);
   }
 
   public KakaoUserInfoDto getUserInfo(ResponseEntity<String> response)
@@ -128,5 +140,28 @@ public class OAuthService {
         .id(id)
         .password("kakao")
         .build();
+  }
+
+  public void kakaoLogout(HttpServletRequest request,
+      UserEntity userEntity) {
+    String id = userEntity.getId();
+    String kakaoId = id.substring(6);
+
+    HttpHeaders headers = new HttpHeaders();
+    RestTemplate restTemplate = new RestTemplate();
+    headers.add("Authorization", "KakaoAK " + adminId);
+
+    request.getSession().removeAttribute("kakaoToken");
+    request.getSession().removeAttribute("kakaoRefreshToken");
+
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("target_id_type", "user_id");
+    params.add("target_id", kakaoId);
+
+    HttpEntity<MultiValueMap<String, String>> kakaoRequest =
+        new HttpEntity<>(params, headers);
+
+    restTemplate.exchange("https://kapi.kakao.com/v1/user/logout",
+        HttpMethod.POST, kakaoRequest, String.class);
   }
 }

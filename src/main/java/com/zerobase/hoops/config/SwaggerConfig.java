@@ -26,7 +26,8 @@ import org.springframework.context.annotation.Configuration;
         @Tag(name = "1. USER", description = "회원 기능"),
         @Tag(name = "2. AUTH", description = "인증/인가 기능"),
         @Tag(name = "3. GAME", description = "경기 기능"),
-        @Tag(name = "4. REPORT", description = "신고 기능")
+        @Tag(name = "4. REPORT", description = "신고 기능"),
+        @Tag(name = "5. OAUTH2", description = "소셜 로그인")
     }
 )
 @Configuration
