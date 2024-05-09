@@ -4,6 +4,7 @@ import com.zerobase.hoops.friends.dto.FriendDto;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import com.zerobase.hoops.gameCreator.dto.GameDto;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
@@ -60,6 +61,17 @@ public class FriendController {
       @RequestBody @Validated FriendDto.AcceptRequest request) {
     List<AcceptResponse> result = friendService.acceptFriend(request);
     return ResponseEntity.ok(Collections.singletonMap("friendList", result));
+  }
+
+  /**
+   * 친구 거절
+   */
+  @Operation(summary = "친구 거절")
+  @PatchMapping("/reject")
+  public ResponseEntity<RejectResponse> rejectFriend(
+      @RequestBody @Validated FriendDto.RejectRequest request) {
+    RejectResponse result = friendService.rejectFriend(request);
+    return ResponseEntity.ok(result);
   }
 
 }

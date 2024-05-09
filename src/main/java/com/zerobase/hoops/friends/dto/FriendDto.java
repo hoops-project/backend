@@ -182,4 +182,58 @@ public class FriendDto {
     }
   }
 
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class RejectRequest {
+
+    @NotNull(message = "친구 아이디는 필수 값입니다.")
+    @Min(1)
+    private Long friendId;
+
+    public static FriendEntity toEntity(FriendEntity friendEntity) {
+      return FriendEntity.builder()
+          .friendId(friendEntity.getFriendId())
+          .status(FriendStatus.REJECT)
+          .createdDateTime(friendEntity.getCreatedDateTime())
+          .rejectedDateTime(LocalDateTime.now())
+          .userEntity(friendEntity.getUserEntity())
+          .friendUserEntity(friendEntity.getFriendUserEntity())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class RejectResponse {
+
+    private Long friendId;
+
+    private FriendStatus status;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime rejectedDateTime;
+
+    private String nickName;
+
+    private String friendNickName;
+
+    public static RejectResponse toDto(FriendEntity friendEntity) {
+      return RejectResponse.builder()
+          .friendId(friendEntity.getFriendId())
+          .status(friendEntity.getStatus())
+          .createdDateTime(friendEntity.getCreatedDateTime())
+          .rejectedDateTime(friendEntity.getRejectedDateTime())
+          .nickName(friendEntity.getUserEntity().getNickName())
+          .friendNickName(friendEntity.getFriendUserEntity().getNickName())
+          .build();
+    }
+  }
+
 }

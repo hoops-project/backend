@@ -18,6 +18,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -162,7 +164,30 @@ public class FriendService {
     result.add(AcceptResponse.toDto(otherEntity));
 
     return result;
+  }
 
+  /**
+   * 친구 거절
+   */
+  public RejectResponse rejectFriend(RejectRequest request) {
+    setUpUser();
+
+    FriendEntity friendEntity =
+        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+                FriendStatus.APPLY)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+
+    // 자신이 받은 친구 신청만 거절 가능
+    if(!Objects.equals(user.getUserId(),
+        friendEntity.getFriendUserEntity().getUserId())) {
+      throw new CustomException(NOT_SELF_RECEIVE);
+    }
+
+    FriendEntity rejectEntity = RejectRequest.toEntity(friendEntity);
+
+    friendRepository.save(rejectEntity);
+
+    return RejectResponse.toDto(rejectEntity);
   }
 
   public void setUpUser() {

@@ -3,6 +3,7 @@ package com.zerobase.hoops.friends.service;
 import static com.zerobase.hoops.friends.type.FriendStatus.ACCEPT;
 import static com.zerobase.hoops.friends.type.FriendStatus.APPLY;
 import static com.zerobase.hoops.friends.type.FriendStatus.CANCEL;
+import static com.zerobase.hoops.friends.type.FriendStatus.REJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -19,6 +20,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -57,6 +60,8 @@ class FriendServiceTest {
   private UserEntity userEntity;
   private UserEntity friendUserEntity;
 
+  private FriendEntity friendEntity;
+
   @BeforeEach
   void setUp() {
     userEntity = UserEntity.builder()
@@ -88,6 +93,13 @@ class FriendServiceTest {
         .roles(new ArrayList<>(List.of("ROLE_USER")))
         .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
+        .build();
+    friendEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
         .build();
   }
 
@@ -148,14 +160,6 @@ class FriendServiceTest {
         .friendId(1L)
         .build();
 
-    FriendEntity friendEntity = FriendEntity.builder()
-        .friendId(1L)
-        .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
-        .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
-        .build();
-
     FriendEntity cancelEntity = FriendEntity.builder()
         .friendId(1L)
         .status(CANCEL)
@@ -191,14 +195,6 @@ class FriendServiceTest {
     // Given
     AcceptRequest request = AcceptRequest.builder()
         .friendId(1L)
-        .build();
-
-    FriendEntity friendEntity = FriendEntity.builder()
-        .friendId(1L)
-        .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
-        .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
         .build();
 
     FriendEntity selfEntity = FriendEntity.builder()
@@ -241,9 +237,6 @@ class FriendServiceTest {
     // when
     List<AcceptResponse> result = friendService.acceptFriend(request);
 
-    System.out.println(result.get(0));
-    System.out.println(result.get(1));
-
     // Then
     assertEquals(selfEntity.getFriendId(), result.get(0).getFriendId());
     assertEquals(selfEntity.getStatus(), result.get(0).getStatus());
@@ -258,6 +251,47 @@ class FriendServiceTest {
         result.get(1).getNickName());
     assertEquals(otherEntity.getFriendUserEntity().getNickName(),
         result.get(1).getFriendNickName());
+
+  }
+
+  @Test
+  @DisplayName("친구 거절 성공")
+  void rejectFriend_success() {
+    // Given
+    RejectRequest request = RejectRequest.builder()
+        .friendId(1L)
+        .build();
+
+    FriendEntity rejectEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(REJECT)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .rejectedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+
+    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity);
+
+    when(userRepository.findById(2L)).thenReturn(
+        Optional.ofNullable(friendUserEntity));
+
+    when(friendRepository.findByFriendIdAndStatus(anyLong(), eq(APPLY)))
+        .thenReturn(Optional.ofNullable(friendEntity));
+
+
+    when(friendRepository.save(any())).thenReturn(rejectEntity);
+
+    // when
+    RejectResponse result = friendService.rejectFriend(request);
+
+    // Then
+    assertEquals(rejectEntity.getFriendId(), result.getFriendId());
+    assertEquals(rejectEntity.getStatus(), result.getStatus());
+    assertEquals(rejectEntity.getUserEntity().getNickName(), result.getNickName());
+    assertEquals(rejectEntity.getFriendUserEntity().getNickName(),
+        result.getFriendNickName());
 
   }
 
