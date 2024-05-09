@@ -1,13 +1,18 @@
 package com.zerobase.hoops.friends.controller;
 
 import com.zerobase.hoops.friends.dto.FriendDto;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import com.zerobase.hoops.gameCreator.dto.GameDto;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -44,6 +49,17 @@ public class FriendController {
       @RequestBody @Validated FriendDto.CancelRequest request) {
     FriendDto.CancelResponse result = friendService.cancelFriend(request);
     return ResponseEntity.ok(result);
+  }
+
+  /**
+   * 친구 수락
+   */
+  @Operation(summary = "친구 수락")
+  @PatchMapping("/accept")
+  public ResponseEntity<Map<String, List<AcceptResponse>>> acceptFriend(
+      @RequestBody @Validated FriendDto.AcceptRequest request) {
+    List<AcceptResponse> result = friendService.acceptFriend(request);
+    return ResponseEntity.ok(Collections.singletonMap("friendList", result));
   }
 
 }

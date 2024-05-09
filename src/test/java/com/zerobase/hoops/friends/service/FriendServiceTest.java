@@ -13,12 +13,13 @@ import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
-import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -33,9 +34,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,12 +54,12 @@ class FriendServiceTest {
   @Mock
   private FriendRepository friendRepository;
 
-  private UserEntity applyUserEntity;
+  private UserEntity userEntity;
   private UserEntity friendUserEntity;
 
   @BeforeEach
   void setUp() {
-    applyUserEntity = UserEntity.builder()
+    userEntity = UserEntity.builder()
         .userId(1L)
         .id("test")
         .password("Testpass12!@")
@@ -105,16 +106,18 @@ class FriendServiceTest {
             (anyLong(), any()))
         .thenReturn(0);
     
-    // 친구 목록에 10명이 있다고 가정
+    // 자신의 친구 목록에 10명이 있다고 가정
+    when(friendRepository.findByUserEntityUserIdAndStatus
+        (anyLong(), eq(ACCEPT))).thenReturn(10);
+
+    // 상대방의 친구 목록에 10명이 있다고 가정
     when(friendRepository.findByFriendUserEntityUserIdAndStatus
-        (anyLong(), eq(ACCEPT)))
-        .thenReturn(10);
+        (anyLong(), eq(ACCEPT))).thenReturn(10);
 
 
     when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity));
 
-    FriendEntity friendEntity = ApplyRequest.toEntity(
-        applyUserEntity, friendUserEntity
+    FriendEntity friendEntity = ApplyRequest.toEntity(userEntity, friendUserEntity
     );
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
@@ -130,8 +133,8 @@ class FriendServiceTest {
     assertEquals(1L, response.getFriendId());
     assertEquals(friendEntity.getStatus(),
         response.getStatus());
-    assertEquals(friendEntity.getApplyUserEntity().getNickName(),
-        response.getApplyNickName());
+    assertEquals(friendEntity.getUserEntity().getNickName(),
+        response.getNickName());
     assertEquals(friendEntity.getFriendUserEntity().getNickName(),
         response.getFriendNickName());
 
@@ -149,7 +152,7 @@ class FriendServiceTest {
         .friendId(1L)
         .status(APPLY)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
-        .applyUserEntity(applyUserEntity)
+        .userEntity(userEntity)
         .friendUserEntity(friendUserEntity)
         .build();
 
@@ -158,7 +161,7 @@ class FriendServiceTest {
         .status(CANCEL)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .canceledDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
-        .applyUserEntity(applyUserEntity)
+        .userEntity(userEntity)
         .friendUserEntity(friendUserEntity)
         .build();
 
@@ -175,18 +178,94 @@ class FriendServiceTest {
     // Then
     assertEquals(cancelEntity.getFriendId(), response.getFriendId());
     assertEquals(cancelEntity.getStatus(), response.getStatus());
-    assertEquals(cancelEntity.getApplyUserEntity().getNickName(),
-        response.getApplyNickName());
+    assertEquals(cancelEntity.getUserEntity().getNickName(),
+        response.getNickName());
     assertEquals(cancelEntity.getFriendUserEntity().getNickName(),
         response.getFriendNickName());
 
   }
 
+  @Test
+  @DisplayName("친구 수락 성공")
+  void acceptFriend_success() {
+    // Given
+    AcceptRequest request = AcceptRequest.builder()
+        .friendId(1L)
+        .build();
+
+    FriendEntity friendEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity selfEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity otherEntity = FriendEntity.builder()
+        .friendId(2L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
+        .userEntity(friendUserEntity)
+        .friendUserEntity(userEntity)
+        .build();
+
+    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity);
+
+    when(userRepository.findById(2L)).thenReturn(
+        Optional.ofNullable(friendUserEntity));
+
+    when(friendRepository.findByFriendIdAndStatus(anyLong(), eq(APPLY)))
+        .thenReturn(Optional.ofNullable(friendEntity));
+
+    // 자신 또는 상대방의 친구 목록에 10명이 있다고 가정
+    when(friendRepository.findByFriendUserEntityUserIdAndStatus
+        (anyLong(), eq(ACCEPT))).thenReturn(10).thenReturn(10);
+
+    when(friendRepository.save(any())).thenReturn(selfEntity)
+        .thenAnswer(invocation -> {
+      FriendEntity savedFriendEntity = invocation.getArgument(0);
+      savedFriendEntity.setFriendId(2L); // friendId 동적 할당
+      return savedFriendEntity;
+    });
+
+    // when
+    List<AcceptResponse> result = friendService.acceptFriend(request);
+
+    System.out.println(result.get(0));
+    System.out.println(result.get(1));
+
+    // Then
+    assertEquals(selfEntity.getFriendId(), result.get(0).getFriendId());
+    assertEquals(selfEntity.getStatus(), result.get(0).getStatus());
+    assertEquals(selfEntity.getUserEntity().getNickName(),
+        result.get(0).getNickName());
+    assertEquals(selfEntity.getFriendUserEntity().getNickName(),
+        result.get(0).getFriendNickName());
+
+    assertEquals(otherEntity.getFriendId(), result.get(1).getFriendId());
+    assertEquals(otherEntity.getStatus(), result.get(1).getStatus());
+    assertEquals(otherEntity.getUserEntity().getNickName(),
+        result.get(1).getNickName());
+    assertEquals(otherEntity.getFriendUserEntity().getNickName(),
+        result.get(1).getFriendNickName());
+
+  }
+
   private void getCurrentUser() {
-    when(jwtTokenExtract.currentUser()).thenReturn(applyUserEntity);
+    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
 
     when(userRepository.findById(1L)).thenReturn(
-        Optional.ofNullable(applyUserEntity));
+        Optional.ofNullable(userEntity));
   }
 
 }

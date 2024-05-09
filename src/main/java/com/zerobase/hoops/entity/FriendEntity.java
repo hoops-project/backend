@@ -53,8 +53,8 @@ public class FriendEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "apply_user_id", nullable = false)
-  private UserEntity applyUserEntity;
+  @JoinColumn(name = "user_id", nullable = false)
+  private UserEntity userEntity;
 
   @ManyToOne
   @JoinColumn(name = "friend_user_id", nullable = false)

@@ -4,6 +4,7 @@ import static com.zerobase.hoops.exception.ErrorCode.ALREADY_APPLY_ACCEPT_STATUS
 import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_APPLY_FRIEND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_APPLY;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_FRIEND;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_RECEIVE;
 import static com.zerobase.hoops.exception.ErrorCode.OTHER_FRIEND_FULL;
 import static com.zerobase.hoops.exception.ErrorCode.SELF_FRIEND_FULL;
 import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
@@ -11,6 +12,8 @@ import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
@@ -19,6 +22,7 @@ import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -58,8 +62,9 @@ public class FriendService {
 
     // 자신 친구 목록 최대 50명 체크
     int selfFriendCount = friendRepository
-        .findByFriendUserEntityUserIdAndStatus
+        .findByUserEntityUserIdAndStatus
             (user.getUserId(), FriendStatus.ACCEPT);
+
     if(selfFriendCount >= 50) {
       throw new CustomException(SELF_FRIEND_FULL);
     }
@@ -97,7 +102,7 @@ public class FriendService {
 
     // 자기 자신이 한 친구 신청만 취소 가능
     if(!Objects.equals(user.getUserId(),
-        friendEntity.getApplyUserEntity().getUserId())) {
+        friendEntity.getUserEntity().getUserId())) {
       throw new CustomException(NOT_SELF_APPLY);
     }
 
@@ -108,12 +113,65 @@ public class FriendService {
     return CancelResponse.toDto(result);
   }
 
+  /**
+   * 친구 수락
+   */
+  public List<AcceptResponse> acceptFriend(AcceptRequest request) {
+    setUpUser();
+
+    FriendEntity friendEntity =
+        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+                FriendStatus.APPLY)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+
+    // 자신이 받은 친구 신청만 수락 가능
+    if(!Objects.equals(user.getUserId(),
+        friendEntity.getFriendUserEntity().getUserId())) {
+      throw new CustomException(NOT_SELF_RECEIVE);
+    }
+
+    // 자신의 친구 목록 최대 50개 체크
+    int selfFriendCount = friendRepository
+        .findByFriendUserEntityUserIdAndStatus
+            (user.getUserId(), FriendStatus.ACCEPT);
+
+    if(selfFriendCount >= 50) {
+      throw new CustomException(SELF_FRIEND_FULL);
+    }
+
+    // 상대방 친구 목록 최대 50명 체크
+    int friendCount = friendRepository
+        .findByUserEntityUserIdAndStatus
+            (friendEntity.getUserEntity().getUserId(), FriendStatus.ACCEPT);
+
+    if(friendCount >= 50) {
+      throw new CustomException(OTHER_FRIEND_FULL);
+    }
+
+
+    FriendEntity selfEntity = AcceptRequest.toSelfEntity(friendEntity);
+
+    friendRepository.save(selfEntity);
+
+    FriendEntity otherEntity = AcceptRequest.toOtherEntity(selfEntity);
+
+    friendRepository.save(otherEntity);
+
+    List<AcceptResponse> result = new ArrayList<>();
+    result.add(AcceptResponse.toDto(selfEntity));
+    result.add(AcceptResponse.toDto(otherEntity));
+
+    return result;
+
+  }
+
   public void setUpUser() {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
+
 
 
 }
