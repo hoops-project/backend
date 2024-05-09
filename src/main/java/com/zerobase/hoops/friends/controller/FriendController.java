@@ -4,12 +4,9 @@ import com.zerobase.hoops.friends.dto.FriendDto;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.service.FriendService;
-import com.zerobase.hoops.gameCreator.dto.GameDto;
-import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
-import com.zerobase.hoops.gameCreator.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.Collections;
 import java.util.List;
@@ -72,6 +69,17 @@ public class FriendController {
       @RequestBody @Validated FriendDto.RejectRequest request) {
     RejectResponse result = friendService.rejectFriend(request);
     return ResponseEntity.ok(result);
+  }
+
+  /**
+   * 친구 거절
+   */
+  @Operation(summary = "친구 거절")
+  @PatchMapping("/delete")
+  public ResponseEntity<Map<String, List<DeleteResponse>>> deleteFriend(
+      @RequestBody @Validated FriendDto.DeleteRequest request) {
+    List<DeleteResponse> result = friendService.deleteFriend(request);
+    return ResponseEntity.ok(Collections.singletonMap("friendList", result));
   }
 
 }

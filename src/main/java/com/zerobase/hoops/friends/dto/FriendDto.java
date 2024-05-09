@@ -141,7 +141,6 @@ public class FriendDto {
 
     public static FriendEntity toOtherEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
-          .friendId(friendEntity.getFriendId())
           .status(FriendStatus.ACCEPT)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(friendEntity.getAcceptedDateTime())
@@ -230,6 +229,77 @@ public class FriendDto {
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .rejectedDateTime(friendEntity.getRejectedDateTime())
+          .nickName(friendEntity.getUserEntity().getNickName())
+          .friendNickName(friendEntity.getFriendUserEntity().getNickName())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class DeleteRequest {
+
+    @NotNull(message = "친구 아이디는 필수 값입니다.")
+    @Min(1)
+    private Long friendId;
+
+    public static FriendEntity toSelfEntity(FriendEntity friendEntity) {
+      return FriendEntity.builder()
+          .friendId(friendEntity.getFriendId())
+          .status(FriendStatus.DELETE)
+          .createdDateTime(friendEntity.getCreatedDateTime())
+          .acceptedDateTime(friendEntity.getAcceptedDateTime())
+          .deletedDateTime(LocalDateTime.now())
+          .userEntity(friendEntity.getUserEntity())
+          .friendUserEntity(friendEntity.getFriendUserEntity())
+          .build();
+    }
+
+    public static FriendEntity toOtherEntity(FriendEntity friendEntity,
+        FriendEntity otherFriendEntity) {
+      return FriendEntity.builder()
+          .friendId(otherFriendEntity.getFriendId())
+          .status(FriendStatus.DELETE)
+          .createdDateTime(friendEntity.getCreatedDateTime())
+          .acceptedDateTime(friendEntity.getAcceptedDateTime())
+          .deletedDateTime(friendEntity.getDeletedDateTime())
+          .userEntity(otherFriendEntity.getUserEntity())
+          .friendUserEntity(otherFriendEntity.getFriendUserEntity())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class DeleteResponse {
+
+    private Long friendId;
+
+    private FriendStatus status;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime acceptedDateTime;
+
+    private LocalDateTime deletedDateTime;
+
+    private String nickName;
+
+    private String friendNickName;
+
+    public static DeleteResponse toDto(FriendEntity friendEntity) {
+      return DeleteResponse.builder()
+          .friendId(friendEntity.getFriendId())
+          .status(friendEntity.getStatus())
+          .createdDateTime(friendEntity.getCreatedDateTime())
+          .acceptedDateTime(friendEntity.getAcceptedDateTime())
+          .deletedDateTime(friendEntity.getDeletedDateTime())
           .nickName(friendEntity.getUserEntity().getNickName())
           .friendNickName(friendEntity.getFriendUserEntity().getNickName())
           .build();

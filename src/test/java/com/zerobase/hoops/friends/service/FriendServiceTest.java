@@ -3,13 +3,12 @@ package com.zerobase.hoops.friends.service;
 import static com.zerobase.hoops.friends.type.FriendStatus.ACCEPT;
 import static com.zerobase.hoops.friends.type.FriendStatus.APPLY;
 import static com.zerobase.hoops.friends.type.FriendStatus.CANCEL;
+import static com.zerobase.hoops.friends.type.FriendStatus.DELETE;
 import static com.zerobase.hoops.friends.type.FriendStatus.REJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.FriendEntity;
@@ -20,6 +19,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
@@ -39,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -292,6 +292,86 @@ class FriendServiceTest {
     assertEquals(rejectEntity.getUserEntity().getNickName(), result.getNickName());
     assertEquals(rejectEntity.getFriendUserEntity().getNickName(),
         result.getFriendNickName());
+
+  }
+
+  @Test
+  @DisplayName("친구 삭제 성공")
+  void deleteFriend_success() {
+    // Given
+    DeleteRequest request = DeleteRequest.builder()
+        .friendId(1L)
+        .build();
+
+    FriendEntity selfEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity otherEntity = FriendEntity.builder()
+        .friendId(2L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
+        .userEntity(friendUserEntity)
+        .friendUserEntity(userEntity)
+        .build();
+
+    FriendEntity selfDeleteEntity = FriendEntity.builder()
+        .friendId(1L)
+        .status(DELETE)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
+        .deletedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity otherDeleteEntity = FriendEntity.builder()
+        .friendId(2L)
+        .status(DELETE)
+        .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
+        .rejectedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
+        .userEntity(friendUserEntity)
+        .friendUserEntity(userEntity)
+        .build();
+
+    getCurrentUser();
+
+    when(friendRepository.findByFriendIdAndStatus
+        (anyLong(), eq(ACCEPT)))
+        .thenReturn(Optional.ofNullable(selfEntity));
+
+    when(friendRepository.findByStatusAndUserEntityUserIdAndFriendUseEntityUserId
+        (anyLong(), anyLong(), eq(ACCEPT)))
+        .thenReturn(Optional.ofNullable(otherEntity));
+
+
+    when(friendRepository.save(any()))
+        .thenReturn(selfDeleteEntity)
+        .thenReturn(otherDeleteEntity);
+
+    // when
+    List<DeleteResponse> result = friendService.deleteFriend(request);
+
+    // Then
+    assertEquals(selfDeleteEntity.getFriendId(), result.get(0).getFriendId());
+    assertEquals(selfDeleteEntity.getStatus(), result.get(0).getStatus());
+    assertEquals(selfDeleteEntity.getUserEntity().getNickName(),
+        result.get(0).getNickName());
+    assertEquals(selfDeleteEntity.getFriendUserEntity().getNickName(),
+        result.get(0).getFriendNickName());
+
+    assertEquals(otherDeleteEntity.getFriendId(), result.get(1).getFriendId());
+    assertEquals(otherDeleteEntity.getStatus(), result.get(1).getStatus());
+    assertEquals(otherDeleteEntity.getUserEntity().getNickName(),
+        result.get(1).getNickName());
+    assertEquals(otherDeleteEntity.getFriendUserEntity().getNickName(),
+        result.get(1).getFriendNickName());
 
   }
 

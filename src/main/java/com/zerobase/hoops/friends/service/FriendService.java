@@ -1,7 +1,9 @@
 package com.zerobase.hoops.friends.service;
 
 import static com.zerobase.hoops.exception.ErrorCode.ALREADY_APPLY_ACCEPT_STATUS;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_ACCEPT_FRIEND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_APPLY_FRIEND;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_ACCEPT;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_APPLY;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_FRIEND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_RECEIVE;
@@ -18,6 +20,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
@@ -190,13 +194,53 @@ public class FriendService {
     return RejectResponse.toDto(rejectEntity);
   }
 
+  /**
+   * 친구 삭제
+   */
+  public List<DeleteResponse> deleteFriend(DeleteRequest request) {
+    setUpUser();
+
+    FriendEntity selfFriendEntity =
+        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+                FriendStatus.ACCEPT)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+
+    Long userId = user.getUserId();
+    Long friendUserId = selfFriendEntity.getFriendUserEntity().getUserId();
+
+    FriendEntity otherFriendEntity =
+        friendRepository.
+                findByStatusAndUserEntityUserIdAndFriendUseEntityUserId
+                (friendUserId, userId, FriendStatus.ACCEPT)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+
+    // 자신이 받은 친구만 삭제 가능
+    if(!Objects.equals(user.getUserId(),
+        selfFriendEntity.getUserEntity().getUserId())) {
+      throw new CustomException(NOT_SELF_ACCEPT);
+    }
+    
+    FriendEntity selfResult = DeleteRequest.toSelfEntity(selfFriendEntity);
+
+    friendRepository.save(selfResult);
+
+    FriendEntity otherResult = DeleteRequest.toOtherEntity(selfResult, otherFriendEntity);
+
+    friendRepository.save(otherResult);
+
+    List<DeleteResponse> result = new ArrayList<>();
+    result.add(DeleteResponse.toDto(selfResult));
+    result.add(DeleteResponse.toDto(otherResult));
+
+    return result;
+  }
+
   public void setUpUser() {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
-
-
-
+  
+  
 }
