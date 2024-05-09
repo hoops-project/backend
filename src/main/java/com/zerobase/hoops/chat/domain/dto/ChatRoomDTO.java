@@ -14,12 +14,12 @@ import lombok.Setter;
 public class ChatRoomDTO {
 
   private Long roomId;
-  private String roomName;
+  private Long gameId;
 
   public static ChatRoomDTO entityToDto(ChatRoomEntity entity) {
     return ChatRoomDTO.builder()
         .roomId(entity.getRoomId())
-        .roomName(entity.getRoomName())
+        .gameId(entity.getGameEntity().getGameId())
         .build();
   }
 }

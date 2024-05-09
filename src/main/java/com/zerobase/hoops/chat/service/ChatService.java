@@ -7,10 +7,12 @@ import com.zerobase.hoops.chat.domain.dto.MessageDTO;
 import com.zerobase.hoops.chat.domain.repository.ChatRoomRepository;
 import com.zerobase.hoops.chat.domain.repository.MessageRepository;
 import com.zerobase.hoops.entity.ChatRoomEntity;
+import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.MessageEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +25,29 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final MessageRepository messageRepository;
   private final UserRepository userRepository;
+  private final GameRepository gameRepository;
 
   /**
    * 채팅방 생성 및 DB에 저장하는 메서드
    *
-   * @param name
+   * @param gameId
    * @return
    */
-  public ChatRoomDTO createChatRoom(String name) {
+  public ChatRoomDTO createChatRoom(Long gameId) {
+    GameEntity gameEntity = gameRepository.findById(gameId)
+            .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
+
     ChatRoomEntity chattingRoom = ChatRoomEntity.builder()
-            .roomName(name).build();
+            .gameEntity(gameEntity)
+            .build();
+
     return ChatRoomDTO.entityToDto(
         chatRoomRepository.save(chattingRoom));
   }
 
-  public MessageDTO createMessage(Long roomId, Content content, String senderId) {
-    ChatRoomEntity chatRoomEntity = chatRoomRepository.findById(roomId)
-        .orElseThrow(RuntimeException::new);
+  public MessageDTO createMessage(Long gameId, Content content, String senderId) {
+    ChatRoomEntity chatRoomEntity = chatRoomRepository.findById(gameId)
+        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     UserEntity user = this.findUser(senderId);
 

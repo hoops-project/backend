@@ -14,14 +14,14 @@ import lombok.Setter;
 @Builder
 public class MessageDTO {
 
-  private Long roomId;
+  private Long gameId;
   private String content;
   private LocalDateTime sendDateTime;
   private String sender;
 
   public static MessageDTO entityToDto(MessageEntity message) {
     return MessageDTO.builder()
-        .roomId(message.getChatRoomEntity().getRoomId())
+        .gameId(message.getChatRoomEntity().getGameEntity().getGameId())
         .content(message.getContent())
         .sendDateTime(message.getSendDateTime())
         .sender(message.getUser().getNickName())
