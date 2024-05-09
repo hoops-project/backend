@@ -215,9 +215,6 @@ public class FriendService {
                 (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
-    System.out.println(selfFriendEntity);
-    System.out.println(otherFriendEntity);
-
     // 자신이 받은 친구만 삭제 가능
     if(!Objects.equals(user.getUserId(),
         selfFriendEntity.getUserEntity().getUserId())) {
