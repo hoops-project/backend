@@ -14,6 +14,8 @@ import lombok.Data;
 public class GameSearchResponse {
 
   private Long gameId;
+  private Long gameOwnerId;
+  private Long myId;
   private String title;
   private String content;
   private Long headCount;
@@ -29,9 +31,11 @@ public class GameSearchResponse {
   private CityName cityName;
   private MatchFormat matchFormat;
 
-  public static GameSearchResponse of(GameEntity gameEntity) {
+  public static GameSearchResponse of(GameEntity gameEntity, Long userId) {
     return GameSearchResponse.builder()
         .gameId(gameEntity.getGameId())
+        .gameOwnerId(gameEntity.getUserEntity().getUserId())
+        .myId(userId)
         .title(gameEntity.getTitle())
         .content(gameEntity.getContent())
         .headCount(gameEntity.getHeadCount())

@@ -4,6 +4,7 @@ import static com.zerobase.hoops.gameCreator.type.CityName.SEOUL;
 import static com.zerobase.hoops.gameCreator.type.FieldStatus.INDOOR;
 import static com.zerobase.hoops.gameCreator.type.Gender.ALL;
 import static com.zerobase.hoops.gameCreator.type.MatchFormat.THREEONTHREE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,6 +45,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -70,6 +74,106 @@ class GameUserControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @DisplayName("현재 게임 목록 테스트")
+  @WithMockUser
+  @Test
+  void testMyCurrentGameList() throws Exception {
+
+    // Given
+    CityName cityName = CityName.SEOUL;
+    FieldStatus fieldStatus = FieldStatus.INDOOR;
+    Gender gender = Gender.ALL;
+    MatchFormat matchFormat = MatchFormat.THREEONTHREE;
+    int size = 3;
+
+    LocalDateTime time = LocalDateTime.now()
+        .plusDays(10);
+    GameEntity gameEntity = new GameEntity();
+    gameEntity.setGameId(1L);
+    gameEntity.setTitle("Test Game");
+    gameEntity.setContent("Test Game Content");
+    gameEntity.setHeadCount(6L);
+    gameEntity.setFieldStatus(fieldStatus);
+    gameEntity.setGender(gender);
+    gameEntity.setStartDateTime(time.plusDays(1));
+    gameEntity.setCreatedDateTime(time);
+    gameEntity.setDeletedDateTime(null);
+    gameEntity.setInviteYn(true);
+    gameEntity.setAddress("Test Address");
+    gameEntity.setLatitude(37.5665);
+    gameEntity.setLongitude(126.9780);
+    gameEntity.setCityName(cityName);
+    gameEntity.setMatchFormat(matchFormat);
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    gameEntity.setUserEntity(userEntity);
+
+    List<GameSearchResponse> gameSearchResponses = Arrays.asList(
+        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(gameSearchResponses);
+
+    // When
+    when(gameUserService.myCurrentGameList(size)).thenReturn(
+        (expectedPage));
+
+    // Then
+    mockMvc.perform(get("/api/game-user/my-current-game-list/{size}", size)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andDo(print())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$.content").isArray());
+  }
+
+
+  @DisplayName("과거 게임 목록 테스트")
+  @WithMockUser
+  @Test
+  void testMyLastGameList() throws Exception {
+    // Given
+
+    CityName cityName = CityName.SEOUL;
+    FieldStatus fieldStatus = FieldStatus.INDOOR;
+    Gender gender = Gender.ALL;
+    MatchFormat matchFormat = MatchFormat.THREEONTHREE;
+
+    LocalDateTime time = LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099);
+    GameEntity gameEntity = new GameEntity();
+    gameEntity.setGameId(1L);
+    gameEntity.setTitle("Test Game");
+    gameEntity.setContent("Test Game Content");
+    gameEntity.setHeadCount(6L);
+    gameEntity.setFieldStatus(fieldStatus);
+    gameEntity.setGender(gender);
+    gameEntity.setStartDateTime(time.plusDays(1));
+    gameEntity.setCreatedDateTime(time);
+    gameEntity.setDeletedDateTime(null);
+    gameEntity.setInviteYn(true);
+    gameEntity.setAddress("Test Address");
+    gameEntity.setLatitude(37.5665);
+    gameEntity.setLongitude(126.9780);
+    gameEntity.setCityName(cityName);
+    gameEntity.setMatchFormat(matchFormat);
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    gameEntity.setUserEntity(userEntity);
+    List<GameSearchResponse> gameSearchResponses = Arrays.asList(
+        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+
+    // When
+    when(gameUserService.myLastGameList()).thenReturn(gameSearchResponses);
+
+    // Then
+    mockMvc.perform(get("/api/game-user/my-last-game-list")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andDo(print())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$").isArray());
+  }
 
   @DisplayName("게임 참가 요청 성공")
   @WithMockUser
@@ -113,8 +217,13 @@ class GameUserControllerTest {
     FieldStatus fieldStatus = INDOOR;
     Gender gender = ALL;
     MatchFormat matchFormat = THREEONTHREE;
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    GameEntity gameEntity = new GameEntity();
+    gameEntity.setUserEntity(userEntity);
+
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(mock(GameEntity.class)));
+        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
 
     // When
     when(gameUserService.findFilteredGames(any(), any(), any(),
@@ -163,8 +272,11 @@ class GameUserControllerTest {
     gameEntity.setLongitude(126.9780);
     gameEntity.setCityName(cityName);
     gameEntity.setMatchFormat(matchFormat);
+    UserEntity userEntity = new UserEntity();
+    userEntity.setUserId(1L);
+    gameEntity.setUserEntity(userEntity);
     List<GameSearchResponse> expectedGames = Arrays.asList(
-        GameSearchResponse.of(gameEntity));
+        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
 
     // When
     when(gameUserService.findFilteredGames(eq(localDate), eq(cityName),

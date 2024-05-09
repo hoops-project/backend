@@ -14,9 +14,11 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,4 +60,18 @@ public class GameUserController {
         gameUserService.participateInGame(request.getGameId()));
   }
 
+  @PreAuthorize("hasRole('USER')")
+  @GetMapping("/my-current-game-list/{size}")
+  public ResponseEntity<Page<GameSearchResponse>> myCurrentGameList(
+      @PathVariable int size) {
+    return ResponseEntity.ok(gameUserService.myCurrentGameList(size));
+  }
+
+  @PreAuthorize("hasRole('USER')")
+  @GetMapping("/my-last-game-list")
+  public ResponseEntity<List<GameSearchResponse>> myLastGameList() {
+    return ResponseEntity.ok(gameUserService.myLastGameList());
+  }
+
+  // 유저목록 불러오기
 }
