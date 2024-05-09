@@ -10,6 +10,7 @@ import com.zerobase.hoops.gameUsers.dto.UserJoinsGameDto;
 import com.zerobase.hoops.gameUsers.service.GameUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -35,15 +36,17 @@ public class GameUserController {
   private final GameUserService gameUserService;
 
   @GetMapping("/search")
-  public ResponseEntity<List<GameSearchResponse>> findFilteredGames(
+  public ResponseEntity<Page<GameSearchResponse>> findFilteredGames(
       @RequestParam(required = false) LocalDate localDate,
       @RequestParam(required = false) CityName cityName,
       @RequestParam(required = false) FieldStatus fieldStatus,
       @RequestParam(required = false) Gender gender,
-      @RequestParam(required = false) MatchFormat matchFormat) {
+      @RequestParam(required = false) MatchFormat matchFormat,
+      @Positive @RequestParam int page,
+      @Positive @RequestParam int size) {
     return ResponseEntity.ok(
         gameUserService.findFilteredGames(localDate,
-            cityName, fieldStatus, gender, matchFormat));
+            cityName, fieldStatus, gender, matchFormat, page, size));
   }
 
   @GetMapping("/search-address")
@@ -61,17 +64,21 @@ public class GameUserController {
   }
 
   @PreAuthorize("hasRole('USER')")
-  @GetMapping("/my-current-game-list/{size}")
+  @GetMapping("/my-current-game-list")
   public ResponseEntity<Page<GameSearchResponse>> myCurrentGameList(
-      @PathVariable int size) {
-    return ResponseEntity.ok(gameUserService.myCurrentGameList(size));
+      @Positive @RequestParam int page,
+      @Positive @RequestParam int size) {
+    return ResponseEntity.ok(
+        gameUserService.myCurrentGameList(page, size));
   }
 
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/my-last-game-list")
-  public ResponseEntity<List<GameSearchResponse>> myLastGameList() {
-    return ResponseEntity.ok(gameUserService.myLastGameList());
+  public ResponseEntity<Page<GameSearchResponse>> myLastGameList(
+      @Positive @RequestParam int page,
+      @Positive @RequestParam int size) {
+    return ResponseEntity.ok(gameUserService.myLastGameList(page, size));
   }
 
-  // 유저목록 불러오기
+
 }
