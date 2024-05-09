@@ -66,6 +66,8 @@ public class WebSecurityConfig {
             .hasAnyRole("USER", "ADMIN")
             .requestMatchers("/api/game-creator/participant/**")
             .hasRole("USER")
+            .requestMatchers("/api/friend/**")
+            .hasRole("USER")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,
