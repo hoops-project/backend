@@ -18,7 +18,6 @@ public class ChatRoomEntity {
 
   @OneToOne
   @JoinColumn(name = "game_id")
-  @Column(unique = true)
   private GameEntity gameEntity;
 
 }
