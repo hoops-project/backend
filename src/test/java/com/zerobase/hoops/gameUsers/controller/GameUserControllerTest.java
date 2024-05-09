@@ -45,6 +45,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -77,12 +79,13 @@ class GameUserControllerTest {
   @WithMockUser
   @Test
   void testMyCurrentGameList() throws Exception {
-    // Given
 
+    // Given
     CityName cityName = CityName.SEOUL;
     FieldStatus fieldStatus = FieldStatus.INDOOR;
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.THREEONTHREE;
+    int size = 3;
 
     LocalDateTime time = LocalDateTime.now()
         .plusDays(10);
@@ -105,21 +108,23 @@ class GameUserControllerTest {
     UserEntity userEntity = new UserEntity();
     userEntity.setUserId(1L);
     gameEntity.setUserEntity(userEntity);
+
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(gameSearchResponses);
 
     // When
-    when(gameUserService.myCurrentGameList()).thenReturn(
-        gameSearchResponses);
+    when(gameUserService.myCurrentGameList(size)).thenReturn(
+        (expectedPage));
 
     // Then
-    mockMvc.perform(get("/api/game-user/my-current-game-list")
+    mockMvc.perform(get("/api/game-user/my-current-game-list/{size}", size)
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getGameId()))
-        .andExpect(jsonPath("$").isArray());
+        .andExpect(jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$.content").isArray());
   }
 
 

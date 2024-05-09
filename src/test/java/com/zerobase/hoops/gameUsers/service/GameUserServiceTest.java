@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.GameEntity;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,7 +99,48 @@ class GameUserServiceTest {
     when(gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
         user.getUserId(), ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
-    List<GameSearchResponse> result = gameUserService.myCurrentGameList();
+    Page<GameSearchResponse> result = gameUserService.myCurrentGameList(1);
+    List<GameSearchResponse> result2 = result.getContent();
+
+    // Then
+    assertEquals(1, result2.size());
+  }
+
+  @Test
+  @DisplayName("현제 참여중인 게임 리스트 불러오기 성공2")
+  void testMyCurrentGameList2() {
+    // Given
+    UserEntity user = new UserEntity();
+    user.setUserId(1L);
+
+    JwtTokenExtract jwtTokenExtractMock = mock(JwtTokenExtract.class);
+    UserRepository userRepositoryMock = mock(UserRepository.class);
+    GameCheckOutRepository gameCheckOutRepositoryMock = mock(
+        GameCheckOutRepository.class);
+
+    List<ParticipantGameEntity> userGameList = new ArrayList<>();
+    GameEntity futureGame = new GameEntity();
+    futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
+    futureGame.setUserEntity(user);
+    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
+    participantGameEntity.setGameEntity(futureGame);
+    userGameList.add(participantGameEntity);
+
+    // When
+    when(jwtTokenExtractMock.currentUser()).thenReturn(user);
+    when(userRepositoryMock.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(gameCheckOutRepositoryMock.findByUserEntity_UserIdAndStatus(
+        user.getUserId(), ParticipantGameStatus.ACCEPT))
+        .thenReturn(Optional.of(userGameList));
+
+    GameUserService gameUserService = new GameUserService(
+        gameCheckOutRepositoryMock, null, userRepositoryMock,
+        jwtTokenExtractMock);
+    int pageSize = 10;
+    Page<GameSearchResponse> resultPage = gameUserService.myCurrentGameList(
+        pageSize);
+    List<GameSearchResponse> result = resultPage.getContent();
 
     // Then
     assertEquals(1, result.size());

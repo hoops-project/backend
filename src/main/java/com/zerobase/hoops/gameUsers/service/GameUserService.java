@@ -20,9 +20,13 @@ import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +41,7 @@ public class GameUserService {
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
-  public List<GameSearchResponse> myCurrentGameList() {
+  public Page<GameSearchResponse> myCurrentGameList(int size) {
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
@@ -47,8 +51,7 @@ public class GameUserService {
         .toList();
 
     Long userId = jwtTokenExtract.currentUser().getUserId();
-
-    return getGameSearchResponses(games, userId);
+    return getPageGameSearchResponses(games, userId, size);
   }
 
   public List<GameSearchResponse> myLastGameList() {
@@ -92,6 +95,20 @@ public class GameUserService {
     return getGameSearchResponses(allFromDateToday, userId);
   }
 
+  private static Page<GameSearchResponse> getPageGameSearchResponses(
+      List<GameEntity> gameListNow, Long userId, int size) {
+    List<GameSearchResponse> gameList = new ArrayList<>();
+    gameListNow.forEach(
+        (e) -> gameList.add(GameSearchResponse.of(e, userId)));
+
+    int start = 0;
+    int end = Math.min(size, gameList.size());
+
+    List<GameSearchResponse> pageContent = gameList.subList(0, end);
+    PageRequest pageable = PageRequest.of(start, end);
+    return new PageImpl<>(pageContent, pageable, gameList.size());
+  }
+
   private static List<GameSearchResponse> getGameSearchResponses(
       List<GameEntity> gameListNow, Long userId) {
     List<GameSearchResponse> gameList = new ArrayList<>();
@@ -99,6 +116,7 @@ public class GameUserService {
         (e) -> gameList.add(GameSearchResponse.of(e, userId)));
     return gameList;
   }
+
   @Transactional
   public ParticipateGameDto participateInGame(Long gameId) {
     Long userId = jwtTokenExtract.currentUser().getUserId();
