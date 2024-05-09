@@ -99,7 +99,8 @@ class GameUserServiceTest {
     when(gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
         user.getUserId(), ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
-    Page<GameSearchResponse> result = gameUserService.myCurrentGameList(1);
+    Page<GameSearchResponse> result = gameUserService.myCurrentGameList(1,
+        1);
     List<GameSearchResponse> result2 = result.getContent();
 
     // Then
@@ -139,6 +140,7 @@ class GameUserServiceTest {
         jwtTokenExtractMock);
     int pageSize = 10;
     Page<GameSearchResponse> resultPage = gameUserService.myCurrentGameList(
+        1,
         pageSize);
     List<GameSearchResponse> result = resultPage.getContent();
 
@@ -166,10 +168,10 @@ class GameUserServiceTest {
         user.getUserId(),
         ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
-    List<GameSearchResponse> result = gameUserService.myLastGameList();
-
+    Page<GameSearchResponse> result = gameUserService.myLastGameList(1, 1);
+    List<GameSearchResponse> result2 = result.getContent();
     // Then
-    assertEquals(1, result.size());
+    assertEquals(1, result2.size());
   }
 
   @Test
@@ -238,12 +240,12 @@ class GameUserServiceTest {
     when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
-    List<GameSearchResponse> result = gameUserService.findFilteredGames(
-        null,
-        null, null, null, null);
-
+    Page<GameSearchResponse> result = gameUserService.findFilteredGames(
+        null, null, null, null, null
+        , 1, 2);
+    List<GameSearchResponse> result2 = result.getContent();
     // Then
-    assertEquals(gameEntities.size(), result.size());
+    assertEquals(gameEntities.size(), result2.size());
   }
 
   @Test
@@ -271,12 +273,12 @@ class GameUserServiceTest {
     when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
-    List<GameSearchResponse> result = gameUserService.findFilteredGames(
-        date,
-        cityName, fieldStatus, gender, matchFormat);
+    Page<GameSearchResponse> result = gameUserService.findFilteredGames(
+        date, cityName, fieldStatus, gender, matchFormat, 1, 2);
+    List<GameSearchResponse> result2 = result.getContent();
 
     // Then
-    assertEquals(gameEntities.size(), result.size());
+    assertEquals(gameEntities.size(), result2.size());
   }
 
   @Test

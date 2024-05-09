@@ -85,7 +85,6 @@ class GameUserControllerTest {
     FieldStatus fieldStatus = FieldStatus.INDOOR;
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.THREEONTHREE;
-    int size = 3;
 
     LocalDateTime time = LocalDateTime.now()
         .plusDays(10);
@@ -114,11 +113,13 @@ class GameUserControllerTest {
     Page<GameSearchResponse> expectedPage = new PageImpl<>(gameSearchResponses);
 
     // When
-    when(gameUserService.myCurrentGameList(size)).thenReturn(
+    when(gameUserService.myCurrentGameList(1,1)).thenReturn(
         (expectedPage));
 
     // Then
-    mockMvc.perform(get("/api/game-user/my-current-game-list/{size}", size)
+    mockMvc.perform(get("/api/game-user/my-current-game-list")
+            .param("page", "1")
+            .param("size", "1")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andDo(print())
@@ -161,18 +162,20 @@ class GameUserControllerTest {
     gameEntity.setUserEntity(userEntity);
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getUserId()));
-
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(gameSearchResponses);
     // When
-    when(gameUserService.myLastGameList()).thenReturn(gameSearchResponses);
+    when(gameUserService.myLastGameList(1,1)).thenReturn(expectedPage);
 
     // Then
     mockMvc.perform(get("/api/game-user/my-last-game-list")
+            .param("page", "1")
+            .param("size", "1")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getGameId()))
-        .andExpect(jsonPath("$").isArray());
+        .andExpect(jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$.content").isArray());
   }
 
   @DisplayName("게임 참가 요청 성공")
@@ -224,10 +227,10 @@ class GameUserControllerTest {
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getUserId()));
-
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(gameSearchResponses);
     // When
     when(gameUserService.findFilteredGames(any(), any(), any(),
-        any(), any())).thenReturn(gameSearchResponses);
+        any(), any(), eq(1), eq(1))).thenReturn(expectedPage);
 
     // Then
     mockMvc.perform(get("/api/game-user/search")
@@ -236,11 +239,13 @@ class GameUserControllerTest {
             .param("fieldStatus", fieldStatus.toString())
             .param("gender", gender.toString())
             .param("matchFormat", matchFormat.toString())
+            .param("page", "1")
+            .param("size", "1")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray());
+        .andExpect(jsonPath("$.content").isArray());
   }
 
   @DisplayName("필터 검색 데이터 테스트")
@@ -277,11 +282,12 @@ class GameUserControllerTest {
     gameEntity.setUserEntity(userEntity);
     List<GameSearchResponse> expectedGames = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(expectedGames);
 
     // When
     when(gameUserService.findFilteredGames(eq(localDate), eq(cityName),
-        eq(fieldStatus), eq(gender), eq(matchFormat)))
-        .thenReturn(expectedGames);
+        eq(fieldStatus), eq(gender), eq(matchFormat),eq(1),eq(1)))
+        .thenReturn(expectedPage);
 
     // Then
     mockMvc.perform(get("/api/game-user/search")
@@ -290,31 +296,23 @@ class GameUserControllerTest {
             .param("fieldStatus", fieldStatus.name())
             .param("gender", gender.name())
             .param("matchFormat", matchFormat.name())
+            .param("page", "1")
+            .param("size", "1")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()").value(expectedGames.size()))
-        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getGameId()))
-        .andExpect(jsonPath("$[0].title").value(gameEntity.getTitle()))
-        .andExpect(jsonPath("$[0].content").value(gameEntity.getContent()))
-        .andExpect(
-            jsonPath("$[0].headCount").value(gameEntity.getHeadCount()))
-        .andExpect(jsonPath("$[0].fieldStatus").value(
-            gameEntity.getFieldStatus().name()))
-        .andExpect(
-            jsonPath("$[0].gender").value(gameEntity.getGender().name()))
-        .andExpect(jsonPath("$[0].startDateTime").value(
-            gameEntity.getStartDateTime().toString()))
-        .andExpect(
-            jsonPath("$[0].inviteYn").value(gameEntity.getInviteYn()))
-        .andExpect(jsonPath("$[0].address").value(gameEntity.getAddress()))
-        .andExpect(
-            jsonPath("$[0].latitude").value(gameEntity.getLatitude()))
-        .andExpect(
-            jsonPath("$[0].longitude").value(gameEntity.getLongitude()))
-        .andExpect(jsonPath("$[0].cityName").value(
-            gameEntity.getCityName().name()))
-        .andExpect(jsonPath("$[0].matchFormat").value(
-            gameEntity.getMatchFormat().name()));
+        .andExpect(jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$.content[0].title").value(gameEntity.getTitle()))
+        .andExpect(jsonPath("$.content[0].content").value(gameEntity.getContent()))
+        .andExpect(jsonPath("$.content[0].headCount").value(gameEntity.getHeadCount()))
+        .andExpect(jsonPath("$.content[0].fieldStatus").value(gameEntity.getFieldStatus().name()))
+        .andExpect(jsonPath("$.content[0].gender").value(gameEntity.getGender().name()))
+        .andExpect(jsonPath("$.content[0].startDateTime").value(gameEntity.getStartDateTime().toString()))
+        .andExpect(jsonPath("$.content[0].inviteYn").value(gameEntity.getInviteYn()))
+        .andExpect(jsonPath("$.content[0].address").value(gameEntity.getAddress()))
+        .andExpect(jsonPath("$.content[0].latitude").value(gameEntity.getLatitude()))
+        .andExpect(jsonPath("$.content[0].longitude").value(gameEntity.getLongitude()))
+        .andExpect(jsonPath("$.content[0].cityName").value(gameEntity.getCityName().name()))
+        .andExpect(jsonPath("$.content[0].matchFormat").value(gameEntity.getMatchFormat().name()));
   }
 
   @DisplayName("주소 검색 테스트")
