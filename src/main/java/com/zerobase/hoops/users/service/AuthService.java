@@ -4,6 +4,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.security.TokenProvider;
+import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
@@ -81,7 +82,7 @@ public class AuthService {
       throw new CustomException(ErrorCode.NOT_MATCHED_TOKEN);
     }
 
-    if(!userEntity.getId().equals(id)) {
+    if (!userEntity.getId().equals(id)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
@@ -126,7 +127,8 @@ public class AuthService {
     Claims claims = tokenProvider.parseClaims(accessToken);
     String id = claims.get("id", String.class);
 
-    if(tokenUserMatch(accessToken, refreshToken) && id.equals(userEntity.getId())) {
+    if (tokenUserMatch(accessToken, refreshToken) &&
+        id.equals(userEntity.getId())) {
       authRepository.deleteById(id);
     } else {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
@@ -142,5 +144,36 @@ public class AuthService {
     String refreshId = refreshClaims.get("id", String.class);
 
     return accessId.equals(refreshId);
+  }
+
+  public UserDto getUserInfo(HttpServletRequest request, UserEntity user) {
+    isSameId(request, user);
+    return UserDto.fromEntity(user);
+  }
+
+  public UserDto editUserInfo(HttpServletRequest request,
+      EditDto.Request editDto, UserEntity user) {
+    isSameId(request, user);
+
+    if(editDto.getPassword() != null) {
+      String encodedNewPassword = passwordEncoder.encode(editDto.getPassword());
+      user.passwordEdit(encodedNewPassword);
+    }
+
+    user.edit(editDto);
+    userRepository.save(user);
+
+    return UserDto.fromEntity(user);
+  }
+
+  private void isSameId(HttpServletRequest request, UserEntity user) {
+    String accessToken = validateAccessTokenExistHeader(request);
+
+    Claims claims = tokenProvider.parseClaims(accessToken);
+    String id = claims.get("id", String.class);
+
+    if (!user.getId().equals(id)) {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
   }
 }
