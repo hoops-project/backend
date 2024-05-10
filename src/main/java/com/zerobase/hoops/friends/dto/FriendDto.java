@@ -3,6 +3,9 @@ package com.zerobase.hoops.friends.dto;
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.type.FriendStatus;
+import com.zerobase.hoops.users.type.AbilityType;
+import com.zerobase.hoops.users.type.GenderType;
+import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -318,20 +321,15 @@ public class FriendDto {
 
     private LocalDate birthday;
 
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime acceptedDateTime;
-
-    private LocalDateTime deletedDateTime;
+    private GenderType gender;
 
     private String nickName;
 
-    private String friendNickName;
+    private PlayStyleType playStyle;
 
-    public static SearchResponse toDto(FriendEntity friendEntity) {
-      return SearchResponse.builder()
-          .build();
-    }
+    private AbilityType ability;
+
+    private Long friendId;
   }
 
 }

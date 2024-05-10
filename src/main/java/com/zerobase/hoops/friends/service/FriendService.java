@@ -3,6 +3,7 @@ package com.zerobase.hoops.friends.service;
 import static com.zerobase.hoops.exception.ErrorCode.ALREADY_APPLY_ACCEPT_STATUS;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_ACCEPT_FRIEND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_APPLY_FRIEND;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_NICKNAME;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_ACCEPT;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_APPLY;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_FRIEND;
@@ -26,6 +27,7 @@ import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
+import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -33,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,6 +48,8 @@ public class FriendService {
   private final JwtTokenExtract jwtTokenExtract;
 
   private final UserRepository userRepository;
+
+  private final FriendCustomRepositoryImpl friendCustomRepository;
 
   private static UserEntity user;
 
@@ -236,6 +242,25 @@ public class FriendService {
     return result;
   }
 
+  /**
+   * 친구 검색
+   */
+  public Page<SearchResponse> searchNickName(String nickName, Pageable pageable) {
+    // validaiton
+    if(nickName.trim().isEmpty()) {
+      throw new CustomException(NOT_FOUND_NICKNAME);
+    }
+
+    setUpUser();
+
+    Page<SearchResponse> result =
+        friendCustomRepository.findBySearchFriendList
+            (user.getUserId(), nickName,
+            pageable);
+
+    return result;
+  }
+
   public void setUpUser() {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
@@ -243,14 +268,5 @@ public class FriendService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
 
-  /**
-   * 친구 검색
-   */
-  public List<SearchResponse> searchNickName(String nickName) {
-    setUpUser();
 
-    List<SearchResponse> result = new ArrayList<>();
-
-    return result;
-  }
 }

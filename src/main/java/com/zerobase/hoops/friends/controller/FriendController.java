@@ -1,5 +1,6 @@
 package com.zerobase.hoops.friends.controller;
 
+import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.dto.FriendDto;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
@@ -17,6 +18,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,10 +98,12 @@ public class FriendController {
    */
   @Operation(summary = "친구 검색")
   @GetMapping("/search")
-  public ResponseEntity<Map<String, List<SearchResponse>>> searchFriend(
-      @RequestParam String nickName) {
-    List<SearchResponse> result = friendService.searchNickName(nickName);
-    return ResponseEntity.ok(Collections.singletonMap("searchList", result));
+  public ResponseEntity<Page<SearchResponse>> searchFriend(
+      @RequestParam String nickName,
+      @PageableDefault(size = 10) Pageable pageable) {
+    Page<SearchResponse> result = friendService.searchNickName(nickName,
+        pageable);
+    return ResponseEntity.ok(result);
   }
 
 }

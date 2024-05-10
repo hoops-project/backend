@@ -74,6 +74,7 @@ public enum ErrorCode {
   SELF_FRIEND_FULL(HttpStatus.BAD_REQUEST.value(), "나의 친구가 다 찼습니다."),
   NOT_FOUND_APPLY_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 신청한 상태가 아닙니다."),
   NOT_FOUND_ACCEPT_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 수락한 상태가 아닙니다."),
+  NOT_FOUND_NICKNAME(HttpStatus.BAD_REQUEST.value(), "닉네임은 필수 값 입니다."),
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
