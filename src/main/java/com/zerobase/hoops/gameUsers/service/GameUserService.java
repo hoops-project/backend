@@ -60,20 +60,20 @@ public class GameUserService {
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    Long GameLongId = Long.valueOf(gameId);
+    Long gameLongId = Long.valueOf(gameId);
 
     gameUserRepository.findByGameIdAndStartDateTimeBefore(
-            GameLongId, LocalDateTime.now())
+            gameLongId, LocalDateTime.now())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     boolean finalCheck = gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
-        GameLongId, userId, ParticipantGameStatus.ACCEPT);
+        gameLongId, userId, ParticipantGameStatus.ACCEPT);
 
     if (!finalCheck) {
       throw new CustomException(ErrorCode.GAME_NOT_FOUND);
     }
     return gameCheckOutRepository.findByStatusAndGameEntity_GameId(
-            ParticipantGameStatus.ACCEPT, GameLongId)
+            ParticipantGameStatus.ACCEPT, gameLongId)
         .orElseThrow(
             () -> new CustomException(ErrorCode.GAME_NOT_FOUND));
   }

@@ -12,6 +12,7 @@ public class MannerPointListResponse {
   private String title;
   private String address;
   private String player;
+  private Long playerId;
 
   public static MannerPointListResponse of(
       ParticipantGameEntity participantGame) {
@@ -20,6 +21,7 @@ public class MannerPointListResponse {
         .title(participantGame.getGameEntity().getTitle())
         .address(participantGame.getGameEntity().getAddress())
         .player(participantGame.getUserEntity().getNickName())
+        .playerId(participantGame.getUserEntity().getUserId())
         .build();
   }
 }
