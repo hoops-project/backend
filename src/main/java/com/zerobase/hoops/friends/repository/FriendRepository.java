@@ -24,4 +24,6 @@ public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
       Long userId, FriendStatus friendStatus);
 
   int countByFriendUserEntityUserIdAndStatusIn(Long friendUserId, List<FriendStatus> apply);
+
+  Page<FriendEntity> findByUserEntityUserId(Long userId, Pageable pageable);
 }

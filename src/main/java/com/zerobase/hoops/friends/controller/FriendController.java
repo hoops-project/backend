@@ -19,6 +19,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -110,10 +111,11 @@ public class FriendController {
    */
   @Operation(summary = "친구 리스트 조회")
   @GetMapping("/myfriends")
-  public ResponseEntity<Page<SearchResponse>> getMyFriends(
-      @PageableDefault(size = 10, page = 0) Pageable pageable) {
-    Page<SearchResponse> result = friendService.getMyFriends(pageable);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, List<SearchResponse>>> getMyFriends(
+      @PageableDefault(size = 10, page = 0, sort = "FriendUserEntityNickName",
+          direction = Direction.ASC) Pageable pageable) {
+    List<SearchResponse> result = friendService.getMyFriends(pageable);
+    return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
   }
 
 }

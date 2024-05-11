@@ -36,7 +36,9 @@ import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -264,12 +266,18 @@ public class FriendService {
   /**
    * 친구 리스트 조회
    */
-  public Page<SearchResponse> getMyFriends(Pageable pageable) {
+  public List<SearchResponse> getMyFriends(Pageable pageable) {
     setUpUser();
 
-    Page<SearchResponse> result =
-        friendCustomRepository.findBySearchMyFriendList
+    Page<FriendEntity> friendEntityPage =
+        friendRepository.findByUserEntityUserId
             (user.getUserId(), pageable);
+
+    List<SearchResponse> result = new ArrayList<>();
+
+    friendEntityPage.stream().forEach(friendEntity -> {
+      result.add(SearchResponse.toDto(friendEntity));
+    });
 
     return result;
   }

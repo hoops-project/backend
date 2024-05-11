@@ -330,6 +330,19 @@ public class FriendDto {
     private AbilityType ability;
 
     private Long friendId;
+
+    public static SearchResponse toDto(FriendEntity friendEntity) {
+      return SearchResponse.builder()
+          .userId(friendEntity.getFriendUserEntity().getUserId())
+          .birthday(friendEntity.getFriendUserEntity().getBirthday())
+          .gender(friendEntity.getFriendUserEntity().getGender())
+          .nickName(friendEntity.getFriendUserEntity().getNickName())
+          .playStyle(friendEntity.getFriendUserEntity().getPlayStyle())
+          .ability(friendEntity.getFriendUserEntity().getAbility())
+          .friendId(friendEntity.getFriendId())
+          .build();
+    }
+
   }
 
 }

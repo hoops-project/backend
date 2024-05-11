@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class FriendCustomRepositoryImpl implements FriendCustomRepository {
+
   private final JPAQueryFactory jpaQueryFactory;
 
   public FriendCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
@@ -29,73 +30,24 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     QFriendEntity friend = QFriendEntity.friendEntity;
 
     // Count query 생성
-    JPAQuery<Long> countQuery = jpaQueryFactory.select(user.count())
-        .from(user)
+    JPAQuery<Long> countQuery = jpaQueryFactory.select(user.count()).from(user)
         .leftJoin(friend).on(user.userId.eq(friend.friendUserEntity.userId)
-            .and(friend.userEntity.userId.eq(userId)))
-        .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId)));
+            .and(friend.userEntity.userId.eq(userId))).where(
+            user.nickName.likeIgnoreCase("%" + nickName + "%").and(user.userId.ne(userId)));
 
     // Pageable에서 페이지 번호와 페이지 크기 가져오기
     int pageNumber = pageable.getPageNumber();
     int pageSize = pageable.getPageSize();
 
     // 결과 쿼리 생성
-    List<SearchResponse> result = jpaQueryFactory
-        .select(Projections.constructor(
-            SearchResponse.class,
-            user.userId,
-            user.birthday,
-            user.gender,
-            user.nickName,
-            user.playStyle,
-            user.ability,
-            friend.friendId))
-        .from(user)
-        .leftJoin(friend).on(user.userId.eq(friend.friendUserEntity.userId)
-            .and(friend.userEntity.userId.eq(userId)))
-        .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId)))
-        .orderBy(user.nickName.asc())
-        .offset((long) pageNumber * pageSize)
-        .limit(pageSize)
-        .fetch();
+    List<SearchResponse> result = jpaQueryFactory.select(
+            Projections.constructor(SearchResponse.class, user.userId, user.birthday,
+                user.gender, user.nickName, user.playStyle, user.ability, friend.friendId)).from(user).leftJoin(friend)
+        .on(user.userId.eq(friend.friendUserEntity.userId)
+            .and(friend.userEntity.userId.eq(userId))).where(
+            user.nickName.likeIgnoreCase("%" + nickName + "%").and(user.userId.ne(userId))).orderBy(user.nickName.asc())
+        .offset((long) pageNumber * pageSize).limit(pageSize).fetch();
 
-    // 전체 결과의 크기 가져오기
-    long total = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
-
-    return new PageImpl<>(result, pageable, total);
-  }
-
-  public Page<SearchResponse> findBySearchMyFriendList(Long userId, Pageable pageable) {
-    QFriendEntity friend = QFriendEntity.friendEntity;
-
-    // Count query 생성
-    JPAQuery<Long> countQuery = jpaQueryFactory.select(friend.count())
-        .from(friend)
-        .where(friend.userEntity.userId.eq(userId));
-
-    // Pageable에서 페이지 번호와 페이지 크기 가져오기
-    int pageNumber = pageable.getPageNumber();
-    int pageSize = pageable.getPageSize();
-
-    // 결과 쿼리 생성
-    List<SearchResponse> result = jpaQueryFactory
-        .select(Projections.constructor(
-            SearchResponse.class,
-            friend.friendUserEntity.userId,
-            friend.friendUserEntity.birthday,
-            friend.friendUserEntity.gender,
-            friend.friendUserEntity.nickName,
-            friend.friendUserEntity.playStyle,
-            friend.friendUserEntity.ability,
-            friend.friendId))
-        .from(friend)
-        .where(friend.userEntity.userId.eq(userId))
-        .orderBy(friend.friendUserEntity.nickName.asc())
-        .offset((long) pageNumber * pageSize)
-        .limit(pageSize)
-        .fetch();
     // 전체 결과의 크기 가져오기
     long total = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
 
