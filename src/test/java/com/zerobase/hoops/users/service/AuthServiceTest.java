@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.SignUpDto;
+import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDate;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,4 +159,87 @@ class AuthServiceTest {
     assertEquals("인증되지 않은 회원입니다.", exception.getMessage());
   }
 
+  @Test
+  @DisplayName("Get_User_Info_Success")
+  void getUserInfoTest() {
+    // given
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    UserDto user = authService.logInUser(LogInDto.Request.builder()
+        .id("testUser")
+        .password("Abcdefg123$%")
+        .build());
+    TokenDto token = authService.getToken(user);
+
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.addHeader("Authorization", "Bearer " + token.getAccessToken());
+
+    UserEntity userEntity = userRepository.findById("testUser")
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // when
+    UserDto userInfo = authService.getUserInfo(request, userEntity);
+
+    // then
+    assertEquals(userInfo.getUserId(), 12);
+    assertEquals(userInfo.getId(), "testUser");
+    assertTrue(passwordEncoder.matches(
+        "Abcdefg123$%", userInfo.getPassword())
+    );
+    assertEquals(userInfo.getEmail(), "test@hoops.com");
+    assertEquals(userInfo.getName(), "테스트");
+    assertEquals(userInfo.getBirthday(), LocalDate
+        .parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")));
+    assertEquals(userInfo.getGender(), "MALE");
+    assertEquals(userInfo.getNickName(), "별명");
+    assertEquals(userInfo.getPlayStyle(), "BALANCE");
+    assertEquals(userInfo.getAbility(), "SHOOT");
+    for (int i = 0; i < userInfo.getRoles().size(); i++) {
+      assertEquals(userInfo.getRoles().get(i), "ROLE_USER");
+    }
+  }
+
+  @Test
+  @DisplayName("Edit_User_Info_Success")
+  void editUserInfoTest() {
+    // given
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    UserDto user = authService.logInUser(LogInDto.Request.builder()
+        .id("testUser")
+        .password("Abcdefg123$%")
+        .build());
+    TokenDto token = authService.getToken(user);
+
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.addHeader("Authorization", "Bearer " + token.getAccessToken());
+
+    UserEntity userEntity = userRepository.findById("testUser")
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    EditDto.Request requestEdit = EditDto.Request.builder()
+        .password("TransPa1@#")
+        .nickName("변경")
+        .gender("FEMALE")
+        .build();
+
+    // when
+    UserDto edit = authService.editUserInfo(request, requestEdit, userEntity);
+
+    // then
+    assertEquals(edit.getUserId(), 12);
+    assertEquals(edit.getId(), "testUser");
+    assertTrue(passwordEncoder.matches(
+        "TransPa1@#", edit.getPassword())
+    );
+    assertEquals(edit.getEmail(), "test@hoops.com");
+    assertEquals(edit.getName(), "테스트");
+    assertEquals(edit.getBirthday(), LocalDate
+        .parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")));
+    assertEquals(edit.getGender(), "FEMALE");
+    assertEquals(edit.getNickName(), "변경");
+    assertEquals(edit.getPlayStyle(), "BALANCE");
+    assertEquals(edit.getAbility(), "SHOOT");
+    for (int i = 0; i < edit.getRoles().size(); i++) {
+      assertEquals(edit.getRoles().get(i), "ROLE_USER");
+    }
+  }
 }
