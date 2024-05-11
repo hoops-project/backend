@@ -24,7 +24,6 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
-import com.zerobase.hoops.friends.repository.FriendCustomRepository;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -35,10 +34,8 @@ import com.zerobase.hoops.users.type.PlayStyleType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +47,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class FriendServiceTest {
