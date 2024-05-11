@@ -75,6 +75,9 @@ public enum ErrorCode {
   NOT_FOUND_APPLY_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 신청한 상태가 아닙니다."),
   NOT_FOUND_ACCEPT_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 수락한 상태가 아닙니다."),
 
+  // 매너점수
+  INVALID_GAME_ID(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 game_id입니다."),
+
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
 
