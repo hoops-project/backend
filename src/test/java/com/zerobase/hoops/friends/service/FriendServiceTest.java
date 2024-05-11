@@ -468,6 +468,62 @@ class FriendServiceTest {
         responseList.get(1).getFriendId());
   }
 
+
+  @Test
+  @DisplayName("친구 리스트 조회 성공")
+  void getMyFriends_success() {
+    // Given
+    Pageable pageable = PageRequest.of(0, 1);
+
+    FriendEntity friendEntity1 = FriendEntity.builder()
+        .friendId(1L)
+        .status(ACCEPT)
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity friendEntity2 = FriendEntity.builder()
+        .friendId(2L)
+        .status(ACCEPT)
+        .userEntity(friendUserEntity)
+        .friendUserEntity(userEntity)
+        .build();
+
+    SearchResponse searchResponse1 = SearchResponse.builder()
+        .userId(2L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .nickName("test1")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .friendId(1L)
+        .build();
+
+    List<SearchResponse> searchResponseList =
+        List.of(searchResponse1);
+
+    Page<SearchResponse> searchResponsePage =
+        new PageImpl<>(searchResponseList, pageable, 1);
+
+    getCurrentUser();
+
+    when(friendCustomRepository.findBySearchMyFriendList
+        (1L, pageable))
+        .thenReturn(searchResponsePage);
+
+
+    // when
+    Page<SearchResponse> result = friendService.getMyFriends(pageable);
+    List<SearchResponse> responseList = result.getContent();
+
+    // Then
+    assertEquals(searchResponse1.getUserId(), responseList.get(0).getUserId());
+    assertEquals(searchResponse1.getBirthday(), responseList.get(0).getBirthday());
+    assertEquals(searchResponse1.getNickName(), responseList.get(0).getNickName());
+    assertEquals(searchResponse1.getPlayStyle(), responseList.get(0).getPlayStyle());
+    assertEquals(searchResponse1.getAbility(), responseList.get(0).getAbility());
+    assertEquals(searchResponse1.getFriendId(), responseList.get(0).getFriendId());
+  }
+
   private void getCurrentUser() {
     when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
 
