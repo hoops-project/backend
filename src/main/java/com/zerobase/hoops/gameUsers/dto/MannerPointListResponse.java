@@ -1,8 +1,6 @@
 package com.zerobase.hoops.gameUsers.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
 import lombok.Builder;
 import lombok.Data;
 
