@@ -246,7 +246,7 @@ public class FriendService {
    * 친구 검색
    */
   public Page<SearchResponse> searchNickName(String nickName, Pageable pageable) {
-    // validaiton
+    // validation
     if(nickName.trim().isEmpty()) {
       throw new CustomException(NOT_FOUND_NICKNAME);
     }

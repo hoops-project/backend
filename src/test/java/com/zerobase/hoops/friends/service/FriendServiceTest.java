@@ -23,7 +23,10 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
+import com.zerobase.hoops.friends.repository.FriendCustomRepository;
 import com.zerobase.hoops.friends.repository.FriendRepository;
+import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -32,8 +35,10 @@ import com.zerobase.hoops.users.type.PlayStyleType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +46,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class FriendServiceTest {
@@ -56,6 +66,9 @@ class FriendServiceTest {
 
   @Mock
   private FriendRepository friendRepository;
+
+  @Mock
+  private FriendCustomRepositoryImpl friendCustomRepository;
 
   private UserEntity userEntity;
   private UserEntity friendUserEntity;
@@ -367,6 +380,92 @@ class FriendServiceTest {
     assertEquals(otherDeleteEntity.getFriendUserEntity().getNickName(),
         result.get(1).getFriendNickName());
 
+  }
+
+  @Test
+  @DisplayName("친구 검색 성공")
+  void searchNickName_success() {
+    // Given
+    String nickName = "test";
+    Pageable pageable = PageRequest.of(0, 4);
+
+    UserEntity otherEntity = UserEntity.builder()
+        .userId(3L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("test2")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .build();
+
+    FriendEntity friendEntity1 = FriendEntity.builder()
+        .friendId(1L)
+        .status(ACCEPT)
+        .userEntity(userEntity)
+        .friendUserEntity(friendUserEntity)
+        .build();
+
+    FriendEntity friendEntity2 = FriendEntity.builder()
+        .friendId(2L)
+        .status(ACCEPT)
+        .userEntity(friendUserEntity)
+        .friendUserEntity(userEntity)
+        .build();
+
+    SearchResponse searchResponse1 = SearchResponse.builder()
+        .userId(2L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .nickName("test1")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .friendId(1L)
+        .build();
+
+    SearchResponse searchResponse2 = SearchResponse.builder()
+        .userId(3L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .nickName("test2")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .friendId(null)
+        .build();
+
+    List<SearchResponse> searchResponseList =
+        List.of(searchResponse1, searchResponse2);
+
+    Page<SearchResponse> searchResponsePage =
+        new PageImpl<>(searchResponseList, pageable, 2);
+
+    getCurrentUser();
+
+    when(friendCustomRepository.findBySearchFriendList
+        (1L, nickName, pageable))
+        .thenReturn(searchResponsePage);
+
+
+    // when
+    Page<SearchResponse> result = friendService.searchNickName(nickName, pageable);
+    List<SearchResponse> responseList = result.getContent();
+
+    // Then
+    assertEquals(searchResponse1.getUserId(), responseList.get(0).getUserId());
+    assertEquals(searchResponse1.getBirthday(), responseList.get(0).getBirthday());
+    assertEquals(searchResponse1.getNickName(), responseList.get(0).getNickName());
+    assertEquals(searchResponse1.getPlayStyle(), responseList.get(0).getPlayStyle());
+    assertEquals(searchResponse1.getAbility(), responseList.get(0).getAbility());
+    assertEquals(searchResponse1.getFriendId(), responseList.get(0).getFriendId());
+
+    assertEquals(searchResponse2.getFriendId(), responseList.get(1).getFriendId());
+    assertEquals(searchResponse2.getBirthday(),
+        responseList.get(1).getBirthday());
+    assertEquals(searchResponse2.getNickName(),
+        responseList.get(1).getNickName());
+    assertEquals(searchResponse2.getPlayStyle(),
+        responseList.get(1).getPlayStyle());
+    assertEquals(searchResponse2.getAbility(),
+        responseList.get(1).getAbility());
+    assertEquals(searchResponse2.getFriendId(),
+        responseList.get(1).getFriendId());
   }
 
   private void getCurrentUser() {
