@@ -1,6 +1,7 @@
 package com.zerobase.hoops.users.controller;
 
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.LogInDto.Response;
 import com.zerobase.hoops.users.dto.TokenDto;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,5 +87,40 @@ public class AuthController {
     authService.logOutUser(request, userEntity);
 
     return ResponseEntity.ok(HttpStatus.OK);
+  }
+
+  /**
+   * 회원 정보 조회
+   */
+  @Operation(summary = "회원 정보 조회")
+  @GetMapping("/user/info")
+  public ResponseEntity<UserDto> getUserInfo(
+      HttpServletRequest request,
+      @AuthenticationPrincipal UserEntity user
+  ) {
+    UserDto userDto = authService.getUserInfo(request, user);
+
+    return ResponseEntity.ok(userDto);
+  }
+
+  /**
+   * 회원 정보 수정
+   */
+  @Operation(summary = "회원 정보 수정")
+  @PatchMapping("/user/edit")
+  public ResponseEntity<EditDto.Response> editUserInfo(
+      HttpServletRequest request,
+      @RequestBody @Validated EditDto.Request editDto,
+      @AuthenticationPrincipal UserEntity user
+  ) {
+    UserDto userDto = authService.editUserInfo(request, editDto, user);
+    TokenDto tokenDto = authService.getToken(userDto);
+
+    HttpHeaders responseHeaders = new HttpHeaders();
+    responseHeaders.set("Authorization", tokenDto.getAccessToken());
+
+    return ResponseEntity.ok()
+        .headers(responseHeaders)
+        .body(EditDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));
   }
 }

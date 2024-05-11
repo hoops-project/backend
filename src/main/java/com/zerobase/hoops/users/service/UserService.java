@@ -188,7 +188,8 @@ public class UserService implements UserDetailsService {
         userRepository.findById(id)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    String newPassword = CertificationProvider.createCertificationNumber();
+    String newPassword =
+        "Gnqtm!" + CertificationProvider.createCertificationNumber();
     String encodedNewPassword = passwordEncoder.encode(newPassword);
     user.passwordEdit(encodedNewPassword);
     userRepository.save(user);

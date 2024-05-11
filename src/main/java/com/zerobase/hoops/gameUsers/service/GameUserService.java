@@ -98,6 +98,8 @@ public class GameUserService {
     gameListNow.forEach(
         (e) -> gameList.add(GameSearchResponse.of(e, userId)));
 
+    log.info("game list : " +gameList);
+    log.info("gameListNow : " + gameListNow);
     int totalSize = gameList.size();
     int totalPages = (int) Math.ceil((double) totalSize / size);
     int lastPage = totalPages == 0 ? 1 : totalPages;
@@ -169,14 +171,10 @@ public class GameUserService {
       LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
       Gender gender, MatchFormat matchFormat) {
     Specification<GameEntity> spec = Specification.where(
-        GameSpecifications.startDate(LocalDate.now())
-            .and(GameSpecifications.notDeleted()));
+        GameSpecifications.notDeleted());
+    
+    spec = spec.and(GameSpecifications.startDate(localDate));
 
-    if (localDate != null) {
-      spec = Specification.where(
-          GameSpecifications.withDate(localDate)
-              .and(GameSpecifications.notDeleted()));
-    }
     if (cityName != null) {
       spec = spec.and(GameSpecifications.withCityName(cityName));
     }

@@ -1,5 +1,6 @@
 package com.zerobase.hoops.entity;
 
+import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
@@ -97,6 +98,27 @@ public class UserEntity implements UserDetails {
   public void passwordEdit(String password) {
     if (!password.isEmpty()) {
       this.password = password;
+    }
+  }
+
+  public void edit(EditDto.Request request) {
+    if (request.getName() != null) {
+      this.name = request.getName();
+    }
+    if (request.getNickName() != null) {
+      this.nickName = request.getNickName();
+    }
+    if (request.getBirthday() != null) {
+      this.birthday = request.getBirthday();
+    }
+    if (request.getGender() != null) {
+      this.gender = GenderType.valueOf(request.getGender());
+    }
+    if (request.getPlayStyle() != null) {
+      this.playStyle = PlayStyleType.valueOf(request.getPlayStyle());
+    }
+    if (request.getAbility() != null) {
+      this.ability = AbilityType.valueOf(request.getAbility());
     }
   }
 

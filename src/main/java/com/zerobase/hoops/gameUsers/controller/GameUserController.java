@@ -37,13 +37,13 @@ public class GameUserController {
 
   @GetMapping("/search")
   public ResponseEntity<Page<GameSearchResponse>> findFilteredGames(
-      @RequestParam(required = false) LocalDate localDate,
+      @RequestParam LocalDate localDate,
       @RequestParam(required = false) CityName cityName,
       @RequestParam(required = false) FieldStatus fieldStatus,
       @RequestParam(required = false) Gender gender,
       @RequestParam(required = false) MatchFormat matchFormat,
-      @Positive @RequestParam int page,
-      @Positive @RequestParam int size) {
+      @RequestParam(value = "page", defaultValue = "1") @Positive int page,
+      @RequestParam(value = "size", defaultValue = "1") @Positive int size) {
     return ResponseEntity.ok(
         gameUserService.findFilteredGames(localDate,
             cityName, fieldStatus, gender, matchFormat, page, size));
@@ -66,8 +66,8 @@ public class GameUserController {
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/my-current-game-list")
   public ResponseEntity<Page<GameSearchResponse>> myCurrentGameList(
-      @Positive @RequestParam int page,
-      @Positive @RequestParam int size) {
+      @RequestParam(value = "page", defaultValue = "1") @Positive int page,
+      @RequestParam(value = "size", defaultValue = "1") @Positive int size) {
     return ResponseEntity.ok(
         gameUserService.myCurrentGameList(page, size));
   }
@@ -75,8 +75,8 @@ public class GameUserController {
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/my-last-game-list")
   public ResponseEntity<Page<GameSearchResponse>> myLastGameList(
-      @Positive @RequestParam int page,
-      @Positive @RequestParam int size) {
+      @RequestParam(value = "page", defaultValue = "1") @Positive int page,
+      @RequestParam(value = "size", defaultValue = "1") @Positive int size) {
     return ResponseEntity.ok(gameUserService.myLastGameList(page, size));
   }
 
