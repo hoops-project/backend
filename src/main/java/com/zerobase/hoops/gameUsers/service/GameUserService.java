@@ -13,6 +13,7 @@ import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
+import com.zerobase.hoops.gameUsers.repository.GameCheckOutSpecifications;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -171,21 +172,21 @@ public class GameUserService {
       LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
       Gender gender, MatchFormat matchFormat) {
     Specification<GameEntity> spec = Specification.where(
-        GameSpecifications.notDeleted());
+        GameCheckOutSpecifications.notDeleted());
     
-    spec = spec.and(GameSpecifications.startDate(localDate));
+    spec = spec.and(GameCheckOutSpecifications.startDate(localDate));
 
     if (cityName != null) {
-      spec = spec.and(GameSpecifications.withCityName(cityName));
+      spec = spec.and(GameCheckOutSpecifications.withCityName(cityName));
     }
     if (fieldStatus != null) {
-      spec = spec.and(GameSpecifications.withFieldStatus(fieldStatus));
+      spec = spec.and(GameCheckOutSpecifications.withFieldStatus(fieldStatus));
     }
     if (gender != null) {
-      spec = spec.and(GameSpecifications.withGender(gender));
+      spec = spec.and(GameCheckOutSpecifications.withGender(gender));
     }
     if (matchFormat != null) {
-      spec = spec.and(GameSpecifications.withMatchFormat(matchFormat));
+      spec = spec.and(GameCheckOutSpecifications.withMatchFormat(matchFormat));
     }
     return spec;
   }
