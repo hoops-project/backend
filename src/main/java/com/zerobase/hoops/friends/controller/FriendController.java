@@ -17,6 +17,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,10 +98,24 @@ public class FriendController {
    */
   @Operation(summary = "친구 검색")
   @GetMapping("/search")
-  public ResponseEntity<Map<String, List<SearchResponse>>> searchFriend(
-      @RequestParam String nickName) {
-    List<SearchResponse> result = friendService.searchNickName(nickName);
-    return ResponseEntity.ok(Collections.singletonMap("searchList", result));
+  public ResponseEntity<Page<SearchResponse>> searchFriend(
+      @RequestParam String nickName,
+      @PageableDefault(size = 10, page = 0) Pageable pageable) {
+    Page<SearchResponse> result = friendService.searchNickName(nickName,
+        pageable);
+    return ResponseEntity.ok(result);
+  }
+
+  /**
+   * 친구 리스트 조회
+   */
+  @Operation(summary = "친구 리스트 조회")
+  @GetMapping("/myfriends")
+  public ResponseEntity<Map<String, List<SearchResponse>>> getMyFriends(
+      @PageableDefault(size = 10, page = 0, sort = "FriendUserEntityNickName",
+          direction = Direction.ASC) Pageable pageable) {
+    List<SearchResponse> result = friendService.getMyFriends(pageable);
+    return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
   }
 
 }
