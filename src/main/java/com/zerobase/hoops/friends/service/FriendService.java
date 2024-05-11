@@ -261,12 +261,26 @@ public class FriendService {
     return result;
   }
 
+  /**
+   * 친구 리스트 조회
+   */
+  public Page<SearchResponse> getMyFriends(Pageable pageable) {
+    setUpUser();
+
+    Page<SearchResponse> result =
+        friendCustomRepository.findBySearchMyFriendList
+            (user.getUserId(), pageable);
+
+    return result;
+  }
+
   public void setUpUser() {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
+
 
 
 }

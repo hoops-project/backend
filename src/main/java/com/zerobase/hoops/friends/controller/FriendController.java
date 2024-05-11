@@ -1,6 +1,5 @@
 package com.zerobase.hoops.friends.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.dto.FriendDto;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
@@ -100,9 +99,20 @@ public class FriendController {
   @GetMapping("/search")
   public ResponseEntity<Page<SearchResponse>> searchFriend(
       @RequestParam String nickName,
-      @PageableDefault(size = 10) Pageable pageable) {
+      @PageableDefault(size = 10, page = 0) Pageable pageable) {
     Page<SearchResponse> result = friendService.searchNickName(nickName,
         pageable);
+    return ResponseEntity.ok(result);
+  }
+
+  /**
+   * 친구 리스트 조회
+   */
+  @Operation(summary = "친구 리스트 조회")
+  @GetMapping("/myfriends")
+  public ResponseEntity<Page<SearchResponse>> getMyFriends(
+      @PageableDefault(size = 10, page = 0) Pageable pageable) {
+    Page<SearchResponse> result = friendService.getMyFriends(pageable);
     return ResponseEntity.ok(result);
   }
 
