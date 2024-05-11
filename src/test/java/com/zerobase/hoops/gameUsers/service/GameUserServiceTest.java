@@ -3,6 +3,7 @@ package com.zerobase.hoops.gameUsers.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
@@ -27,8 +29,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +66,7 @@ class GameUserServiceTest {
 
   private UserEntity user;
   private GameEntity game;
-
+  private ParticipantGameEntity participateGame;
 
   @BeforeEach
   void setUp() {
@@ -78,7 +82,98 @@ class GameUserServiceTest {
         .startDateTime(LocalDateTime.now().plusHours(1))
         .userEntity(user)
         .build();
+
+    participateGame = ParticipantGameEntity.builder()
+        .gameEntity(game)
+        .userEntity(user)
+        .status(ParticipantGameStatus.ACCEPT)
+        .participantId(1L)
+        .build();
+
   }
+
+  @Test
+  void testGetMannerPoint_Success() {
+    // Give When
+    String gameId = "1";
+
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(eq(Long.valueOf(gameId)),
+        any(LocalDateTime.class)))
+        .thenAnswer(invocation -> Optional.of(
+            Collections.singletonList(participateGame)));
+
+    when(
+        gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+            eq(Long.valueOf(gameId)), eq(user.getUserId()),
+            eq(ParticipantGameStatus.ACCEPT)))
+        .thenReturn(true);
+    when(gameCheckOutRepository.findByStatusAndGameEntity_GameId(eq(ParticipantGameStatus.ACCEPT),
+        eq(Long.valueOf(gameId))))
+        .thenAnswer(invocation -> Optional.of(
+            Collections.singletonList(participateGame)));
+
+    List<MannerPointListResponse> result = gameUserService.getMannerPoint(
+        "1");
+
+    // Then
+    Assertions.assertNotNull(result);
+    Assertions.assertFalse(result.isEmpty());
+    Assertions.assertEquals(1, result.size());
+  }
+
+  @Test
+  void testGetMannerPointUserNotFound() {
+    // Give When
+    String gameId = "1";
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.empty());
+
+    // Then
+    Assertions.assertThrows(CustomException.class,
+        () -> gameUserService.getMannerPoint(gameId));
+  }
+
+  @Test
+  void testGetMannerPointGameNotFound() {
+    // Give When
+    String gameId = "1";
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
+        game.getGameId(), LocalDateTime.now())).thenReturn(
+        Optional.empty());
+
+    // Then
+    Assertions.assertThrows(CustomException.class,
+        () -> gameUserService.getMannerPoint(gameId));
+  }
+
+  @Test
+  void testGetMannerPointUserNotAccepted() {
+    // Give When
+    String gameId = "1";
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
+        game.getGameId(), LocalDateTime.now())).thenReturn(
+        Optional.of(game));
+    when(
+        gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+            game.getGameId(), user.getUserId(),
+            ParticipantGameStatus.ACCEPT)).thenReturn(false);
+
+    // Then
+    Assertions.assertThrows(CustomException.class,
+        () -> gameUserService.getMannerPoint(gameId));
+  }
+
 
   @Test
   @DisplayName("현제 참여중인 게임 리스트 불러오기 성공")
@@ -99,7 +194,8 @@ class GameUserServiceTest {
     when(gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
         user.getUserId(), ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
-    Page<GameSearchResponse> result = gameUserService.myCurrentGameList(1,
+    Page<GameSearchResponse> result = gameUserService.myCurrentGameList(
+        1,
         1);
     List<GameSearchResponse> result2 = result.getContent();
 
@@ -168,7 +264,8 @@ class GameUserServiceTest {
         user.getUserId(),
         ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
-    Page<GameSearchResponse> result = gameUserService.myLastGameList(1, 1);
+    Page<GameSearchResponse> result = gameUserService.myLastGameList(1,
+        1);
     List<GameSearchResponse> result2 = result.getContent();
     // Then
     assertEquals(1, result2.size());
@@ -237,7 +334,8 @@ class GameUserServiceTest {
         gameEntity2);
 
     // When
-    when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
+    when(
+        gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
     Page<GameSearchResponse> result = gameUserService.findFilteredGames(
@@ -250,7 +348,8 @@ class GameUserServiceTest {
 
   @Test
   @DisplayName("GameUserService 필터 테스트 2")
-  void findFilteredGames_whenSomeFiltersAreProvided_shouldReturnFilteredGames() {
+  void findFilteredGames_whenSomeFiltersAreProvided_shouldReturnFilteredGames
+      () {
     // Given
     LocalDate date = LocalDate.now();
     CityName cityName = CityName.SEOUL;
@@ -270,7 +369,8 @@ class GameUserServiceTest {
         gameEntity2);
 
     // When
-    when(gameUserRepository.findAll(any(Specification.class))).thenReturn(
+    when(
+        gameUserRepository.findAll(any(Specification.class))).thenReturn(
         gameEntities);
 
     Page<GameSearchResponse> result = gameUserService.findFilteredGames(
