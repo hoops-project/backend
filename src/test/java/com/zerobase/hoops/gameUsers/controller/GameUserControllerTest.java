@@ -6,11 +6,14 @@ import static com.zerobase.hoops.gameCreator.type.Gender.ALL;
 import static com.zerobase.hoops.gameCreator.type.MatchFormat.THREEONTHREE;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -18,6 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.MannerPointEntity;
+import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
@@ -25,19 +30,27 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
 import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.dto.UserJoinsGameDto;
+import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
+import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
+import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
 import com.zerobase.hoops.gameUsers.service.GameUserService;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
+import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.service.UserService;
+import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -66,8 +79,68 @@ class GameUserControllerTest {
   @MockBean
   private JwtTokenExtract jwtTokenExtract;
 
+  @MockBean
+  private UserRepository userRepository;
+
+  @MockBean
+  private GameUserRepository gameUserRepository;
+
+  @MockBean
+  private MannerPointRepository mannerPointRepository;
+
+  @MockBean
+  private GameCheckOutRepository gameCheckOutRepository;
+
   @Autowired
   private ObjectMapper objectMapper;
+
+
+  @DisplayName("매너점수 평가하기")
+  @WithMockUser
+  @Test
+  void testSaveMannerPointList() throws Exception {
+    // Given
+    LocalDateTime time = LocalDateTime.now();
+    GameEntity gameEntity = new GameEntity();
+    gameEntity.setGameId(1L);
+    gameEntity.setTitle("Test Game");
+    gameEntity.setStartDateTime(time.minusDays(1));
+    gameEntity.setAddress("Test Address");
+
+    UserEntity user = UserEntity.builder()
+        .userId(1L)
+        .gender(GenderType.MALE)
+        .build();
+
+    UserEntity receiverUser = UserEntity.builder()
+        .userId(2L)
+        .gender(GenderType.MALE)
+        .build();
+
+    MannerPointDto gameForManner = MannerPointDto.builder()
+        .receiverId(receiverUser.getUserId())
+        .gameId(gameEntity.getGameId())
+        .point(5)
+        .build();
+
+    given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
+    given(userRepository.findById(anyLong())).willReturn(Optional.of(receiverUser));
+    given(gameUserRepository.findByGameIdAndStartDateTimeBefore(anyLong(), any(LocalDateTime.class)))
+        .willReturn(Optional.of(gameEntity));
+    given(mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(anyLong(), anyLong(), anyLong()))
+        .willReturn(false);
+
+    // When
+    gameUserService.saveMannerPoint(gameForManner);
+
+    // Then
+    mockMvc.perform(post("/api/game-user/manner-point")
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(gameForManner)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.detail").value("Success"));
+  }
 
   @DisplayName("매너점수 리스트")
   @WithMockUser
@@ -80,17 +153,6 @@ class GameUserControllerTest {
     gameEntity.setTitle("Test Game");
     gameEntity.setStartDateTime(time.minusDays(1));
     gameEntity.setAddress("Test Address");
-
-    Long gameId = 1L;
-    UserJoinsGameDto.Request request = new UserJoinsGameDto.Request(
-        gameId);
-
-    ParticipateGameDto participateGameDto = ParticipateGameDto.builder()
-        .participantId(1L)
-        .status(ParticipantGameStatus.ACCEPT)
-        .gameEntity(mock(GameEntity.class))
-        .userEntity(mock(UserEntity.class))
-        .build();
 
     List<MannerPointListResponse> mannerPointList = Arrays.asList(
         MannerPointListResponse.builder()
@@ -106,10 +168,10 @@ class GameUserControllerTest {
             .player("Player 2")
             .build()
     );
-
+    // When
     when(gameUserService.getMannerPoint("8")).thenReturn(mannerPointList);
 
-    // When & Then
+    // Then
     mockMvc.perform(get("/api/game-user/manner-point/8"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(2)))

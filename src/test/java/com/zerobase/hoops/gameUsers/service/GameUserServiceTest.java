@@ -5,11 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.MannerPointEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -18,10 +23,12 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
 import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
+import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
@@ -37,6 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,19 +67,31 @@ class GameUserServiceTest {
   private UserRepository userRepository;
 
   @Mock
+  private MannerPointRepository mannerPointRepository;
+
+  @Mock
   private GameCheckOutRepository gameCheckOutRepository;
 
   @Mock
   private JwtTokenExtract jwtTokenExtract;
 
   private UserEntity user;
+  private UserEntity receiverUser;
   private GameEntity game;
+  private GameEntity gameForManner;
   private ParticipantGameEntity participateGame;
+  private ParticipantGameEntity participateGame2;
+  private MannerPointDto mannerPointDto;
 
   @BeforeEach
   void setUp() {
     user = UserEntity.builder()
         .userId(1L)
+        .gender(GenderType.MALE)
+        .build();
+
+    receiverUser = UserEntity.builder()
+        .userId(2L)
         .gender(GenderType.MALE)
         .build();
 
@@ -83,6 +103,14 @@ class GameUserServiceTest {
         .userEntity(user)
         .build();
 
+    gameForManner = GameEntity.builder()
+        .gameId(2L)
+        .headCount(10L)
+        .gender(Gender.MALEONLY)
+        .startDateTime(LocalDateTime.of(2023, 5, 8, 10, 0))
+        .userEntity(user)
+        .build();
+
     participateGame = ParticipantGameEntity.builder()
         .gameEntity(game)
         .userEntity(user)
@@ -90,18 +118,58 @@ class GameUserServiceTest {
         .participantId(1L)
         .build();
 
+    participateGame2 = ParticipantGameEntity.builder()
+        .gameEntity(game)
+        .userEntity(receiverUser)
+        .status(ParticipantGameStatus.ACCEPT)
+        .participantId(2L)
+        .build();
+
+    mannerPointDto = MannerPointDto.builder()
+        .receiverId(receiverUser.getUserId())
+        .gameId(gameForManner.getGameId())
+        .point(5)
+        .build();
+
+  }
+  @DisplayName("매너점수 평가하기 성공 - 1")
+  @Test
+  void testSaveMannerPoint() {
+    // Given
+    given(jwtTokenExtract.currentUser()).willReturn(user);
+    given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+    given(userRepository.findById(receiverUser.getUserId())).willReturn(Optional.of(receiverUser));
+    given(gameUserRepository.findById(gameForManner.getGameId())).willReturn(Optional.of(gameForManner));
+    given(gameCheckOutRepository.findById(participateGame.getParticipantId())).willReturn(Optional.of(participateGame));
+    given(gameCheckOutRepository.findById(participateGame2.getParticipantId())).willReturn(Optional.of(participateGame2));
+    given(gameUserRepository.findByGameIdAndStartDateTimeBefore(eq(gameForManner.getGameId()), any(LocalDateTime.class)))
+        .willReturn(Optional.of(gameForManner));
+    given(mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(
+        user.getUserId(), receiverUser.getUserId(), gameForManner.getGameId())).willReturn(false);
+
+    // When
+    gameUserService.saveMannerPoint(mannerPointDto);
+
+    // Then
+    ArgumentCaptor<MannerPointEntity> mannerPointEntityCaptor = ArgumentCaptor.forClass(
+        MannerPointEntity.class);
+    verify(mannerPointRepository).save(mannerPointEntityCaptor.capture());
+
   }
 
+  @DisplayName("매너점수 평가 리스트 갖고 오기")
   @Test
   void testGetMannerPoint_Success() {
-    // Give When
+    // Give
     String gameId = "1";
 
+    // When
     when(jwtTokenExtract.currentUser()).thenReturn(user);
     when(userRepository.findById(user.getUserId())).thenReturn(
         Optional.of(user));
 
-    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(eq(Long.valueOf(gameId)),
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
+        eq(Long.valueOf(gameId)),
         any(LocalDateTime.class)))
         .thenAnswer(invocation -> Optional.of(
             Collections.singletonList(participateGame)));
@@ -111,7 +179,8 @@ class GameUserServiceTest {
             eq(Long.valueOf(gameId)), eq(user.getUserId()),
             eq(ParticipantGameStatus.ACCEPT)))
         .thenReturn(true);
-    when(gameCheckOutRepository.findByStatusAndGameEntity_GameId(eq(ParticipantGameStatus.ACCEPT),
+    when(gameCheckOutRepository.findByStatusAndGameEntity_GameId(
+        eq(ParticipantGameStatus.ACCEPT),
         eq(Long.valueOf(gameId))))
         .thenAnswer(invocation -> Optional.of(
             Collections.singletonList(participateGame)));
@@ -125,6 +194,70 @@ class GameUserServiceTest {
     Assertions.assertEquals(1, result.size());
   }
 
+  @DisplayName("매너점수 평가하기 - 실패 (평가하는 사람 Not Found)")
+  @Test
+  void testSaveMannerPointUserNotFound() {
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.empty());
+
+    assertThrows(CustomException.class,
+        () -> gameUserService.saveMannerPoint(mannerPointDto));
+  }
+
+  @DisplayName("매너점수 평가하기 - 실패 (평가당하는 사람 Not Found)")
+  @Test
+  void testSaveMannerPointReceiverNotFound() {
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(userRepository.findById(receiverUser.getUserId())).thenReturn(
+        Optional.empty());
+
+    assertThrows(CustomException.class,
+        () -> gameUserService.saveMannerPoint(mannerPointDto));
+  }
+
+  @DisplayName("매너점수 평가하기 - 실패 (게임 Not Found)")
+  @Test
+  void testSaveMannerPointGameNotFound() {
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(userRepository.findById(receiverUser.getUserId())).thenReturn(
+        Optional.of(receiverUser));
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
+        game.getGameId(), LocalDateTime.now())).thenReturn(
+        Optional.empty());
+
+    assertThrows(CustomException.class,
+        () -> gameUserService.saveMannerPoint(mannerPointDto));
+  }
+
+
+  @DisplayName("매너점수 평가하기 - 실패 (이미 평가함)")
+  @Test
+  void testSaveMannerPointExistRate() {
+    when(jwtTokenExtract.currentUser()).thenReturn(user);
+    when(userRepository.findById(user.getUserId())).thenReturn(
+        Optional.of(user));
+    when(userRepository.findById(receiverUser.getUserId())).thenReturn(
+        Optional.of(receiverUser));
+    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
+        game.getGameId(), LocalDateTime.now())).thenReturn(
+        Optional.of(game));
+    when(
+        mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(
+            user.getUserId(), receiverUser.getUserId(),
+            game.getGameId())).thenReturn(true);
+
+    assertThrows(CustomException.class,
+        () -> gameUserService.saveMannerPoint(mannerPointDto));
+  }
+
+
+
+  @DisplayName("매너점수 평가 리스트 갖고오기 실패 (유저없음)")
   @Test
   void testGetMannerPointUserNotFound() {
     // Give When
@@ -138,6 +271,7 @@ class GameUserServiceTest {
         () -> gameUserService.getMannerPoint(gameId));
   }
 
+  @DisplayName("매너점수 평가리스트 갖고오기 실패 (게임 없음) ")
   @Test
   void testGetMannerPointGameNotFound() {
     // Give When
@@ -154,25 +288,6 @@ class GameUserServiceTest {
         () -> gameUserService.getMannerPoint(gameId));
   }
 
-  @Test
-  void testGetMannerPointUserNotAccepted() {
-    // Give When
-    String gameId = "1";
-    when(jwtTokenExtract.currentUser()).thenReturn(user);
-    when(userRepository.findById(user.getUserId())).thenReturn(
-        Optional.of(user));
-    when(gameUserRepository.findByGameIdAndStartDateTimeBefore(
-        game.getGameId(), LocalDateTime.now())).thenReturn(
-        Optional.of(game));
-    when(
-        gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
-            game.getGameId(), user.getUserId(),
-            ParticipantGameStatus.ACCEPT)).thenReturn(false);
-
-    // Then
-    Assertions.assertThrows(CustomException.class,
-        () -> gameUserService.getMannerPoint(gameId));
-  }
 
 
   @Test
@@ -214,6 +329,10 @@ class GameUserServiceTest {
     UserRepository userRepositoryMock = mock(UserRepository.class);
     GameCheckOutRepository gameCheckOutRepositoryMock = mock(
         GameCheckOutRepository.class);
+    GameUserRepository gameUserRepositoryMock = mock(
+        GameUserRepository.class);
+    MannerPointRepository mannerPointRepositoryMock = mock(
+        MannerPointRepository.class);
 
     List<ParticipantGameEntity> userGameList = new ArrayList<>();
     GameEntity futureGame = new GameEntity();
@@ -232,7 +351,8 @@ class GameUserServiceTest {
         .thenReturn(Optional.of(userGameList));
 
     GameUserService gameUserService = new GameUserService(
-        gameCheckOutRepositoryMock, null, userRepositoryMock,
+        gameCheckOutRepositoryMock, gameUserRepositoryMock,
+        mannerPointRepositoryMock, userRepositoryMock,
         jwtTokenExtractMock);
     int pageSize = 10;
     Page<GameSearchResponse> resultPage = gameUserService.myCurrentGameList(
