@@ -80,6 +80,9 @@ public enum ErrorCode {
   INVALID_GAME_ID(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 game_id입니다."),
   EXIST_RATE(HttpStatus.BAD_REQUEST.value(), "이미 평가가 완료되었습니다."),
 
+  // 신고
+  AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),
+
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
 
