@@ -27,6 +27,10 @@ public interface ParticipantGameRepository extends
 
   Optional<ParticipantGameEntity> findByParticipantIdAndStatus(Long participantId,
       ParticipantGameStatus participantGameStatus);
+
+  boolean existsByStatusAndGameEntityGameIdAndUserEntityUserId(
+      ParticipantGameStatus participantGameStatus, Long gameId,
+      Long receiverUserId);
 }
 
 
