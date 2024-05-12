@@ -16,6 +16,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -76,6 +77,11 @@ public class UserEntity implements UserDetails {
   @Enumerated(EnumType.STRING)
   private AbilityType ability;
 
+  private int totalRatings;
+  private int totalRatingsCount;
+  private double doubleAverageRating;
+  private String stringAverageRating;
+
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(
       name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -93,6 +99,14 @@ public class UserEntity implements UserDetails {
 
   public void confirm() {
     this.emailAuth = true;
+  }
+
+  public void saveMannerPoint(int point){
+    this.totalRatings += point;
+    this.totalRatingsCount ++;
+    this.doubleAverageRating = (double) this.totalRatings /this.totalRatingsCount;
+    DecimalFormat df = new DecimalFormat("#.#");
+    this.stringAverageRating = df.format(doubleAverageRating);
   }
 
   public void passwordEdit(String password) {
