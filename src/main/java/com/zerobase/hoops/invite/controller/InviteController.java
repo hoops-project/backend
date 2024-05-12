@@ -1,14 +1,15 @@
 package com.zerobase.hoops.invite.controller;
 
 
-import com.zerobase.hoops.gameCreator.service.GameService;
 import com.zerobase.hoops.invite.dto.InviteDto;
+import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
 import com.zerobase.hoops.invite.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,18 @@ public class InviteController {
   @PostMapping("/request")
   public ResponseEntity<CreateResponse> requestInviteGame(
       @RequestBody @Validated InviteDto.CreateRequest request) {
-    InviteDto.CreateResponse result = inviteService.requestInviteGame(request);
+    CreateResponse result = inviteService.requestInviteGame(request);
+    return ResponseEntity.ok(result);
+  }
+
+  /**
+   * 경기 초대 요청 취소
+   */
+  @Operation(summary = "경기 초대 요청 취소")
+  @PatchMapping("/cancel")
+  public ResponseEntity<CancelResponse> cancelInviteGame(
+      @RequestBody @Validated InviteDto.CancelRequest request) {
+    CancelResponse result = inviteService.cancelInviteGame(request);
     return ResponseEntity.ok(result);
   }
 

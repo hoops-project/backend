@@ -3,7 +3,6 @@ package com.zerobase.hoops.invite.dto;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.gameCreator.dto.GameDto;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -55,7 +54,7 @@ public class InviteDto {
 
     private InviteStatus inviteStatus;
 
-    private LocalDateTime requestedDatetime;
+    private LocalDateTime requestedDateTime;
 
     private String senderUserNickName;
 
@@ -63,11 +62,11 @@ public class InviteDto {
 
     private String title;
 
-    public static InviteDto.CreateResponse toDto(InviteEntity inviteEntity) {
+    public static CreateResponse toDto(InviteEntity inviteEntity) {
       return CreateResponse.builder()
           .inviteId(inviteEntity.getInviteId())
           .inviteStatus(inviteEntity.getInviteStatus())
-          .requestedDatetime(inviteEntity.getRequestedDatetime())
+          .requestedDateTime(inviteEntity.getRequestedDateTime())
           .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
           .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
           .title(inviteEntity.getGameEntity().getTitle())
@@ -75,4 +74,53 @@ public class InviteDto {
     }
   }
 
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class CancelRequest {
+
+    @NotNull(message = "초대 아이디는 필수 값 입니다.")
+    @Min(1)
+    private Long inviteId;
+
+    @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
+    @Min(1)
+    private Long gameId;
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class CancelResponse {
+
+    private Long inviteId;
+
+    private InviteStatus inviteStatus;
+
+    private LocalDateTime requestedDateTime;
+
+    private LocalDateTime canceledDateTime;
+
+    private String senderUserNickName;
+
+    private String receiverUserNickName;
+
+    private String title;
+
+    public static CancelResponse toDto(InviteEntity inviteEntity) {
+      return CancelResponse.builder()
+          .inviteId(inviteEntity.getInviteId())
+          .inviteStatus(inviteEntity.getInviteStatus())
+          .requestedDateTime(inviteEntity.getRequestedDateTime())
+          .canceledDateTime(inviteEntity.getCanceledDateTime())
+          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
+          .title(inviteEntity.getGameEntity().getTitle())
+          .build();
+    }
+  }
 }

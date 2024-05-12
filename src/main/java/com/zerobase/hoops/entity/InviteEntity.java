@@ -1,9 +1,5 @@
 package com.zerobase.hoops.entity;
 
-import com.zerobase.hoops.gameCreator.type.CityName;
-import com.zerobase.hoops.gameCreator.type.FieldStatus;
-import com.zerobase.hoops.gameCreator.type.Gender;
-import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,13 +41,14 @@ public class InviteEntity {
 
   @CreatedDate
   @Column(nullable = false)
-  private LocalDateTime requestedDatetime;
+  private LocalDateTime requestedDateTime;
 
-  private LocalDateTime canceledDatetime;
+  private LocalDateTime canceledDateTime;
 
-  private LocalDateTime acceptedDatetime;
+  private LocalDateTime acceptedDateTime;
 
   private LocalDateTime deletedDateTime;
+
 
   @ManyToOne
   @JoinColumn(name = "sender_user_id", nullable = false)
@@ -64,5 +61,17 @@ public class InviteEntity {
   @ManyToOne
   @JoinColumn(name = "game_id", nullable = false)
   private GameEntity gameEntity;
+
+  public static InviteEntity cancelEntity(InviteEntity inviteEntity) {
+    return InviteEntity.builder()
+        .inviteId(inviteEntity.getInviteId())
+        .inviteStatus(InviteStatus.CANCEL)
+        .requestedDateTime(inviteEntity.getRequestedDateTime())
+        .canceledDateTime(LocalDateTime.now())
+        .senderUserEntity(inviteEntity.getSenderUserEntity())
+        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
+        .gameEntity(inviteEntity.getGameEntity())
+        .build();
+  }
 
 }

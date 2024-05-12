@@ -3,7 +3,6 @@ package com.zerobase.hoops.invite.service;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -15,7 +14,6 @@ import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.type.FriendStatus;
-import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -41,7 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -158,7 +155,7 @@ class InviteServiceTest {
         .receiverUserId(2L)
         .build();
 
-    CreateResponse createResponse = CreateResponse.builder()
+    CreateResponse response = CreateResponse.builder()
         .inviteId(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .senderUserNickName(requestUser.getNickName())
@@ -203,7 +200,7 @@ class InviteServiceTest {
     when(inviteRepository.save(any(InviteEntity.class))).thenAnswer(invocation -> {
       InviteEntity savedInviteEntity = invocation.getArgument(0);
       savedInviteEntity.setInviteId(1L); // friendId 동적 할당
-      savedInviteEntity.setRequestedDatetime(LocalDateTime.now());
+      savedInviteEntity.setRequestedDateTime(LocalDateTime.now());
       return savedInviteEntity;
     });
 
@@ -211,11 +208,11 @@ class InviteServiceTest {
     CreateResponse result = inviteService.requestInviteGame(createRequest);
 
     // Then
-    assertEquals(createResponse.getInviteId(), result.getInviteId());
-    assertEquals(createResponse.getInviteStatus(), result.getInviteStatus());
-    assertEquals(createResponse.getSenderUserNickName(), result.getSenderUserNickName());
-    assertEquals(createResponse.getReceiverUserNickName(), result.getReceiverUserNickName());
-    assertEquals(createResponse.getTitle(), result.getTitle());
+    assertEquals(response.getInviteId(), result.getInviteId());
+    assertEquals(response.getInviteStatus(), result.getInviteStatus());
+    assertEquals(response.getSenderUserNickName(), result.getSenderUserNickName());
+    assertEquals(response.getReceiverUserNickName(), result.getReceiverUserNickName());
+    assertEquals(response.getTitle(), result.getTitle());
   }
 
   private void getCurrentUser() {
