@@ -39,6 +39,9 @@ public class MannerPointEntity {
   @ManyToOne
   private UserEntity receiver;
 
+  @ManyToOne
+  private GameEntity game;
+
   @CreatedDate
   private LocalDateTime createdDateTime;
 
