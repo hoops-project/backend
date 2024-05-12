@@ -6,6 +6,7 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
 import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.UserJoinsGameDto;
 import com.zerobase.hoops.gameUsers.service.GameUserService;
@@ -89,4 +90,11 @@ public class GameUserController {
     return ResponseEntity.ok(gameUserService.getMannerPoint(gameId));
   }
 
+  @PreAuthorize("hasRole('USER')")
+  @PostMapping("/manner-point")
+  public ResponseEntity<ApiResponse2> saveMannerPoint(
+      @RequestBody @Valid MannerPointDto request) {
+    gameUserService.saveMannerPoint(request);
+    return ResponseEntity.ok().body(new ApiResponse2("매너점수평가", "Success"));
+  }
 }

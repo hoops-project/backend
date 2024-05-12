@@ -11,11 +11,13 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
+import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
 import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutSpecifications;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
+import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
@@ -39,8 +41,45 @@ public class GameUserService {
 
   private final GameCheckOutRepository gameCheckOutRepository;
   private final GameUserRepository gameUserRepository;
+  private final MannerPointRepository mannerPointRepository;
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
+
+  public void saveMannerPoint(MannerPointDto request) {
+
+    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long receiverId = request.getReceiverId();
+    Long gameId = request.getGameId();
+
+    UserEntity userEntity = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(
+            ErrorCode.USER_NOT_FOUND));
+
+    UserEntity receiverEntity = userRepository.findById(
+            receiverId)
+        .orElseThrow(() -> new CustomException(
+            ErrorCode.USER_NOT_FOUND));
+
+    GameEntity gameEntity = gameUserRepository.findByGameIdAndStartDateTimeBefore(
+            gameId, LocalDateTime.now())
+        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
+
+    checkExistRate(request, userId, gameId);
+
+    mannerPointRepository.save(
+        request.toEntity(userEntity, receiverEntity, gameEntity));
+  }
+
+  private void checkExistRate(MannerPointDto request, Long userId,
+      Long gameId) {
+    boolean checking = mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(
+        userId, request.getReceiverId(), gameId);
+
+    if (checking) {
+      throw new CustomException(ErrorCode.EXIST_RATE);
+    }
+  }
+
 
   public List<MannerPointListResponse> getMannerPoint(
       String gameId) {
