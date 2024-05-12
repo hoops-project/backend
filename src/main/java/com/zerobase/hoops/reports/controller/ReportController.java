@@ -1,5 +1,6 @@
 package com.zerobase.hoops.reports.controller;
 
+import com.zerobase.hoops.commonResponse.ApiResponse;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.service.ReportService;
 import io.swagger.v3.oas.annotations.tags.Tag;

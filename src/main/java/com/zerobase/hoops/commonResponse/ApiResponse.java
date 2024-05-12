@@ -1,5 +1,6 @@
-package com.zerobase.hoops.gameUsers.controller;
+package com.zerobase.hoops.commonResponse;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,13 +8,14 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class ApiResponse2 {
+@AllArgsConstructor
+public class ApiResponse {
 
   private String title;
   private String detail;
 
-  public ApiResponse2 toEntity() {
-    return ApiResponse2.builder()
+  public ApiResponse toEntity() {
+    return ApiResponse.builder()
         .title(this.title)
         .detail(this.detail)
         .build();
