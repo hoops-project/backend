@@ -47,6 +47,8 @@ public class InviteEntity {
 
   private LocalDateTime acceptedDateTime;
 
+  private LocalDateTime rejectedDateTime;
+
   private LocalDateTime deletedDateTime;
 
 
