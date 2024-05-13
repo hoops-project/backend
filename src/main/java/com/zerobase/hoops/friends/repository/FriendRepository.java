@@ -18,8 +18,7 @@ public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
   int countByUserEntityUserIdAndStatus(Long userId, FriendStatus friendStatus);
 
   Optional<FriendEntity> findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus(
-      Long friendUserId,
-      Long userId, FriendStatus friendStatus);
+      Long friendUserId, Long userId, FriendStatus friendStatus);
 
   int countByFriendUserEntityUserIdAndStatusIn(
       Long friendUserId, List<FriendStatus> apply);

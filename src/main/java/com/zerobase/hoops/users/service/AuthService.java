@@ -7,6 +7,7 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.WITHDRAW
 
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
@@ -15,6 +16,8 @@ import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
+import com.zerobase.hoops.invite.repository.InviteRepository;
+import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
@@ -46,6 +49,7 @@ public class AuthService {
   private final GameRepository gameRepository;
   private final ParticipantGameRepository participantGameRepository;
   private final FriendRepository friendRepository;
+  private final InviteRepository inviteRepository;
 
   private final TokenProvider tokenProvider;
 
@@ -224,6 +228,17 @@ public class AuthService {
             participantGame.setStatus(DELETE);
           });
 
+      // 내가 생성한 경기의 초대 테이블 삭제
+      List<InviteEntity> inviteList = inviteRepository
+          .findByInviteStatusAndGameEntityGameId(
+              InviteStatus.REQUEST, game.getGameId());
+      inviteList.stream().forEach(
+          invite -> {
+            invite.setInviteStatus(InviteStatus.DELETE);
+            invite.setDeletedDateTime(now);
+          }
+      );
+
     });
 
     // 내가 참가한 방의 참가 테이블에서 탈퇴 처리
@@ -236,6 +251,18 @@ public class AuthService {
           participantGame.setWithdrewDateTime(now);
           participantGame.setStatus(WITHDRAW);
         });
+
+    // 내가 참가한 방의 초대에서 삭제
+    List<InviteEntity> inviteList =
+        inviteRepository
+            .findByInviteStatusAndSenderUserEntityUserIdOrReceiverUserEntityUserId(
+                InviteStatus.REQUEST, user.getUserId(), user.getUserId());
+    inviteList.stream().forEach(
+        invite -> {
+          invite.setInviteStatus(InviteStatus.DELETE);
+          invite.setDeletedDateTime(now);
+        }
+    );
 
     // 친구 목록에 있는 사람들 서로 삭제
     List<FriendEntity> friendList =
