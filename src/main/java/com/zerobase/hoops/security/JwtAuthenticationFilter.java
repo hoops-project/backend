@@ -1,6 +1,7 @@
 package com.zerobase.hoops.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.users.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -30,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final TokenProvider tokenProvider;
   private final ObjectMapper objectMapper;
   private final UserService userService;
+  private final ManagerService managerService;
 
   @Override
   protected void doFilterInternal(
@@ -61,8 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         // 블랙리스트 체크
-        userService.checkBlackList(tokenProvider.getUsername(accessToken));
-
+        managerService.checkBlackList(tokenProvider.getUsername(accessToken));
         log.info(String.format("[%s] -> %s",
             tokenProvider.getUsername(accessToken), request.getRequestURI()));
       }
