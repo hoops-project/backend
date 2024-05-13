@@ -26,7 +26,7 @@ public class ReportService {
   public final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
-  public String reportContents(String reportId){
+  public String reportContents(String reportId) {
     ReportEntity reportEntity = reportRepository.findById(
         Long.valueOf(reportId)).orElseThrow(
         () -> new CustomException(ErrorCode.NOT_EXIST_REPORTED)
