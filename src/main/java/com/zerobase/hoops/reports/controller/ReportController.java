@@ -7,6 +7,7 @@ import com.zerobase.hoops.reports.service.ReportService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,8 @@ public class ReportController {
   @PreAuthorize("hasRole('OWNER')")
   @GetMapping("/user-list")
   public ResponseEntity<List<ReportListResponseDto>> reportList(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
+      @RequestParam(value = "page",defaultValue = "0") @Positive int page,
+      @RequestParam(value = "size",defaultValue = "10") @Positive int size) {
     return ResponseEntity.ok()
         .body(this.reportService.reportList(page, size));
   }
