@@ -48,6 +48,7 @@ public class ManagerService {
             request.getReportedId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     reportEntity.saveBlackListStartDateTime(LocalDateTime.now());
+    reportRepository.save(reportEntity);
   }
 
   private void validateBlackList(Long userId, Long reportedId) {
