@@ -12,9 +12,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.ReportEntity;
+import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
-import com.zerobase.hoops.reports.dto.ReportListResponse;
+import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.reports.service.ReportService;
 import com.zerobase.hoops.security.TokenProvider;
@@ -24,19 +25,18 @@ import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @WebMvcTest(ReportController.class)
@@ -70,13 +70,54 @@ class ReportControllerTest {
   @WithMockUser(roles = "OWNER")
   @Test
   @DisplayName("신고 목록 불러오기")
+  public void testReportContents() throws Exception {
+    String reportId = "1";
+    String reportContents = "Report contents for report1";
+
+    UserEntity user = UserEntity.builder()
+        .userId(1L)
+        .gender(GenderType.MALE)
+        .build();
+
+    UserEntity receiverUser = UserEntity.builder()
+        .userId(2L)
+        .gender(GenderType.MALE)
+        .build();
+
+    ReportEntity report = ReportEntity.builder()
+        .user(user)
+        .reportedUser(receiverUser)
+        .content(reportContents)
+        .build();
+
+    given(reportRepository.findById(Long.valueOf(reportId))).willReturn(
+        Optional.of(report));
+    when(reportService.reportContents(reportId)).thenReturn(
+        report.getContent());
+
+    // 컨트롤러 호출 및 결과 확인
+    mockMvc.perform(MockMvcRequestBuilders
+            .get("/api/report/contents/{report_id}", reportId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(jsonPath("$.title")
+            .value("신고내역"))
+        .andExpect(jsonPath("$.detail")
+            .value(reportContents));
+  }
+
+
+  @WithMockUser(roles = "OWNER")
+  @Test
+  @DisplayName("신고 목록 불러오기")
   void getReportList_success() throws Exception {
     // Given
     int page = 0;
     int size = 10;
 
-    List<ReportListResponse> mockReportList = Arrays.asList(
-        ReportListResponse.builder()
+    List<ReportListResponseDto> mockReportList = Arrays.asList(
+        ReportListResponseDto.builder()
             .userId(1L)
             .userName("User1")
             .mannerPoint("Excellent")
@@ -84,7 +125,7 @@ class ReportControllerTest {
             .abilityType(AbilityType.SHOOT)
             .playStyleType(PlayStyleType.AGGRESSIVE)
             .build(),
-        ReportListResponse.builder()
+        ReportListResponseDto.builder()
             .userId(2L)
             .userName("User2")
             .mannerPoint("Good")
@@ -106,7 +147,8 @@ class ReportControllerTest {
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
-            .andExpect(MockMvcResultMatchers.jsonPath("$[0].userId").value(1L));
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].userId").value(1L));
   }
 
   @WithMockUser
