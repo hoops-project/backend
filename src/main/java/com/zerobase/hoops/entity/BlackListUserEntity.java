@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -27,14 +28,16 @@ public class BlackListUserEntity {
   @Id
   @GeneratedValue
   private Long id;
-  private String email;
+
+  @ManyToOne
+  private UserEntity blackUser;
 
   @CreatedDate
-  private LocalDate startedAt;
+  private LocalDate startDate;
 
-  private LocalDate endedAt;
+  private LocalDate endDate;
 
-  public void testBlackList() {
-    this.endedAt = LocalDate.now();
+  public void unLockBlackList() {
+    this.endDate = LocalDate.now().minusDays(1);
   }
 }
