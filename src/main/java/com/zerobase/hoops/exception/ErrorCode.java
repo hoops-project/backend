@@ -31,6 +31,8 @@ public enum ErrorCode {
 
   // 블랙리스트
   BAN_FOR_10DAYS(HttpStatus.BAD_REQUEST.value(), "10일 후에 다시 이용 가능합니다."),
+  ALREADY_BLACKLIST(HttpStatus.BAD_REQUEST.value(), "이미 블랙리스트로 처리 되었습니다."),
+  NOT_BLACKLIST(HttpStatus.BAD_REQUEST.value(), "블랙리스트 목록에 없습니다."),
 
   // 게임 개설자
   GAME_NOT_FOUND(HttpStatus.NOT_FOUND.value(),  "경기를 찾을 수 없습니다."),
