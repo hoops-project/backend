@@ -45,6 +45,7 @@ public class GameUserService {
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
+  @Transactional
   public void saveMannerPoint(MannerPointDto request) {
 
     Long userId = jwtTokenExtract.currentUser().getUserId();
@@ -65,7 +66,7 @@ public class GameUserService {
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     checkExistRate(request, userId, gameId);
-
+    receiverEntity.saveMannerPoint(request.getPoint());
     mannerPointRepository.save(
         request.toEntity(userEntity, receiverEntity, gameEntity));
   }

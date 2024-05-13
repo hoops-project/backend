@@ -89,6 +89,9 @@ public enum ErrorCode {
   NOT_SELF_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 요청한 경기 초대만 취소 할수 있습니다"
       + "."),
 
+  // 신고
+  AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),
+
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
 

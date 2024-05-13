@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.reports.service.ReportService;
@@ -39,6 +40,9 @@ class ReportControllerTest {
   @MockBean
   private UserService userService;
 
+  @MockBean
+  private ManagerService managerService;
+
   @Autowired
   private MockMvc mockMvc;
 
@@ -59,7 +63,7 @@ class ReportControllerTest {
 
     // When
     ReportDto reportDto = ReportDto.builder()
-        .reportedUserEmail("reported@example.com")
+        .reportedUserId(1L)
         .content("ReasonReasonReasonReasonReasonReasonReasonReasonReason")
         .build();
 
