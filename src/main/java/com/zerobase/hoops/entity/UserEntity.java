@@ -77,9 +77,17 @@ public class UserEntity implements UserDetails {
   @Enumerated(EnumType.STRING)
   private AbilityType ability;
 
-  private int totalRatings;
-  private int totalRatingsCount;
-  private double doubleAverageRating;
+  @Builder.Default
+  @Column(name = "total_ratings")
+  private int totalRatings = 0;
+
+  @Builder.Default
+  @Column(name = "total_ratings_count")
+  private int totalRatingsCount = 0;
+
+  @Builder.Default
+  @Column(name = "double_average_rating")
+  private double doubleAverageRating = 0.0;
   private String stringAverageRating;
 
   @ElementCollection(fetch = FetchType.EAGER)
@@ -101,10 +109,11 @@ public class UserEntity implements UserDetails {
     this.emailAuth = true;
   }
 
-  public void saveMannerPoint(int point){
+  public void saveMannerPoint(int point) {
     this.totalRatings += point;
-    this.totalRatingsCount ++;
-    this.doubleAverageRating = (double) this.totalRatings /this.totalRatingsCount;
+    this.totalRatingsCount++;
+    this.doubleAverageRating =
+        (double) this.totalRatings / this.totalRatingsCount;
     DecimalFormat df = new DecimalFormat("#.#");
     this.stringAverageRating = df.format(doubleAverageRating);
   }
