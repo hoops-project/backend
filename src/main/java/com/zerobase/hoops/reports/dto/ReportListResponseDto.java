@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ReportListResponseDto {
+  private Long reportId;
   private Long userId;
   private String userName;
   private String mannerPoint;
@@ -20,6 +21,7 @@ public class ReportListResponseDto {
   public static ReportListResponseDto of (ReportEntity reportEntity) {
 
     return ReportListResponseDto.builder()
+        .reportId(reportEntity.getId())
         .userId(reportEntity.getReportedUser().getUserId())
         .userName(reportEntity.getReportedUser().getName())
         .mannerPoint(reportEntity.getReportedUser().getStringAverageRating())
