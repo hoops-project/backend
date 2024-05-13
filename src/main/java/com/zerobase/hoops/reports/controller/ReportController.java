@@ -1,7 +1,6 @@
 package com.zerobase.hoops.reports.controller;
 
 import com.zerobase.hoops.commonResponse.ApiResponse;
-import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponse;
 import com.zerobase.hoops.reports.service.ReportService;
@@ -10,7 +9,6 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +34,15 @@ public class ReportController {
     this.reportService.reportUser(request);
     return ResponseEntity.ok().body(
         new ApiResponse("유저신고", "Success"));
+  }
+
+  @PreAuthorize("hasRole('OWNER')")
+  @GetMapping("/user-list")
+  public ResponseEntity<List<ReportListResponse>> reportList(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+    return ResponseEntity.ok()
+        .body(this.reportService.reportList(page, size));
   }
 
 }
