@@ -63,15 +63,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         // 블랙리스트 체크
-        managerService.checkBlackList(tokenProvider.getUsername(accessToken));
+        try {
+          managerService.checkBlackList(tokenProvider.getUsername(accessToken));
+        } catch (Exception e) {
+          setUnauthorizedResponse(response, e.getMessage());
+          return;
+        }
         log.info(String.format("[%s] -> %s",
-            tokenProvider.getUsername(accessToken), request.getRequestURI()));
+            tokenProvider.getUsername(accessToken),
+            request.getRequestURI()));
       }
     } catch (ExpiredJwtException e) {
       log.warn("에러 메세지 : " + e.getMessage());
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void setUnauthorizedResponse(HttpServletResponse response,
+      String message) throws IOException {
+    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+    response.setContentType("application/json; charset=UTF-8");
+    response.setCharacterEncoding("UTF-8");
+    String errorMessage = objectMapper.writeValueAsString(
+        Map.of("error", "Unauthorized", "message", message));
+    response.getWriter().write(errorMessage);
   }
 
   private String resolveTokenFromRequest(HttpServletRequest request) {
