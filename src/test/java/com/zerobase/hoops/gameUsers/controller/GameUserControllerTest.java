@@ -38,6 +38,7 @@ import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
 import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
 import com.zerobase.hoops.gameUsers.service.GameUserService;
+import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -90,6 +91,9 @@ class GameUserControllerTest {
 
   @MockBean
   private GameCheckOutRepository gameCheckOutRepository;
+
+  @MockBean
+  private ManagerService managerService;
 
   @Autowired
   private ObjectMapper objectMapper;
