@@ -1,6 +1,7 @@
 package com.zerobase.hoops.users.controller;
 
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.LogInDto.Response;
@@ -36,6 +37,7 @@ public class AuthController {
   private final AuthService authService;
   private final UserService userService;
   private final OAuth2Service oAuth2Service;
+  private final ManagerService managerService;
 
   /**
    * 로그인
@@ -45,8 +47,8 @@ public class AuthController {
   public ResponseEntity<Response> logIn(
       @RequestBody @Validated LogInDto.Request request
   ) {
+    managerService.checkBlackList(request.getId());
     UserDto userDto = authService.logInUser(request);
-
     TokenDto tokenDto = authService.getToken(userDto);
 
     HttpHeaders responseHeaders = new HttpHeaders();
