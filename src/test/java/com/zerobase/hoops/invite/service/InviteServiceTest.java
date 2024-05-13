@@ -13,6 +13,7 @@ import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
@@ -25,6 +26,8 @@ import com.zerobase.hoops.invite.dto.InviteDto.CancelRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -64,11 +67,16 @@ class InviteServiceTest {
   private GameRepository gameRepository;
 
   @Mock
+  private FriendRepository friendRepository;
+
+  @Mock
   private InviteRepository inviteRepository;
 
   private UserEntity requestUser;
 
   private UserEntity receiverUser;
+
+  private UserEntity otherUser;
 
   private GameEntity createdGameEntity;
 
@@ -97,6 +105,21 @@ class InviteServiceTest {
         .emailAuth(true)
         .build();
     receiverUser = UserEntity.builder()
+        .userId(2L)
+        .id("test2")
+        .password("Testpass12!@")
+        .email("test2@example.com")
+        .name("test2")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("test2")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(true)
+        .build();
+    otherUser = UserEntity.builder()
         .userId(6L)
         .id("test6")
         .password("Testpass12!@")
@@ -169,6 +192,8 @@ class InviteServiceTest {
         .toEntity(requestUser, receiverUser, createdGameEntity);
 
     getCurrentUser();
+
+    validFriendUser(requestUser.getUserId(), createRequest.getReceiverUserId());
 
     // 경기
     when(gameRepository
@@ -244,6 +269,8 @@ class InviteServiceTest {
 
     getCurrentUser();
 
+    validFriendUser(requestUser.getUserId(), receiverUser.getUserId());
+
     // 경기
     when(inviteRepository
         .findByInviteIdAndInviteStatus(eq(1L), eq(InviteStatus.REQUEST)))
@@ -262,11 +289,76 @@ class InviteServiceTest {
     assertEquals(response.getTitle(), result.getTitle());
   }
 
+  @Test
+  @DisplayName("경기 초대 요청(경기 개설자) 수락 성공")
+  public void acceptGameCreatorInviteGame_success() {
+    //Given
+    ReceiveAcceptRequest receiveAcceptRequest = ReceiveAcceptRequest.builder()
+        .inviteId(1L)
+        .build();
+
+    ReceiveAcceptResponse response = ReceiveAcceptResponse.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.ACCEPT)
+        .senderUserNickName(requestUser.getNickName())
+        .receiverUserNickName(receiverUser.getNickName())
+        .title(createdGameEntity.getTitle())
+        .build();
+
+    InviteEntity inviteEntity = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REQUEST)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(receiverUser)
+        .gameEntity(createdGameEntity)
+        .build();
+
+    ParticipantGameEntity gameCreatorInvite =
+        ParticipantGameEntity.gameCreatorInvite(inviteEntity);
+
+    when(jwtTokenExtract.currentUser()).thenReturn(receiverUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(receiverUser));
+
+    validFriendUser(receiverUser.getUserId(), requestUser.getUserId());
+
+    when(inviteRepository.findByInviteIdAndInviteStatus
+        (eq(1L), eq(InviteStatus.REQUEST)))
+        .thenReturn(Optional.of(inviteEntity));
+
+    // 해당 경기에 인원이 1명 있다고 가정
+    when(participantGameRepository
+        .countByStatusAndGameEntityGameId(eq(ParticipantGameStatus.ACCEPT),
+            eq(1L)))
+        .thenReturn(0L);
+
+    when(inviteRepository.save(any(InviteEntity.class))).thenReturn(inviteEntity);
+
+    when(participantGameRepository.save(any(ParticipantGameEntity.class)))
+        .thenReturn(gameCreatorInvite);
+
+    // when
+    ReceiveAcceptResponse result = inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+
+    // Then
+    assertEquals(response.getInviteId(), result.getInviteId());
+    assertEquals(response.getInviteStatus(), result.getInviteStatus());
+    assertEquals(response.getSenderUserNickName(), result.getSenderUserNickName());
+    assertEquals(response.getReceiverUserNickName(), result.getReceiverUserNickName());
+    assertEquals(response.getTitle(), result.getTitle());
+  }
+
   private void getCurrentUser() {
     when(jwtTokenExtract.currentUser()).thenReturn(requestUser);
 
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(requestUser));
+  }
+
+  private void validFriendUser(Long senderUserId, Long receiverUserId) {
+    when(friendRepository.existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
+        (senderUserId, receiverUserId, FriendStatus.ACCEPT)).thenReturn(true);
   }
 
 }

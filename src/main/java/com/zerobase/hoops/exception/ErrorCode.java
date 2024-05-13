@@ -88,6 +88,8 @@ public enum ErrorCode {
   NOT_INVITE_FOUND(HttpStatus.BAD_REQUEST.value(), "해당 경기에 초대 요청 상태가 아닙니다."),
   NOT_SELF_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 요청한 경기 초대만 취소 할수 있습니다"
       + "."),
+  NOT_SELF_INVITE_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 받은 경기 초대만 수락,"
+      + "거절 할수 있습니다."),
 
   // 신고
   AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),

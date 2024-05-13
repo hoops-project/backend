@@ -26,6 +26,9 @@ public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
 
   Page<FriendEntity> findByUserEntityUserId(Long userId, Pageable pageable);
 
+  boolean existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus(
+      Long userId, Long receiverUserId, FriendStatus friendStatus);
+
   List<FriendEntity> findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(
       Long userId, Long friendUserId, FriendStatus friendStatus);
 }

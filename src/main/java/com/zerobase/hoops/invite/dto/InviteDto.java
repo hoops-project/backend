@@ -123,4 +123,48 @@ public class InviteDto {
           .build();
     }
   }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class ReceiveAcceptRequest {
+    @NotNull(message = "초대 아이디는 필수 값 입니다.")
+    @Min(1)
+    private Long inviteId;
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class ReceiveAcceptResponse {
+    private Long inviteId;
+
+    private InviteStatus inviteStatus;
+
+    private LocalDateTime requestedDateTime;
+
+    private LocalDateTime acceptedDateTime;
+
+    private String senderUserNickName;
+
+    private String receiverUserNickName;
+
+    private String title;
+
+    public static ReceiveAcceptResponse toDto(InviteEntity inviteEntity) {
+      return ReceiveAcceptResponse.builder()
+          .inviteId(inviteEntity.getInviteId())
+          .inviteStatus(inviteEntity.getInviteStatus())
+          .requestedDateTime(inviteEntity.getRequestedDateTime())
+          .acceptedDateTime(inviteEntity.getAcceptedDateTime())
+          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
+          .title(inviteEntity.getGameEntity().getTitle())
+          .build();
+    }
+  }
 }
