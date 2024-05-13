@@ -5,7 +5,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.reports.dto.ReportDto;
-import com.zerobase.hoops.reports.dto.ReportListResponse;
+import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -26,15 +26,22 @@ public class ReportService {
   public final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
 
-  public List<ReportListResponse> reportList(int page, int size) {
+  public String reportContents(String reportId){
+    ReportEntity reportEntity = reportRepository.findById(
+        Long.valueOf(reportId)).orElseThrow(
+        () -> new CustomException(ErrorCode.NOT_EXIST_REPORTED)
+    );
+    return reportEntity.getContent();
+  }
+
+  public List<ReportListResponseDto> reportList(int page, int size) {
     Page<ReportEntity> reportPage = reportRepository.findByBlackListStartDateTimeIsNull(
         PageRequest.of(page, size));
     List<ReportEntity> reportList = reportPage.getContent();
 
-    return reportList.stream().map(ReportListResponse::of)
+    return reportList.stream().map(ReportListResponseDto::of)
         .collect(Collectors.toList());
   }
-
 
   public void reportUser(ReportDto request) {
 
