@@ -21,6 +21,8 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.invite.dto.InviteDto.CancelRequest;
+import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
@@ -206,6 +208,51 @@ class InviteServiceTest {
 
     // when
     CreateResponse result = inviteService.requestInviteGame(createRequest);
+
+    // Then
+    assertEquals(response.getInviteId(), result.getInviteId());
+    assertEquals(response.getInviteStatus(), result.getInviteStatus());
+    assertEquals(response.getSenderUserNickName(), result.getSenderUserNickName());
+    assertEquals(response.getReceiverUserNickName(), result.getReceiverUserNickName());
+    assertEquals(response.getTitle(), result.getTitle());
+  }
+
+  @Test
+  @DisplayName("경기 초대 요청 취소 성공")
+  public void cancelInviteGame_success() {
+    //Given
+    CancelRequest cancelRequest = CancelRequest.builder()
+        .inviteId(1L)
+        .gameId(1L)
+        .build();
+
+    CancelResponse response = CancelResponse.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.CANCEL)
+        .senderUserNickName(requestUser.getNickName())
+        .receiverUserNickName(receiverUser.getNickName())
+        .title(createdGameEntity.getTitle())
+        .build();
+
+    InviteEntity inviteEntity = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.CANCEL)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(receiverUser)
+        .gameEntity(createdGameEntity)
+        .build();
+
+    getCurrentUser();
+
+    // 경기
+    when(inviteRepository
+        .findByInviteIdAndInviteStatus(eq(1L), eq(InviteStatus.REQUEST)))
+        .thenReturn(Optional.ofNullable(inviteEntity));
+
+    when(inviteRepository.save(any(InviteEntity.class))).thenReturn(inviteEntity);
+
+    // when
+    CancelResponse result = inviteService.cancelInviteGame(cancelRequest);
 
     // Then
     assertEquals(response.getInviteId(), result.getInviteId());
