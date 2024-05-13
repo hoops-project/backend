@@ -216,6 +216,7 @@ public class AuthService {
             .findByUserEntityUserIdAndDeletedDateTimeNull(user.getUserId());
     gameList.stream().forEach(game -> {
       game.setDeletedDateTime(now);
+      gameRepository.save(game);
 
       // 내가 생성한 경기의 참가 테이블 삭제
       List<ParticipantGameEntity> participantList =
@@ -226,6 +227,7 @@ public class AuthService {
           participantGame -> {
             participantGame.setDeletedDateTime(now);
             participantGame.setStatus(DELETE);
+            participantGameRepository.save(participantGame);
           });
 
       // 내가 생성한 경기의 초대 테이블 삭제
@@ -236,6 +238,7 @@ public class AuthService {
           invite -> {
             invite.setInviteStatus(InviteStatus.DELETE);
             invite.setDeletedDateTime(now);
+            inviteRepository.save(invite);
           }
       );
 
@@ -250,7 +253,9 @@ public class AuthService {
         participantGame -> {
           participantGame.setWithdrewDateTime(now);
           participantGame.setStatus(WITHDRAW);
+          participantGameRepository.save(participantGame);
         });
+
 
     // 내가 참가한 방의 초대에서 삭제
     List<InviteEntity> inviteList =
@@ -261,6 +266,7 @@ public class AuthService {
         invite -> {
           invite.setInviteStatus(InviteStatus.DELETE);
           invite.setDeletedDateTime(now);
+          inviteRepository.save(invite);
         }
     );
 
@@ -272,6 +278,7 @@ public class AuthService {
     friendList.stream().forEach(friend -> {
       friend.setStatus(FriendStatus.DELETE);
       friend.setDeletedDateTime(now);
+      friendRepository.save(friend);
     });
 
     // 로그 아웃
