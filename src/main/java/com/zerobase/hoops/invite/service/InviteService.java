@@ -5,6 +5,7 @@ import static com.zerobase.hoops.exception.ErrorCode.ALREADY_INVITE_GAME;
 import static com.zerobase.hoops.exception.ErrorCode.ALREADY_PARTICIPANT_GAME;
 import static com.zerobase.hoops.exception.ErrorCode.FULL_PARTICIPANT;
 import static com.zerobase.hoops.exception.ErrorCode.GAME_NOT_FOUND;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_ACCEPT_FRIEND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_INVITE_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_PARTICIPANT_GAME;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_INVITE_REQUEST;
@@ -16,6 +17,8 @@ import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.friends.repository.FriendRepository;
+import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
@@ -48,9 +51,13 @@ public class InviteService {
 
   private final UserRepository userRepository;
 
+  private final FriendRepository friendRepository;
+
   private final JwtTokenExtract jwtTokenExtract;
 
   private static UserEntity user;
+
+  private static UserEntity receiverUser;
 
   /**
    * 경기 초대 요청
@@ -65,6 +72,8 @@ public class InviteService {
     UserEntity receiverUser = userRepository
         .findById(request.getReceiverUserId())
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+    validFriendUser(receiverUser.getUserId());
 
     LocalDateTime nowDatetime = LocalDateTime.now();
 
@@ -130,6 +139,8 @@ public class InviteService {
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
+    validFriendUser(inviteEntity.getReceiverUserEntity().getUserId());
+
     // 본인이 경기 초대 요청한 것만 취소 가능
     if(!Objects.equals(inviteEntity.getSenderUserEntity().getUserId(),
         user.getUserId())) {
@@ -159,6 +170,8 @@ public class InviteService {
         .findByInviteIdAndInviteStatus(request.getInviteId(),
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
+
+    validFriendUser(inviteEntity.getSenderUserEntity().getUserId());
 
     // 본인이 받은 초대 요청만 수락 가능
     if(!Objects.equals(inviteEntity.getReceiverUserEntity().getUserId(),
@@ -200,6 +213,18 @@ public class InviteService {
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+  }
+
+  // 친구 인지 검사
+  private void validFriendUser(Long receiverUserId) {
+    boolean existFriendFlag =
+        friendRepository
+            .existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
+                (user.getUserId(), receiverUserId, FriendStatus.ACCEPT);
+
+    if(!existFriendFlag) {
+      throw new CustomException(NOT_FOUND_ACCEPT_FRIEND);
+    }
   }
 
 
