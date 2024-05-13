@@ -2,6 +2,7 @@ package com.zerobase.hoops.reports.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
+import com.zerobase.hoops.reports.dto.ReportListResponse;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -20,7 +22,9 @@ import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +35,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -89,6 +96,37 @@ class ReportServiceTest {
   }
 
   @Test
+  @DisplayName("유저 목록 불러오기")
+  public void testReportList() {
+    // Given
+    ReportEntity reportEntity1 = ReportEntity.builder()
+        .user(userEntity)
+        .reportedUser(reportedUserEntity)
+        .build();
+
+    ReportEntity reportEntity2 =  ReportEntity.builder()
+        .user(reportedUserEntity)
+        .reportedUser(userEntity)
+        .build();
+
+    List<ReportEntity> reportEntities = Arrays.asList(reportEntity1,
+        reportEntity2);
+    Page<ReportEntity> reportPage = new PageImpl<>(reportEntities);
+
+    // When
+    when(reportRepository.findByBlackListStartDateTimeIsNull(
+        any(PageRequest.class)))
+        .thenReturn(reportPage);
+    List<ReportListResponse> result = reportService.reportList(0, 10);
+
+    // Then
+    verify(reportRepository).findByBlackListStartDateTimeIsNull(
+        any(PageRequest.class));
+    assertThat(result).isNotNull();
+    assertThat(result.size()).isEqualTo(2);
+  }
+
+  @Test
   @DisplayName("신고하기 성공")
   void reportUser_validUsers_shouldSaveReport() {
     // Given
@@ -102,7 +140,6 @@ class ReportServiceTest {
         Optional.of(userEntity));
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.of(reportedUserEntity));
-
 
     ArgumentCaptor<ReportEntity> reportEntityCaptor = ArgumentCaptor.forClass(
         ReportEntity.class);
@@ -132,7 +169,8 @@ class ReportServiceTest {
     when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
     // When, Then
-    assertThrows(CustomException.class, () -> reportService.reportUser(reportDto));
+    assertThrows(CustomException.class,
+        () -> reportService.reportUser(reportDto));
   }
 
 }
