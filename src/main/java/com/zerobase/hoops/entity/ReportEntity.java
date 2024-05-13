@@ -59,4 +59,8 @@ public class ReportEntity {
   public int hashCode() {
     return Objects.hash(id);
   }
+
+  public void saveBlackListStartDateTime(LocalDateTime dateTIme){
+    this.blackListStartDateTime = dateTIme;
+  }
 }
