@@ -93,6 +93,7 @@ public enum ErrorCode {
 
   // 신고
   AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),
+  NOT_EXIST_REPORTED(HttpStatus.BAD_REQUEST.value(), "신고 내용이 없습니다."),
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");

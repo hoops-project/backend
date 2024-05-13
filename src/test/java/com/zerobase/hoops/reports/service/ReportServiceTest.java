@@ -1,6 +1,7 @@
 package com.zerobase.hoops.reports.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -13,7 +14,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 //import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
-import com.zerobase.hoops.reports.dto.ReportListResponse;
+import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -96,6 +97,39 @@ class ReportServiceTest {
   }
 
   @Test
+  @DisplayName("신고내역 불러오기 성공")
+  void testReportContents_ExistingReport() {
+    // Given
+    String reportId = "1";
+    String reportContent = "This is a report content";
+    ReportEntity reportEntity = ReportEntity.builder()
+        .id(1L)
+        .content(reportContent)
+        .build();
+    when(reportRepository.findById(anyLong())).thenReturn(
+        Optional.of(reportEntity));
+
+    // When
+    String result = reportService.reportContents(reportId);
+
+    // Then
+    assertEquals(reportContent, result);
+  }
+
+  @Test
+  @DisplayName("신고내역 불러오기 실패")
+  void testReportContents_NonExistingReport() {
+    // Given
+    String reportId = "999";
+    when(reportRepository.findById(anyLong())).thenReturn(
+        Optional.empty());
+
+    // When & Then
+    assertThrows(CustomException.class,
+        () -> reportService.reportContents(reportId));
+  }
+
+  @Test
   @DisplayName("유저 목록 불러오기")
   public void testReportList() {
     // Given
@@ -104,7 +138,7 @@ class ReportServiceTest {
         .reportedUser(reportedUserEntity)
         .build();
 
-    ReportEntity reportEntity2 =  ReportEntity.builder()
+    ReportEntity reportEntity2 = ReportEntity.builder()
         .user(reportedUserEntity)
         .reportedUser(userEntity)
         .build();
@@ -117,7 +151,7 @@ class ReportServiceTest {
     when(reportRepository.findByBlackListStartDateTimeIsNull(
         any(PageRequest.class)))
         .thenReturn(reportPage);
-    List<ReportListResponse> result = reportService.reportList(0, 10);
+    List<ReportListResponseDto> result = reportService.reportList(0, 10);
 
     // Then
     verify(reportRepository).findByBlackListStartDateTimeIsNull(
