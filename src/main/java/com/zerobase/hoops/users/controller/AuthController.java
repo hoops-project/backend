@@ -6,6 +6,7 @@ import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.LogInDto.Response;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
+import com.zerobase.hoops.users.oauth2.service.OAuth2Service;
 import com.zerobase.hoops.users.service.AuthService;
 import com.zerobase.hoops.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,7 @@ public class AuthController {
 
   private final AuthService authService;
   private final UserService userService;
+  private final OAuth2Service oAuth2Service;
 
   /**
    * 로그인
@@ -122,5 +124,24 @@ public class AuthController {
     return ResponseEntity.ok()
         .headers(responseHeaders)
         .body(EditDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));
+  }
+
+  /**
+   * 회원 탈퇴
+   */
+  @Operation(summary = "회원 탈퇴")
+  @PostMapping("/deactivate")
+  public ResponseEntity<HttpStatus> deactivateUser(
+      HttpServletRequest request,
+      @AuthenticationPrincipal UserEntity user
+  ) {
+    if (user.getId().startsWith("kakao")) {
+      oAuth2Service.kakaoLogout(request, user);
+      oAuth2Service.kakaoUnlink(request, user);
+    }
+
+    authService.deactivateUser(request, user);
+
+    return ResponseEntity.ok(HttpStatus.OK);
   }
 }
