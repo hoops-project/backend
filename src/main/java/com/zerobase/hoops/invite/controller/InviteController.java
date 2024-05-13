@@ -21,9 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class InviteController {
   private final InviteService inviteService;
 
-  /**
-   * 경기 초대 요청
-   */
   @Operation(summary = "경기 초대 요청")
   @PostMapping("/request")
   public ResponseEntity<CreateResponse> requestInviteGame(
@@ -32,9 +29,6 @@ public class InviteController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 경기 초대 요청 취소
-   */
   @Operation(summary = "경기 초대 요청 취소")
   @PatchMapping("/cancel")
   public ResponseEntity<CancelResponse> cancelInviteGame(

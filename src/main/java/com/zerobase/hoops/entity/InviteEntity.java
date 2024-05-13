@@ -23,7 +23,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "invite")
 @Getter
-@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
