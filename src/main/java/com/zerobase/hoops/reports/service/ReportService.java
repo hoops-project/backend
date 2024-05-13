@@ -5,7 +5,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.reports.dto.ReportDto;
-import com.zerobase.hoops.reports.dto.ReportListResponse;
+//import com.zerobase.hoops.reports.dto.ReportListResponse;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;

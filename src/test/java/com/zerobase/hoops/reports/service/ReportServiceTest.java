@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-import com.zerobase.hoops.manager.service.ManagerService;
+//import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -49,7 +49,7 @@ class ReportServiceTest {
   private JwtTokenExtract jwtTokenExtract;
 
   @MockBean
-  private ManagerService managerService;
+  //private ManagerService managerService;
 
   private UserEntity userEntity;
   private UserEntity reportedUserEntity;

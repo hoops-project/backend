@@ -3,7 +3,6 @@ package com.zerobase.hoops.reports.controller;
 import com.zerobase.hoops.commonResponse.ApiResponse;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.reports.dto.ReportDto;
-import com.zerobase.hoops.reports.dto.ReportListResponse;
 import com.zerobase.hoops.reports.service.ReportService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
