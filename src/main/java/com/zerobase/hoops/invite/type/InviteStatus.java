@@ -9,5 +9,6 @@ public enum InviteStatus {
   REQUEST,
   CANCEL,
   ACCEPT,
-  REJECT;
+  REJECT,
+  DELETE;
 }

@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.manager.service.ManagerService;
+//import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
@@ -55,7 +55,7 @@ class ReportControllerTest {
   private UserService userService;
 
   @MockBean
-  private ManagerService managerService;
+  //private ManagerService managerService;
 
   @Autowired
   private MockMvc mockMvc;

@@ -4,6 +4,7 @@ package com.zerobase.hoops.invite.controller;
 import com.zerobase.hoops.invite.dto.InviteDto;
 import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
 import com.zerobase.hoops.invite.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,14 @@ public class InviteController {
   public ResponseEntity<CancelResponse> cancelInviteGame(
       @RequestBody @Validated InviteDto.CancelRequest request) {
     CancelResponse result = inviteService.cancelInviteGame(request);
+    return ResponseEntity.ok(result);
+  }
+
+  @Operation(summary = "경기 초대 요청 상대방 수락")
+  @PatchMapping("/receive/accept")
+  public ResponseEntity<ReceiveAcceptResponse> receiveAcceptInviteGame(
+      @RequestBody @Validated InviteDto.ReceiveAcceptRequest request) {
+    ReceiveAcceptResponse result = inviteService.receiveAcceptInviteGame(request);
     return ResponseEntity.ok(result);
   }
 

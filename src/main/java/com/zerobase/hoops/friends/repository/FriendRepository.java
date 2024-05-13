@@ -12,14 +12,22 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
 
-  Optional<FriendEntity> findByFriendIdAndStatus(Long friendId, FriendStatus friendStatus);
+  Optional<FriendEntity> findByFriendIdAndStatus(
+      Long friendId, FriendStatus friendStatus);
 
   int countByUserEntityUserIdAndStatus(Long userId, FriendStatus friendStatus);
 
-  Optional<FriendEntity> findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus(Long friendUserId,
-      Long userId, FriendStatus friendStatus);
+  Optional<FriendEntity> findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus(
+      Long friendUserId, Long userId, FriendStatus friendStatus);
 
-  int countByFriendUserEntityUserIdAndStatusIn(Long friendUserId, List<FriendStatus> apply);
+  int countByFriendUserEntityUserIdAndStatusIn(
+      Long friendUserId, List<FriendStatus> apply);
 
   Page<FriendEntity> findByUserEntityUserId(Long userId, Pageable pageable);
+
+  boolean existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus(
+      Long userId, Long receiverUserId, FriendStatus friendStatus);
+
+  List<FriendEntity> findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(
+      Long userId, Long friendUserId, FriendStatus friendStatus);
 }

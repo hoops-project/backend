@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -109,4 +110,26 @@ public class ParticipantGameEntity {
         .userEntity(entity.getUserEntity())
         .build();
   }
+
+  public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity) {
+
+    LocalDateTime nowDateTime = LocalDateTime.now();
+
+    return ParticipantGameEntity.builder()
+            .status(ParticipantGameStatus.ACCEPT)
+            .createdDateTime(nowDateTime)
+            .acceptedDateTime(nowDateTime)
+            .gameEntity(inviteEntity.getGameEntity())
+            .userEntity(inviteEntity.getReceiverUserEntity())
+            .build();
+  }
+
+  public static ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
+    return ParticipantGameEntity.builder()
+        .status(ParticipantGameStatus.APPLY)
+        .gameEntity(inviteEntity.getGameEntity())
+        .userEntity(inviteEntity.getReceiverUserEntity())
+        .build();
+  }
+
 }

@@ -23,6 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "invite")
 @Getter
+@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -46,6 +47,8 @@ public class InviteEntity {
 
   private LocalDateTime acceptedDateTime;
 
+  private LocalDateTime rejectedDateTime;
+
   private LocalDateTime deletedDateTime;
 
 
@@ -61,12 +64,24 @@ public class InviteEntity {
   @JoinColumn(name = "game_id", nullable = false)
   private GameEntity gameEntity;
 
-  public static InviteEntity cancelEntity(InviteEntity inviteEntity) {
+  public static InviteEntity toCancelEntity(InviteEntity inviteEntity) {
     return InviteEntity.builder()
         .inviteId(inviteEntity.getInviteId())
         .inviteStatus(InviteStatus.CANCEL)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .canceledDateTime(LocalDateTime.now())
+        .senderUserEntity(inviteEntity.getSenderUserEntity())
+        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
+        .gameEntity(inviteEntity.getGameEntity())
+        .build();
+  }
+
+  public static InviteEntity toAcceptEntity(InviteEntity inviteEntity) {
+    return InviteEntity.builder()
+        .inviteId(inviteEntity.getInviteId())
+        .inviteStatus(InviteStatus.ACCEPT)
+        .requestedDateTime(inviteEntity.getRequestedDateTime())
+        .acceptedDateTime(LocalDateTime.now())
         .senderUserEntity(inviteEntity.getSenderUserEntity())
         .receiverUserEntity(inviteEntity.getReceiverUserEntity())
         .gameEntity(inviteEntity.getGameEntity())
