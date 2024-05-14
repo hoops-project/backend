@@ -10,7 +10,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.Collections;
@@ -38,9 +39,6 @@ public class FriendController {
 
   private final FriendService friendService;
 
-  /**
-   * 친구 신청
-   */
   @Operation(summary = "친구 신청")
   @PostMapping("/apply")
   public ResponseEntity<ApplyResponse> applyFriend(
@@ -49,9 +47,6 @@ public class FriendController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 친구 신청 취소
-   */
   @Operation(summary = "친구 신청 취소")
   @PatchMapping("/cancel")
   public ResponseEntity<CancelResponse> cancelFriend(
@@ -60,9 +55,6 @@ public class FriendController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 친구 수락
-   */
   @Operation(summary = "친구 수락")
   @PatchMapping("/accept")
   public ResponseEntity<Map<String, List<AcceptResponse>>> acceptFriend(
@@ -71,9 +63,6 @@ public class FriendController {
     return ResponseEntity.ok(Collections.singletonMap("friendList", result));
   }
 
-  /**
-   * 친구 거절
-   */
   @Operation(summary = "친구 거절")
   @PatchMapping("/reject")
   public ResponseEntity<RejectResponse> rejectFriend(
@@ -82,9 +71,6 @@ public class FriendController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 친구 삭제
-   */
   @Operation(summary = "친구 삭제")
   @PatchMapping("/delete")
   public ResponseEntity<Map<String, List<DeleteResponse>>> deleteFriend(
@@ -93,29 +79,31 @@ public class FriendController {
     return ResponseEntity.ok(Collections.singletonMap("friendList", result));
   }
 
-  /**
-   * 친구 검색
-   */
   @Operation(summary = "친구 검색")
   @GetMapping("/search")
-  public ResponseEntity<Page<SearchResponse>> searchFriend(
+  public ResponseEntity<Page<ListResponse>> searchFriend(
       @RequestParam String nickName,
       @PageableDefault(size = 10, page = 0) Pageable pageable) {
-    Page<SearchResponse> result = friendService.searchNickName(nickName,
+    Page<ListResponse> result = friendService.searchNickName(nickName,
         pageable);
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 친구 리스트 조회
-   */
   @Operation(summary = "친구 리스트 조회")
   @GetMapping("/myfriends")
-  public ResponseEntity<Map<String, List<SearchResponse>>> getMyFriends(
+  public ResponseEntity<Map<String, List<ListResponse>>> getMyFriends(
       @PageableDefault(size = 10, page = 0, sort = "FriendUserEntityNickName",
           direction = Direction.ASC) Pageable pageable) {
-    List<SearchResponse> result = friendService.getMyFriends(pageable);
+    List<ListResponse> result = friendService.getMyFriends(pageable);
     return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
+  }
+
+  @Operation(summary = "내가 친구 요청 받은 리스트 조회")
+  @GetMapping("/requestFriendList")
+  public ResponseEntity<Map<String, List<RequestListResponse>>> getRequestFriendList() {
+    List<RequestListResponse> result = friendService.getRequestFriendList();
+    return ResponseEntity.ok(Collections.singletonMap("requestFriendList",
+        result));
   }
 
 }

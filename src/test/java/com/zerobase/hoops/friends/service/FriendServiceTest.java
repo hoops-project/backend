@@ -23,7 +23,7 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -408,7 +408,7 @@ class FriendServiceTest {
         .friendUserEntity(userEntity)
         .build();
 
-    SearchResponse searchResponse1 = SearchResponse.builder()
+    ListResponse listResponse1 = ListResponse.builder()
         .userId(2L)
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test1")
@@ -417,7 +417,7 @@ class FriendServiceTest {
         .friendId(1L)
         .build();
 
-    SearchResponse searchResponse2 = SearchResponse.builder()
+    ListResponse listResponse2 = ListResponse.builder()
         .userId(3L)
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test2")
@@ -426,11 +426,11 @@ class FriendServiceTest {
         .friendId(null)
         .build();
 
-    List<SearchResponse> searchResponseList =
-        List.of(searchResponse1, searchResponse2);
+    List<ListResponse> listResponseList =
+        List.of(listResponse1, listResponse2);
 
-    Page<SearchResponse> searchResponsePage =
-        new PageImpl<>(searchResponseList, pageable, 2);
+    Page<ListResponse> searchResponsePage =
+        new PageImpl<>(listResponseList, pageable, 2);
 
     getCurrentUser();
 
@@ -440,27 +440,27 @@ class FriendServiceTest {
 
 
     // when
-    Page<SearchResponse> result = friendService.searchNickName(nickName, pageable);
-    List<SearchResponse> responseList = result.getContent();
+    Page<ListResponse> result = friendService.searchNickName(nickName, pageable);
+    List<ListResponse> responseList = result.getContent();
 
     // Then
-    assertEquals(searchResponse1.getUserId(), responseList.get(0).getUserId());
-    assertEquals(searchResponse1.getBirthday(), responseList.get(0).getBirthday());
-    assertEquals(searchResponse1.getNickName(), responseList.get(0).getNickName());
-    assertEquals(searchResponse1.getPlayStyle(), responseList.get(0).getPlayStyle());
-    assertEquals(searchResponse1.getAbility(), responseList.get(0).getAbility());
-    assertEquals(searchResponse1.getFriendId(), responseList.get(0).getFriendId());
+    assertEquals(listResponse1.getUserId(), responseList.get(0).getUserId());
+    assertEquals(listResponse1.getBirthday(), responseList.get(0).getBirthday());
+    assertEquals(listResponse1.getNickName(), responseList.get(0).getNickName());
+    assertEquals(listResponse1.getPlayStyle(), responseList.get(0).getPlayStyle());
+    assertEquals(listResponse1.getAbility(), responseList.get(0).getAbility());
+    assertEquals(listResponse1.getFriendId(), responseList.get(0).getFriendId());
 
-    assertEquals(searchResponse2.getFriendId(), responseList.get(1).getFriendId());
-    assertEquals(searchResponse2.getBirthday(),
+    assertEquals(listResponse2.getFriendId(), responseList.get(1).getFriendId());
+    assertEquals(listResponse2.getBirthday(),
         responseList.get(1).getBirthday());
-    assertEquals(searchResponse2.getNickName(),
+    assertEquals(listResponse2.getNickName(),
         responseList.get(1).getNickName());
-    assertEquals(searchResponse2.getPlayStyle(),
+    assertEquals(listResponse2.getPlayStyle(),
         responseList.get(1).getPlayStyle());
-    assertEquals(searchResponse2.getAbility(),
+    assertEquals(listResponse2.getAbility(),
         responseList.get(1).getAbility());
-    assertEquals(searchResponse2.getFriendId(),
+    assertEquals(listResponse2.getFriendId(),
         responseList.get(1).getFriendId());
   }
 
@@ -485,7 +485,7 @@ class FriendServiceTest {
         .friendUserEntity(userEntity)
         .build();
 
-    SearchResponse searchResponse1 = SearchResponse.builder()
+    ListResponse listResponse1 = ListResponse.builder()
         .userId(2L)
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test1")
@@ -508,15 +508,15 @@ class FriendServiceTest {
 
 
     // when
-    List<SearchResponse> result = friendService.getMyFriends(pageable);
+    List<ListResponse> result = friendService.getMyFriends(pageable);
 
     // Then
-    assertEquals(searchResponse1.getUserId(), result.get(0).getUserId());
-    assertEquals(searchResponse1.getBirthday(), result.get(0).getBirthday());
-    assertEquals(searchResponse1.getNickName(), result.get(0).getNickName());
-    assertEquals(searchResponse1.getPlayStyle(), result.get(0).getPlayStyle());
-    assertEquals(searchResponse1.getAbility(), result.get(0).getAbility());
-    assertEquals(searchResponse1.getFriendId(), result.get(0).getFriendId());
+    assertEquals(listResponse1.getUserId(), result.get(0).getUserId());
+    assertEquals(listResponse1.getBirthday(), result.get(0).getBirthday());
+    assertEquals(listResponse1.getNickName(), result.get(0).getNickName());
+    assertEquals(listResponse1.getPlayStyle(), result.get(0).getPlayStyle());
+    assertEquals(listResponse1.getAbility(), result.get(0).getAbility());
+    assertEquals(listResponse1.getFriendId(), result.get(0).getFriendId());
   }
 
   private void getCurrentUser() {

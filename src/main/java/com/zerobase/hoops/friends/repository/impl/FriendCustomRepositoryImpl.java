@@ -5,7 +5,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.zerobase.hoops.entity.QFriendEntity;
 import com.zerobase.hoops.entity.QUserEntity;
-import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
 import com.zerobase.hoops.friends.repository.FriendCustomRepository;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +25,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
   }
 
   @Override
-  public Page<SearchResponse> findBySearchFriendList(Long userId, String nickName, Pageable pageable) {
+  public Page<ListResponse> findBySearchFriendList(Long userId, String nickName, Pageable pageable) {
     QUserEntity user = QUserEntity.userEntity;
     QFriendEntity friend = QFriendEntity.friendEntity;
 
@@ -40,8 +40,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     int pageSize = pageable.getPageSize();
 
     // 결과 쿼리 생성
-    List<SearchResponse> result = jpaQueryFactory.select(
-            Projections.constructor(SearchResponse.class, user.userId, user.birthday,
+    List<ListResponse> result = jpaQueryFactory.select(
+            Projections.constructor(ListResponse.class, user.userId, user.birthday,
                 user.gender, user.nickName, user.playStyle, user.ability, friend.friendId)).from(user).leftJoin(friend)
         .on(user.userId.eq(friend.friendUserEntity.userId)
             .and(friend.userEntity.userId.eq(userId))).where(
