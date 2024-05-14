@@ -26,6 +26,7 @@ import com.zerobase.hoops.invite.dto.InviteDto.CancelRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectRequest;
@@ -35,7 +36,10 @@ import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -208,25 +212,6 @@ public class InviteService {
     return ReceiveAcceptResponse.toDto(result);
   }
 
-  public void setUpUser() {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
-
-    user = userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-  }
-
-  // 친구 인지 검사
-  private void validFriendUser(Long receiverUserId) {
-    boolean existFriendFlag =
-        friendRepository
-            .existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
-                (user.getUserId(), receiverUserId, FriendStatus.ACCEPT);
-
-    if(!existFriendFlag) {
-      throw new CustomException(NOT_FOUND_ACCEPT_FRIEND);
-    }
-  }
-
   /**
    * 경기 초대 요청 상대방 거절
    */
@@ -250,5 +235,41 @@ public class InviteService {
     inviteRepository.save(result);
 
     return ReceiveRejectResponse.toDto(result);
+  }
+
+  /**
+   * 내가 초대 요청 받은 리스트 조회
+   */
+  public List<InviteMyListResponse> getInviteRequestList() {
+    setUpUser();
+
+    List<InviteEntity> inviteEntityList =
+        inviteRepository.findByInviteStatusAndReceiverUserEntityUserId
+        (InviteStatus.REQUEST, user.getUserId());
+
+    List<InviteMyListResponse> result = inviteEntityList.stream()
+        .map(InviteMyListResponse::toDto)
+        .collect(Collectors.toList());
+
+    return result;
+  }
+
+  public void setUpUser() {
+    Long userId = jwtTokenExtract.currentUser().getUserId();
+
+    user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+  }
+
+  // 친구 인지 검사
+  private void validFriendUser(Long receiverUserId) {
+    boolean existFriendFlag =
+        friendRepository
+            .existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
+                (user.getUserId(), receiverUserId, FriendStatus.ACCEPT);
+
+    if(!existFriendFlag) {
+      throw new CustomException(NOT_FOUND_ACCEPT_FRIEND);
+    }
   }
 }
