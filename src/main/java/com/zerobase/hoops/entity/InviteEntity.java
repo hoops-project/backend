@@ -88,4 +88,16 @@ public class InviteEntity {
         .build();
   }
 
+  public static InviteEntity toRejectEntity(InviteEntity inviteEntity) {
+    return InviteEntity.builder()
+        .inviteId(inviteEntity.getInviteId())
+        .inviteStatus(InviteStatus.REJECT)
+        .requestedDateTime(inviteEntity.getRequestedDateTime())
+        .rejectedDateTime(LocalDateTime.now())
+        .senderUserEntity(inviteEntity.getSenderUserEntity())
+        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
+        .gameEntity(inviteEntity.getGameEntity())
+        .build();
+  }
+
 }

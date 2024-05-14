@@ -28,6 +28,7 @@ import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -139,8 +140,6 @@ public class InviteService {
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
-    validFriendUser(inviteEntity.getReceiverUserEntity().getUserId());
-
     // 본인이 경기 초대 요청한 것만 취소 가능
     if(!Objects.equals(inviteEntity.getSenderUserEntity().getUserId(),
         user.getUserId())) {
@@ -227,6 +226,27 @@ public class InviteService {
     }
   }
 
+  /**
+   * 경기 초대 요청 상대방 거절
+   */
+  public ReceiveRejectResponse receiveRejectInviteGame(ReceiveAcceptRequest request) {
+    setUpUser();
 
+    InviteEntity inviteEntity = inviteRepository
+        .findByInviteIdAndInviteStatus(request.getInviteId(),
+            InviteStatus.REQUEST)
+        .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
+    // 본인이 받은 초대 요청만 거절 가능
+    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getUserId(),
+        user.getUserId())) {
+      throw new CustomException(NOT_SELF_INVITE_REQUEST);
+    }
+
+    InviteEntity result = InviteEntity.toRejectEntity(inviteEntity);
+
+    inviteRepository.save(result);
+
+    return ReceiveRejectResponse.toDto(result);
+  }
 }
