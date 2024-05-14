@@ -329,6 +329,8 @@ public class FriendDto {
 
     private AbilityType ability;
 
+    private String mannerPoint;
+
     private Long friendId;
 
     public static ListResponse toDto(FriendEntity friendEntity) {
@@ -339,6 +341,7 @@ public class FriendDto {
           .nickName(friendEntity.getFriendUserEntity().getNickName())
           .playStyle(friendEntity.getFriendUserEntity().getPlayStyle())
           .ability(friendEntity.getFriendUserEntity().getAbility())
+          .mannerPoint(friendEntity.getFriendUserEntity().getStringAverageRating())
           .friendId(friendEntity.getFriendId())
           .build();
     }
@@ -364,7 +367,7 @@ public class FriendDto {
 
     private AbilityType ability;
 
-    private String score;
+    private String mannerPoint;
 
     private Long friendId;
 
@@ -376,7 +379,7 @@ public class FriendDto {
           .nickName(friendEntity.getUserEntity().getNickName())
           .playStyle(friendEntity.getUserEntity().getPlayStyle())
           .ability(friendEntity.getUserEntity().getAbility())
-          .score(friendEntity.getUserEntity().getStringAverageRating())
+          .mannerPoint(friendEntity.getUserEntity().getStringAverageRating())
           .friendId(friendEntity.getFriendId())
           .build();
     }

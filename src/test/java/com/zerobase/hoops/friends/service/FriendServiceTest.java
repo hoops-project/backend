@@ -563,7 +563,7 @@ class FriendServiceTest {
         .nickName("test1")
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
-        .score(null)
+        .mannerPoint(null)
         .friendId(1L)
         .build();
 
@@ -573,7 +573,7 @@ class FriendServiceTest {
         .nickName("test2")
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
-        .score(null)
+        .mannerPoint(null)
         .friendId(1L)
         .build();
 
@@ -597,7 +597,7 @@ class FriendServiceTest {
     assertEquals(RequestListResponse1.getPlayStyle(), result.get(0).getPlayStyle());
     assertEquals(RequestListResponse1.getAbility(), result.get(0).getAbility());
     assertEquals(RequestListResponse1.getFriendId(), result.get(0).getFriendId());
-    assertEquals(RequestListResponse1.getScore(), result.get(0).getScore());
+    assertEquals(RequestListResponse1.getMannerPoint(), result.get(0).getMannerPoint());
 
     assertEquals(RequestListResponse2.getUserId(), result.get(1).getUserId());
     assertEquals(RequestListResponse2.getBirthday(),
@@ -607,8 +607,8 @@ class FriendServiceTest {
     assertEquals(RequestListResponse2.getPlayStyle(),
         result.get(1).getPlayStyle());
     assertEquals(RequestListResponse2.getAbility(), result.get(1).getAbility());
-    assertEquals(RequestListResponse2.getScore(),
-        result.get(1).getScore());
+    assertEquals(RequestListResponse2.getMannerPoint(),
+        result.get(1).getMannerPoint());
   }
 
   private void getCurrentUser() {

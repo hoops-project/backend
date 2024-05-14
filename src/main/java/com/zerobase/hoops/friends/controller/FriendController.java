@@ -14,6 +14,7 @@ import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

@@ -248,8 +248,8 @@ public class FriendService {
    * 친구 검색
    */
   public Page<ListResponse> searchNickName(String nickName, Pageable pageable) {
-    // validation
-    if(nickName.trim().isEmpty()) {
+    //validation
+    if(nickName.isBlank()) {
       throw new CustomException(NOT_FOUND_NICKNAME);
     }
 
