@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
-//import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponseDto;
