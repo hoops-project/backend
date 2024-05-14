@@ -37,6 +37,8 @@ public class ParticipantDto {
 
     private AbilityType ability;
 
+    private String mannerPoint;
+
     public static ParticipantDto.DetailResponse toDto(
         ParticipantGameEntity participantGameEntity){
       return DetailResponse.builder()
@@ -47,6 +49,7 @@ public class ParticipantDto {
           .nickName(participantGameEntity.getUserEntity().getNickName())
           .playStyle(participantGameEntity.getUserEntity().getPlayStyle())
           .ability(participantGameEntity.getUserEntity().getAbility())
+          .mannerPoint(participantGameEntity.getUserEntity().getStringAverageRating())
           .build();
     }
 
