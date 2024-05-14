@@ -1,8 +1,23 @@
 package com.zerobase.hoops.users.service;
 
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.WITHDRAW;
+
+import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.InviteEntity;
+import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.friends.repository.FriendRepository;
+import com.zerobase.hoops.friends.type.FriendStatus;
+import com.zerobase.hoops.gameCreator.repository.GameRepository;
+import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
+import com.zerobase.hoops.invite.repository.InviteRepository;
+import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
@@ -13,6 +28,7 @@ import com.zerobase.hoops.users.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +40,16 @@ import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class AuthService {
 
   private final AuthRepository authRepository;
   private final UserRepository userRepository;
+
+  private final GameRepository gameRepository;
+  private final ParticipantGameRepository participantGameRepository;
+  private final FriendRepository friendRepository;
+  private final InviteRepository inviteRepository;
 
   private final TokenProvider tokenProvider;
 
@@ -66,6 +86,7 @@ public class AuthService {
     return new TokenDto(userDto.getId(), accessToken, refreshToken);
   }
 
+  @Transactional
   public TokenDto refreshToken(
       HttpServletRequest request, UserEntity userEntity
   ) {
@@ -155,7 +176,7 @@ public class AuthService {
       EditDto.Request editDto, UserEntity user) {
     isSameId(request, user);
 
-    if(editDto.getPassword() != null) {
+    if (editDto.getPassword() != null) {
       String encodedNewPassword = passwordEncoder.encode(editDto.getPassword());
       user.passwordEdit(encodedNewPassword);
     }
@@ -175,5 +196,96 @@ public class AuthService {
     if (!user.getId().equals(id)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
+  }
+
+  @Transactional
+  public void deactivateUser(HttpServletRequest request, UserEntity user) {
+    isSameId(request, user);
+    String accessToken = validateAccessTokenExistHeader(request);
+    String refreshToken = validateRefreshTokenExistHeader(request);
+
+    if (!tokenUserMatch(accessToken, refreshToken)) {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+
+    // 내가 생성한 경기 삭제
+    List<GameEntity> gameList =
+        gameRepository
+            .findByUserEntityUserIdAndDeletedDateTimeNull(user.getUserId());
+    gameList.stream().forEach(game -> {
+      game.setDeletedDateTime(now);
+      gameRepository.save(game);
+
+      // 내가 생성한 경기의 참가 테이블 삭제
+      List<ParticipantGameEntity> participantList =
+          participantGameRepository
+              .findByGameEntityGameIdAndStatusNotAndDeletedDateTimeNull(
+                  game.getGameId(), WITHDRAW);
+      participantList.stream().forEach(
+          participantGame -> {
+            participantGame.setDeletedDateTime(now);
+            participantGame.setStatus(DELETE);
+            participantGameRepository.save(participantGame);
+          });
+
+      // 내가 생성한 경기의 초대 테이블 삭제
+      List<InviteEntity> inviteList = inviteRepository
+          .findByInviteStatusAndGameEntityGameId(
+              InviteStatus.REQUEST, game.getGameId());
+      inviteList.stream().forEach(
+          invite -> {
+            invite.setInviteStatus(InviteStatus.DELETE);
+            invite.setDeletedDateTime(now);
+            inviteRepository.save(invite);
+          }
+      );
+
+    });
+
+    // 내가 참가한 방의 참가 테이블에서 탈퇴 처리
+    List<ParticipantGameEntity> participantList =
+        participantGameRepository
+            .findByUserEntityUserIdAndStatusInAndWithdrewDateTimeNull(
+                user.getUserId(), List.of(APPLY, ACCEPT));
+    participantList.stream().forEach(
+        participantGame -> {
+          participantGame.setWithdrewDateTime(now);
+          participantGame.setStatus(WITHDRAW);
+          participantGameRepository.save(participantGame);
+        });
+
+
+    // 내가 참가한 방의 초대에서 삭제
+    List<InviteEntity> inviteList =
+        inviteRepository
+            .findByInviteStatusAndSenderUserEntityUserIdOrReceiverUserEntityUserId(
+                InviteStatus.REQUEST, user.getUserId(), user.getUserId());
+    inviteList.stream().forEach(
+        invite -> {
+          invite.setInviteStatus(InviteStatus.DELETE);
+          invite.setDeletedDateTime(now);
+          inviteRepository.save(invite);
+        }
+    );
+
+    // 친구 목록에 있는 사람들 서로 삭제
+    List<FriendEntity> friendList =
+        friendRepository
+            .findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(
+                user.getUserId(), user.getUserId(), FriendStatus.DELETE);
+    friendList.stream().forEach(friend -> {
+      friend.setStatus(FriendStatus.DELETE);
+      friend.setDeletedDateTime(now);
+      friendRepository.save(friend);
+    });
+
+    // 로그 아웃
+    logOutUser(request, user);
+
+    // 회원 탈퇴 처리
+    user.setDeletedDateTime(now);
+    userRepository.save(user);
   }
 }

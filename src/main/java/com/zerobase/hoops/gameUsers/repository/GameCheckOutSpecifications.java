@@ -1,4 +1,4 @@
-package com.zerobase.hoops.gameUsers.service;
+package com.zerobase.hoops.gameUsers.repository;
 
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -8,7 +8,7 @@ import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import java.time.LocalDate;
 import org.springframework.data.jpa.domain.Specification;
 
-public class GameSpecifications {
+public class GameCheckOutSpecifications {
 
   public static Specification<GameEntity> withCityName(CityName cityName) {
     return (root, query, criteriaBuilder) ->

@@ -164,4 +164,26 @@ public class OAuth2Service {
     restTemplate.exchange("https://kapi.kakao.com/v1/user/logout",
         HttpMethod.POST, kakaoRequest, String.class);
   }
+
+  public void kakaoUnlink(HttpServletRequest request, UserEntity userEntity) {
+    String id = userEntity.getId();
+    String kakaoId = id.substring(6);
+
+    HttpHeaders headers = new HttpHeaders();
+    RestTemplate restTemplate = new RestTemplate();
+    headers.add("Authorization", "KakaoAK " + adminId);
+
+    request.getSession().removeAttribute("kakaoToken");
+    request.getSession().removeAttribute("kakaoRefreshToken");
+
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("target_id_type", "user_id");
+    params.add("target_id", kakaoId);
+
+    HttpEntity<MultiValueMap<String, String>> kakaoRequest =
+        new HttpEntity<>(params, headers);
+
+    restTemplate.exchange("https://kapi.kakao.com/v1/user/unlink",
+        HttpMethod.POST, kakaoRequest, String.class);
+  }
 }

@@ -31,6 +31,8 @@ public enum ErrorCode {
 
   // 블랙리스트
   BAN_FOR_10DAYS(HttpStatus.BAD_REQUEST.value(), "10일 후에 다시 이용 가능합니다."),
+  ALREADY_BLACKLIST(HttpStatus.BAD_REQUEST.value(), "이미 블랙리스트로 처리 되었습니다."),
+  NOT_BLACKLIST(HttpStatus.BAD_REQUEST.value(), "블랙리스트 목록에 없습니다."),
 
   // 게임 개설자
   GAME_NOT_FOUND(HttpStatus.NOT_FOUND.value(),  "경기를 찾을 수 없습니다."),
@@ -61,6 +63,9 @@ public enum ErrorCode {
   ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST.value(), "여성만 신청 가능한 경기 입니다."),
   ONLY_MALE_GAME(HttpStatus.BAD_REQUEST.value(), "남성만 신청 가능한 경기 입니다."),
   DUPLICATED_TRY_TO_JOIN_GAME(HttpStatus.BAD_REQUEST.value(), "경기 신청이 이미 등록되어 있습니다."),
+  ALREADY_PARTICIPANT_GAME(HttpStatus.BAD_REQUEST.value(), "이미 경기에 참가 해 있습니다."),
+  NOT_PARTICIPANT_GAME(HttpStatus.BAD_REQUEST.value(), "경기에 참가해 있지 않습니다."),
+
 
   // 친구
   NOT_SELF_FRIEND(HttpStatus.BAD_REQUEST.value(), "자기 자신을 친구 신청 할수 없습니다."),
@@ -75,6 +80,22 @@ public enum ErrorCode {
   NOT_FOUND_APPLY_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 신청한 상태가 아닙니다."),
   NOT_FOUND_ACCEPT_FRIEND(HttpStatus.BAD_REQUEST.value(), "친구 수락한 상태가 아닙니다."),
   NOT_FOUND_NICKNAME(HttpStatus.BAD_REQUEST.value(), "닉네임은 필수 값 입니다."),
+
+  // 매너점수
+  INVALID_GAME_ID(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 game_id입니다."),
+  EXIST_RATE(HttpStatus.BAD_REQUEST.value(), "이미 평가가 완료되었습니다."),
+
+  // 초대
+  ALREADY_INVITE_GAME(HttpStatus.BAD_REQUEST.value(), "이미 경기에 초대 돼 있습니다."),
+  NOT_INVITE_FOUND(HttpStatus.BAD_REQUEST.value(), "해당 경기에 초대 요청 상태가 아닙니다."),
+  NOT_SELF_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 요청한 경기 초대만 취소 할수 있습니다"
+      + "."),
+  NOT_SELF_INVITE_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 받은 경기 초대만 수락,"
+      + "거절 할수 있습니다."),
+
+  // 신고
+  AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),
+  NOT_EXIST_REPORTED(HttpStatus.BAD_REQUEST.value(), "신고 내용이 없습니다."),
 
   // 서버 오류
   INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");

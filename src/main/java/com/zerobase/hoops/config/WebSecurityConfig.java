@@ -68,6 +68,8 @@ public class WebSecurityConfig {
             .hasRole("USER")
             .requestMatchers("/api/friend/**")
             .hasRole("USER")
+            .requestMatchers("/api/invite/**")
+            .hasRole("USER")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,

@@ -22,5 +22,11 @@ public interface GameCheckOutRepository extends
   boolean existsByGameEntity_GameIdAndUserEntity_UserId(Long gameId,
       Long userId);
 
+  Optional<List<ParticipantGameEntity>> findByStatusAndGameEntity_GameId(
+      ParticipantGameStatus status, Long gameId);
+
+  boolean existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+      Long gameId, Long userId, ParticipantGameStatus status);
+
 
 }

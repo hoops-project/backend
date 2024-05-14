@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -31,12 +32,16 @@ public class ReportEntity {
 
   private String content;
 
-  private String userEmail;
+  @ManyToOne
+  private UserEntity user;
 
-  private String reportedEmail;
+  @ManyToOne
+  private UserEntity reportedUser;
 
   @CreatedDate
   private LocalDateTime createdDateTime;
+
+  private LocalDateTime blackListStartDateTime;
 
   @Override
   public boolean equals(Object o) {
@@ -53,5 +58,9 @@ public class ReportEntity {
   @Override
   public int hashCode() {
     return Objects.hash(id);
+  }
+
+  public void saveBlackListStartDateTime(LocalDateTime dateTIme){
+    this.blackListStartDateTime = dateTIme;
   }
 }
