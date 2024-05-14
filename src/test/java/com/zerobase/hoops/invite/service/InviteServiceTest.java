@@ -26,6 +26,7 @@ import com.zerobase.hoops.invite.dto.InviteDto.CancelRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectRequest;
@@ -42,6 +43,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,6 +83,7 @@ class InviteServiceTest {
   private UserEntity otherUser;
 
   private GameEntity createdGameEntity;
+  private GameEntity otherCreatedGameEntity;
 
   private ParticipantGameEntity creatorParticipantGameEntity;
 
@@ -151,6 +154,22 @@ class InviteServiceTest {
         .matchFormat(MatchFormat.THREEONTHREE)
         .cityName(CityName.SEOUL)
         .userEntity(requestUser)
+        .build();
+    otherCreatedGameEntity = GameEntity.builder()
+        .gameId(2L)
+        .title("테스트제목2")
+        .content("테스트내용2")
+        .headCount(6L)
+        .fieldStatus(FieldStatus.INDOOR)
+        .gender(Gender.ALL)
+        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .inviteYn(true)
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .latitude(32.13123)
+        .longitude(123.13123)
+        .matchFormat(MatchFormat.THREEONTHREE)
+        .cityName(CityName.SEOUL)
+        .userEntity(receiverUser)
         .build();
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
         .participantId(1L)
@@ -402,6 +421,60 @@ class InviteServiceTest {
     assertEquals(response.getReceiverUserNickName(), result.getReceiverUserNickName());
     assertEquals(response.getTitle(), result.getTitle());
   }
+
+  @Test
+  @DisplayName("경기 초대 요청 리스트 조회 성공")
+  public void getInviteRequestList_success() {
+    //Given
+    InviteEntity inviteEntity1 = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REQUEST)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(otherUser)
+        .gameEntity(createdGameEntity)
+        .build();
+
+    InviteEntity inviteEntity2 = InviteEntity.builder()
+        .inviteId(2L)
+        .inviteStatus(InviteStatus.REQUEST)
+        .senderUserEntity(receiverUser)
+        .receiverUserEntity(otherUser)
+        .gameEntity(otherCreatedGameEntity)
+        .build();
+
+    List<InviteEntity> inviteEntityList = new ArrayList<>();
+    inviteEntityList.add(inviteEntity1);
+    inviteEntityList.add(inviteEntity2);
+
+    List<InviteMyListResponse> responseList = inviteEntityList.stream()
+        .map(InviteMyListResponse::toDto)
+        .toList();
+
+    when(jwtTokenExtract.currentUser()).thenReturn(otherUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(otherUser));
+
+    when(inviteRepository.findByInviteStatusAndReceiverUserEntityUserId
+        (eq(InviteStatus.REQUEST), anyLong()))
+        .thenReturn(inviteEntityList);
+
+    // when
+    List<InviteMyListResponse> result = inviteService.getInviteRequestList();
+
+    // Then
+    assertEquals(responseList.get(0).getInviteId(), result.get(0).getInviteId());
+    assertEquals(responseList.get(0).getInviteStatus(), result.get(0).getInviteStatus());
+    assertEquals(responseList.get(0).getGameId(), result.get(0).getGameId());
+
+    assertEquals(responseList.get(1).getInviteId(),
+        result.get(1).getInviteId());
+    assertEquals(responseList.get(1).getInviteStatus(),
+        result.get(1).getInviteStatus());
+    assertEquals(responseList.get(1).getGameId(), result.get(1).getGameId());
+  }
+
+
 
   private void getCurrentUser() {
     when(jwtTokenExtract.currentUser()).thenReturn(requestUser);
