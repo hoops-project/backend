@@ -28,6 +28,8 @@ import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectRequest;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -269,8 +271,6 @@ class InviteServiceTest {
 
     getCurrentUser();
 
-    validFriendUser(requestUser.getUserId(), receiverUser.getUserId());
-
     // 경기
     when(inviteRepository
         .findByInviteIdAndInviteStatus(eq(1L), eq(InviteStatus.REQUEST)))
@@ -340,6 +340,60 @@ class InviteServiceTest {
 
     // when
     ReceiveAcceptResponse result = inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+
+    // Then
+    assertEquals(response.getInviteId(), result.getInviteId());
+    assertEquals(response.getInviteStatus(), result.getInviteStatus());
+    assertEquals(response.getSenderUserNickName(), result.getSenderUserNickName());
+    assertEquals(response.getReceiverUserNickName(), result.getReceiverUserNickName());
+    assertEquals(response.getTitle(), result.getTitle());
+  }
+
+  @Test
+  @DisplayName("경기 초대 요청 거절 성공")
+  public void rejectInviteGame_success() {
+    //Given
+    ReceiveRejectRequest receiveRejectRequest = ReceiveRejectRequest.builder()
+        .inviteId(1L)
+        .build();
+
+    ReceiveRejectResponse response = ReceiveRejectResponse.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REJECT)
+        .senderUserNickName(requestUser.getNickName())
+        .receiverUserNickName(receiverUser.getNickName())
+        .title(createdGameEntity.getTitle())
+        .build();
+
+    InviteEntity inviteEntity = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REQUEST)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(receiverUser)
+        .gameEntity(createdGameEntity)
+        .build();
+
+    InviteEntity rejectEntity = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REJECT)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(receiverUser)
+        .gameEntity(createdGameEntity)
+        .build();
+
+    when(jwtTokenExtract.currentUser()).thenReturn(receiverUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(receiverUser));
+
+    when(inviteRepository.findByInviteIdAndInviteStatus
+        (eq(1L), eq(InviteStatus.REQUEST)))
+        .thenReturn(Optional.of(inviteEntity));
+
+    when(inviteRepository.save(any(InviteEntity.class))).thenReturn(rejectEntity);
+
+    // when
+    ReceiveRejectResponse result = inviteService.receiveRejectInviteGame(receiveRejectRequest);
 
     // Then
     assertEquals(response.getInviteId(), result.getInviteId());

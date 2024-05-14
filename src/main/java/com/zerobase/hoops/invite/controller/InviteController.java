@@ -50,7 +50,7 @@ public class InviteController {
   @Operation(summary = "경기 초대 요청 상대방 거절")
   @PatchMapping("/receive/reject")
   public ResponseEntity<ReceiveRejectResponse> receiveRejectInviteGame(
-      @RequestBody @Validated InviteDto.ReceiveAcceptRequest request) {
+      @RequestBody @Validated InviteDto.ReceiveRejectRequest request) {
     ReceiveRejectResponse result =
         inviteService.receiveRejectInviteGame(request);
     return ResponseEntity.ok(result);

@@ -28,6 +28,7 @@ import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
@@ -229,7 +230,8 @@ public class InviteService {
   /**
    * 경기 초대 요청 상대방 거절
    */
-  public ReceiveRejectResponse receiveRejectInviteGame(ReceiveAcceptRequest request) {
+  public ReceiveRejectResponse receiveRejectInviteGame(
+      ReceiveRejectRequest request) {
     setUpUser();
 
     InviteEntity inviteEntity = inviteRepository
