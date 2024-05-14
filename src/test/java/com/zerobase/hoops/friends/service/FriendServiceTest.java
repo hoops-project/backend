@@ -24,8 +24,10 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
+import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -67,7 +69,9 @@ class FriendServiceTest {
   private FriendCustomRepositoryImpl friendCustomRepository;
 
   private UserEntity userEntity;
-  private UserEntity friendUserEntity;
+  private UserEntity friendUserEntity1;
+
+  private UserEntity friendUserEntity2;
 
   private FriendEntity friendEntity;
 
@@ -88,7 +92,7 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
         .build();
-    friendUserEntity = UserEntity.builder()
+    friendUserEntity1 = UserEntity.builder()
         .userId(2L)
         .id("test1")
         .password("Testpass12!@")
@@ -103,12 +107,27 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
         .build();
+    friendUserEntity2 = UserEntity.builder()
+        .userId(3L)
+        .id("test2")
+        .password("Testpass12!@")
+        .email("test2@example.com")
+        .name("test2")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("test2")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(true)
+        .build();
     friendEntity = FriendEntity.builder()
         .friendId(1L)
         .status(APPLY)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
   }
 
@@ -133,7 +152,7 @@ class FriendServiceTest {
         .thenReturn(10)
         .thenReturn(10);
 
-    when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity));
+    when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity1));
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
       FriendEntity savedFriendEntity = invocation.getArgument(0);
@@ -169,7 +188,7 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .canceledDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     getCurrentUser();
@@ -206,7 +225,7 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     FriendEntity otherEntity = FriendEntity.builder()
@@ -214,14 +233,14 @@ class FriendServiceTest {
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
-        .userEntity(friendUserEntity)
+        .userEntity(friendUserEntity1)
         .friendUserEntity(userEntity)
         .build();
 
-    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity);
+    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity1);
 
     when(userRepository.findById(2L)).thenReturn(
-        Optional.ofNullable(friendUserEntity));
+        Optional.ofNullable(friendUserEntity1));
 
     when(friendRepository.findByFriendIdAndStatus(anyLong(), eq(APPLY)))
         .thenReturn(Optional.ofNullable(friendEntity));
@@ -271,14 +290,14 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .rejectedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
 
-    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity);
+    when(jwtTokenExtract.currentUser()).thenReturn(friendUserEntity1);
 
     when(userRepository.findById(2L)).thenReturn(
-        Optional.ofNullable(friendUserEntity));
+        Optional.ofNullable(friendUserEntity1));
 
     when(friendRepository.findByFriendIdAndStatus(anyLong(), eq(APPLY)))
         .thenReturn(Optional.ofNullable(friendEntity));
@@ -312,7 +331,7 @@ class FriendServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     FriendEntity otherEntity = FriendEntity.builder()
@@ -320,7 +339,7 @@ class FriendServiceTest {
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
-        .userEntity(friendUserEntity)
+        .userEntity(friendUserEntity1)
         .friendUserEntity(userEntity)
         .build();
 
@@ -331,7 +350,7 @@ class FriendServiceTest {
         .acceptedDateTime(LocalDateTime.of(2024, 5, 25, 8, 0, 0))
         .deletedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     FriendEntity otherDeleteEntity = FriendEntity.builder()
@@ -339,7 +358,7 @@ class FriendServiceTest {
         .status(DELETE)
         .createdDateTime(LocalDateTime.of(2024, 5, 25, 0, 0, 0))
         .rejectedDateTime(LocalDateTime.of(2024, 5, 25, 12, 0, 0))
-        .userEntity(friendUserEntity)
+        .userEntity(friendUserEntity1)
         .friendUserEntity(userEntity)
         .build();
 
@@ -398,13 +417,13 @@ class FriendServiceTest {
         .friendId(1L)
         .status(ACCEPT)
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     FriendEntity friendEntity2 = FriendEntity.builder()
         .friendId(2L)
         .status(ACCEPT)
-        .userEntity(friendUserEntity)
+        .userEntity(friendUserEntity1)
         .friendUserEntity(userEntity)
         .build();
 
@@ -475,13 +494,13 @@ class FriendServiceTest {
         .friendId(1L)
         .status(ACCEPT)
         .userEntity(userEntity)
-        .friendUserEntity(friendUserEntity)
+        .friendUserEntity(friendUserEntity1)
         .build();
 
     FriendEntity friendEntity2 = FriendEntity.builder()
         .friendId(2L)
         .status(ACCEPT)
-        .userEntity(friendUserEntity)
+        .userEntity(friendUserEntity1)
         .friendUserEntity(userEntity)
         .build();
 
@@ -517,6 +536,79 @@ class FriendServiceTest {
     assertEquals(listResponse1.getPlayStyle(), result.get(0).getPlayStyle());
     assertEquals(listResponse1.getAbility(), result.get(0).getAbility());
     assertEquals(listResponse1.getFriendId(), result.get(0).getFriendId());
+  }
+
+  @Test
+  @DisplayName("내가 친구 요청 받은 리스트 조회 성공")
+  void getRequestFriendList_success() {
+    // Given
+
+    FriendEntity friendEntity1 = FriendEntity.builder()
+        .friendId(1L)
+        .status(ACCEPT)
+        .userEntity(friendUserEntity1)
+        .friendUserEntity(userEntity)
+        .build();
+
+    FriendEntity friendEntity2 = FriendEntity.builder()
+        .friendId(2L)
+        .status(ACCEPT)
+        .userEntity(friendUserEntity2)
+        .friendUserEntity(userEntity)
+        .build();
+
+    RequestListResponse RequestListResponse1 = RequestListResponse.builder()
+        .userId(2L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .nickName("test1")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .score(null)
+        .friendId(1L)
+        .build();
+
+    RequestListResponse RequestListResponse2 = RequestListResponse.builder()
+        .userId(3L)
+        .birthday(LocalDate.of(1990, 1, 1))
+        .nickName("test2")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .score(null)
+        .friendId(1L)
+        .build();
+
+    List<FriendEntity> friendEntityList =
+        List.of(friendEntity1, friendEntity2);
+
+    getCurrentUser();
+
+    when(friendRepository.findByStatusAndFriendUserEntityUserId
+        (eq(FriendStatus.APPLY), anyLong()))
+        .thenReturn(friendEntityList);
+
+
+    // when
+    List<RequestListResponse> result = friendService.getRequestFriendList();
+
+    // Then
+    assertEquals(RequestListResponse1.getUserId(), result.get(0).getUserId());
+    assertEquals(RequestListResponse1.getBirthday(), result.get(0).getBirthday());
+    assertEquals(RequestListResponse1.getNickName(), result.get(0).getNickName());
+    assertEquals(RequestListResponse1.getPlayStyle(), result.get(0).getPlayStyle());
+    assertEquals(RequestListResponse1.getAbility(), result.get(0).getAbility());
+    assertEquals(RequestListResponse1.getFriendId(), result.get(0).getFriendId());
+    assertEquals(RequestListResponse1.getScore(), result.get(0).getScore());
+
+    assertEquals(RequestListResponse2.getUserId(), result.get(1).getUserId());
+    assertEquals(RequestListResponse2.getBirthday(),
+        result.get(1).getBirthday());
+    assertEquals(RequestListResponse2.getNickName(),
+        result.get(1).getNickName());
+    assertEquals(RequestListResponse2.getPlayStyle(),
+        result.get(1).getPlayStyle());
+    assertEquals(RequestListResponse2.getAbility(), result.get(1).getAbility());
+    assertEquals(RequestListResponse2.getScore(),
+        result.get(1).getScore());
   }
 
   private void getCurrentUser() {
