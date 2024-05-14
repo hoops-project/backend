@@ -44,7 +44,7 @@ public class ManagerController {
         new ApiResponse("블랙리스트", "true"));
   }
 
-  @PreAuthorize("hasRole('ROLE_OWNER')")
+  @PreAuthorize("hasRole('OWNER')")
   @PatchMapping("/unlock-black-list")
   public ResponseEntity<?> blackTest(
       @RequestBody UnLockBlackListDto request) {
