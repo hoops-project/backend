@@ -1,6 +1,7 @@
 package com.zerobase.hoops.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.users.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -30,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final TokenProvider tokenProvider;
   private final ObjectMapper objectMapper;
   private final UserService userService;
+  private final ManagerService managerService;
 
   @Override
   protected void doFilterInternal(
@@ -61,16 +63,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         // 블랙리스트 체크
-        userService.checkBlackList(tokenProvider.getUsername(accessToken));
-
+        try {
+          managerService.checkBlackList(tokenProvider.getUsername(accessToken));
+        } catch (Exception e) {
+          setUnauthorizedResponse(response, e.getMessage());
+          return;
+        }
         log.info(String.format("[%s] -> %s",
-            tokenProvider.getUsername(accessToken), request.getRequestURI()));
+            tokenProvider.getUsername(accessToken),
+            request.getRequestURI()));
       }
     } catch (ExpiredJwtException e) {
       log.warn("에러 메세지 : " + e.getMessage());
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void setUnauthorizedResponse(HttpServletResponse response,
+      String message) throws IOException {
+    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+    response.setContentType("application/json; charset=UTF-8");
+    response.setCharacterEncoding("UTF-8");
+    String errorMessage = objectMapper.writeValueAsString(
+        Map.of("error", "Unauthorized", "message", message));
+    response.getWriter().write(errorMessage);
   }
 
   private String resolveTokenFromRequest(HttpServletRequest request) {

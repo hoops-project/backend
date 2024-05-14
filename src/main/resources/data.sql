@@ -125,3 +125,17 @@ VALUES
     (6, '11111111111111111111111111111111111111', 3, 4,'2024-05-06T10:00:00',null),
     (7, '11111111111111111111111111111111111111', 4, 5,'2024-05-06T10:00:00',null),
     (8, '11111111111111111111111111111111111111', 6, 7,'2024-05-06T10:00:00',null);
+
+INSERT INTO friend (friend_id, status, created_date_time, accepted_date_time, rejected_date_time, canceled_date_time, deleted_date_time, user_id, friend_user_id)
+VALUES (5, 'ACCEPT', '2024-05-10T12:00:00', '2024-05-10T13:00:00', null, null, null, 2, 3),
+       (6, 'ACCEPT', '2024-05-10T12:00:00', '2024-05-10T13:00:00', null, null, null, 3, 2),
+       (7, 'APPLY', '2024-05-10T12:00:00', '2024-05-10T13:00:00', null, null, null, 2, 4),
+       (8, 'APPLY', '2024-05-10T12:00:00', '2024-05-10T13:00:00', null, null, null, 6, 5),
+       (9, 'APPLY', '2024-05-10T12:00:00', '2024-05-10T13:00:00', null, null, null, 4, 3);
+
+INSERT INTO invite (invite_id, invite_status, requested_date_time, canceled_date_time, accepted_date_time, rejected_date_time, deleted_date_time, sender_user_id, receiver_user_id, game_id)
+VALUES (5, 'REQUEST', '2024-05-10T12:00:00', null, null, null, null, 2, 3, 8),
+       (6, 'CANCEL', '2024-05-10T12:00:00', '2024-05-10T12:30:00', null, null, null, 2, 6, 10),
+       (7, 'REQUEST', '2024-05-10T12:00:00', null, null, null, null, 6, 5, 8),
+       (8, 'REQUEST', '2024-05-10T12:00:00', null, null, null, null, 7, 8, 8),
+       (9, 'REQUEST', '2024-05-10T12:00:00', null, null, null, null, 5, 2, 8);

@@ -132,6 +132,7 @@ class GameUserServiceTest {
         .build();
 
   }
+
   @DisplayName("매너점수 평가하기 성공 - 1")
   @Test
   void testSaveMannerPoint() {

@@ -1,10 +1,29 @@
 package com.zerobase.hoops.users.service;
 
+import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_APPLY_FRIEND;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
+import com.zerobase.hoops.friends.repository.FriendRepository;
+import com.zerobase.hoops.friends.service.FriendService;
+import com.zerobase.hoops.friends.type.FriendStatus;
+import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
+import com.zerobase.hoops.gameCreator.repository.GameRepository;
+import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
+import com.zerobase.hoops.gameCreator.service.GameService;
+import com.zerobase.hoops.gameCreator.type.FieldStatus;
+import com.zerobase.hoops.gameCreator.type.Gender;
+import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.gameUsers.service.GameUserService;
+import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.SignUpDto;
@@ -12,13 +31,17 @@ import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,12 +52,24 @@ class AuthServiceTest {
 
   @Autowired
   AuthService authService;
-
+  @Autowired
+  TokenProvider tokenProvider;
   @Autowired
   UserService userService;
-
+  @Autowired
+  GameService gameService;
+  @Autowired
+  GameUserService gameUserService;
+  @Autowired
+  FriendService friendService;
   @Autowired
   UserRepository userRepository;
+  @Autowired
+  GameRepository gameRepository;
+  @Autowired
+  ParticipantGameRepository participantGameRepository;
+  @Autowired
+  FriendRepository friendRepository;
 
   @BeforeEach
   void insertTestUser() {
@@ -66,11 +101,16 @@ class AuthServiceTest {
         .ability("SHOOT")
         .build());
 
-    UserEntity user = userRepository.findById("testUser")
+    UserEntity user = userRepository.findById("basketman")
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     user.confirm();
     userRepository.save(user);
     System.out.println("인증 결과 : " + user.isEmailAuth());
+    UserEntity testUser = userRepository.findById("testUser")
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    testUser.confirm();
+    userRepository.save(testUser);
+    System.out.println("인증 결과 : " + testUser.isEmailAuth());
   }
 
   @Test
@@ -241,5 +281,100 @@ class AuthServiceTest {
     for (int i = 0; i < edit.getRoles().size(); i++) {
       assertEquals(edit.getRoles().get(i), "ROLE_USER");
     }
+  }
+
+  @Test
+  @DisplayName("Deactivate_User_Success")
+  void deactivateUserTest() {
+    // given
+    UserDto user = authService.logInUser(LogInDto.Request.builder()
+        .id("basketman")
+        .password("Abcdefg123$%")
+        .build());
+    TokenDto token = authService.getToken(user);
+
+    Authentication auth = tokenProvider.getAuthentication(
+        token.getAccessToken());
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    gameService.createGame(CreateRequest.builder()
+        .title("테스트 경기")
+        .content("테스트 내용")
+        .headCount(10L)
+        .fieldStatus(FieldStatus.OUTDOOR)
+        .gender(Gender.ALL)
+        .startDateTime(LocalDateTime.of(2024, 5, 15, 12, 0, 0))
+        .inviteYn(true)
+        .address("서울 종로구")
+        .latitude(12.33)
+        .longitude(11.33)
+        .matchFormat(MatchFormat.FIVEONFIVE)
+        .build());
+
+    UserDto testUser = authService.logInUser(LogInDto.Request.builder()
+        .id("testUser")
+        .password("Abcdefg123$%")
+        .build());
+    TokenDto testUserToken = authService.getToken(testUser);
+
+    Authentication testUserAuth =
+        tokenProvider.getAuthentication(testUserToken.getAccessToken());
+    SecurityContextHolder.getContext().setAuthentication(testUserAuth);
+
+    gameUserService.participateInGame(1L);
+
+    friendService.applyFriend(ApplyRequest.builder()
+        .friendUserId(11L)
+        .build());
+
+    TokenDto reUsertoken = authService.getToken(user);
+
+    Authentication reUserAuth =
+        tokenProvider.getAuthentication(reUsertoken.getAccessToken());
+    SecurityContextHolder.getContext().setAuthentication(reUserAuth);
+
+    friendService.acceptFriend(AcceptRequest.builder()
+        .friendId(1L)
+        .build());
+
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.addHeader("Authorization",
+        "Bearer " + reUsertoken.getAccessToken());
+    request.addHeader("refreshToken", reUsertoken.getRefreshToken());
+
+    UserEntity userEntity = userRepository.findById("basketman")
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // when
+    authService.deactivateUser(request, userEntity);
+
+    // then
+    GameEntity resultGame = gameRepository.findById(1L)
+        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
+    List<ParticipantGameEntity> participantGame =
+        participantGameRepository
+            .findByStatusAndGameEntityGameId(ParticipantGameStatus.DELETE, 1L);
+    FriendEntity resultFriends =
+        friendRepository.findByFriendIdAndStatus(1L,
+                FriendStatus.DELETE)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+
+    FriendEntity resultAppliedFriends =
+        friendRepository.findByFriendIdAndStatus(2L,
+                FriendStatus.DELETE)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+
+    System.out.println("participantGame size : " + participantGame.size());
+    assertNotNull(resultGame.getDeletedDateTime());
+    assertEquals(participantGame.get(0).getStatus(),
+        ParticipantGameStatus.DELETE);
+    assertNotNull(participantGame.get(0).getDeletedDateTime());
+    assertEquals(participantGame.get(1).getStatus(),
+        ParticipantGameStatus.DELETE);
+    assertNotNull(participantGame.get(1).getDeletedDateTime());
+    assertEquals(resultFriends.getStatus(), FriendStatus.DELETE);
+    assertNotNull(resultFriends.getDeletedDateTime());
+    assertEquals(resultAppliedFriends.getStatus(), FriendStatus.DELETE);
+    assertNotNull(resultAppliedFriends.getDeletedDateTime());
   }
 }
