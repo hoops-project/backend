@@ -1,7 +1,6 @@
 package com.zerobase.hoops.invite.controller;
 
 
-import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
 import com.zerobase.hoops.invite.dto.InviteDto;
 import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;

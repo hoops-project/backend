@@ -25,7 +25,8 @@ import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.SearchResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
@@ -34,11 +35,10 @@ import com.zerobase.hoops.users.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -247,15 +247,15 @@ public class FriendService {
   /**
    * 친구 검색
    */
-  public Page<SearchResponse> searchNickName(String nickName, Pageable pageable) {
-    // validation
-    if(nickName.trim().isEmpty()) {
+  public Page<ListResponse> searchNickName(String nickName, Pageable pageable) {
+    //validation
+    if(nickName.isBlank()) {
       throw new CustomException(NOT_FOUND_NICKNAME);
     }
 
     setUpUser();
 
-    Page<SearchResponse> result =
+    Page<ListResponse> result =
         friendCustomRepository.findBySearchFriendList
             (user.getUserId(), nickName,
             pageable);
@@ -266,18 +266,35 @@ public class FriendService {
   /**
    * 친구 리스트 조회
    */
-  public List<SearchResponse> getMyFriends(Pageable pageable) {
+  public List<ListResponse> getMyFriends(Pageable pageable) {
     setUpUser();
 
     Page<FriendEntity> friendEntityPage =
         friendRepository.findByUserEntityUserId
             (user.getUserId(), pageable);
 
-    List<SearchResponse> result = new ArrayList<>();
+    List<ListResponse> result = new ArrayList<>();
 
     friendEntityPage.stream().forEach(friendEntity -> {
-      result.add(SearchResponse.toDto(friendEntity));
+      result.add(ListResponse.toDto(friendEntity));
     });
+
+    return result;
+  }
+
+  /**
+   * 내가 친구 요청 받은 리스트 조회
+   */
+  public List<RequestListResponse> getRequestFriendList() {
+    setUpUser();
+
+    List<FriendEntity> friendEntityList = friendRepository
+        .findByStatusAndFriendUserEntityUserId
+            (FriendStatus.APPLY, user.getUserId());
+
+    List<RequestListResponse> result = friendEntityList.stream()
+        .map(RequestListResponse::toDto)
+        .collect(Collectors.toList());
 
     return result;
   }

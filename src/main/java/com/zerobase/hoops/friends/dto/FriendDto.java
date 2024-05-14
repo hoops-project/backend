@@ -315,7 +315,7 @@ public class FriendDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class SearchResponse {
+  public static class ListResponse {
 
     private Long userId;
 
@@ -329,16 +329,57 @@ public class FriendDto {
 
     private AbilityType ability;
 
+    private String mannerPoint;
+
     private Long friendId;
 
-    public static SearchResponse toDto(FriendEntity friendEntity) {
-      return SearchResponse.builder()
+    public static ListResponse toDto(FriendEntity friendEntity) {
+      return ListResponse.builder()
           .userId(friendEntity.getFriendUserEntity().getUserId())
           .birthday(friendEntity.getFriendUserEntity().getBirthday())
           .gender(friendEntity.getFriendUserEntity().getGender())
           .nickName(friendEntity.getFriendUserEntity().getNickName())
           .playStyle(friendEntity.getFriendUserEntity().getPlayStyle())
           .ability(friendEntity.getFriendUserEntity().getAbility())
+          .mannerPoint(friendEntity.getFriendUserEntity().getStringAverageRating())
+          .friendId(friendEntity.getFriendId())
+          .build();
+    }
+
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class RequestListResponse {
+
+    private Long userId;
+
+    private LocalDate birthday;
+
+    private GenderType gender;
+
+    private String nickName;
+
+    private PlayStyleType playStyle;
+
+    private AbilityType ability;
+
+    private String mannerPoint;
+
+    private Long friendId;
+
+    public static RequestListResponse toDto(FriendEntity friendEntity) {
+      return RequestListResponse.builder()
+          .userId(friendEntity.getUserEntity().getUserId())
+          .birthday(friendEntity.getUserEntity().getBirthday())
+          .gender(friendEntity.getUserEntity().getGender())
+          .nickName(friendEntity.getUserEntity().getNickName())
+          .playStyle(friendEntity.getUserEntity().getPlayStyle())
+          .ability(friendEntity.getUserEntity().getAbility())
+          .mannerPoint(friendEntity.getUserEntity().getStringAverageRating())
           .friendId(friendEntity.getFriendId())
           .build();
     }
