@@ -2,15 +2,21 @@ package com.zerobase.hoops.gameCreator.dto;
 
 
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.users.type.AbilityType;
+import com.zerobase.hoops.users.type.GenderType;
+import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -174,7 +180,10 @@ public class GameDto {
 
     private String nickName;
 
-    public static DetailResponse toDto(GameEntity gameEntity){
+    private List<ParticipantUser> participantUserList;
+
+    public static DetailResponse toDto(GameEntity gameEntity,
+        List<ParticipantUser> participantUserList) {
       return DetailResponse.builder()
           .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
@@ -192,6 +201,7 @@ public class GameDto {
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .nickName(gameEntity.getUserEntity().getNickName())
+          .participantUserList(participantUserList)
           .build();
     }
   }
@@ -403,6 +413,36 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class ParticipantUser {
+    private Long userId;
+
+    private GenderType genderType;
+
+    private String nickName;
+
+    private PlayStyleType playStyle;
+
+    private AbilityType ability;
+
+    private String mannerPoint;
+
+    public static ParticipantUser toDto(ParticipantGameEntity entity) {
+      return ParticipantUser.builder()
+          .userId(entity.getUserEntity().getUserId())
+          .genderType(entity.getUserEntity().getGender())
+          .nickName(entity.getUserEntity().getNickName())
+          .playStyle(entity.getUserEntity().getPlayStyle())
+          .ability(entity.getUserEntity().getAbility())
+          .mannerPoint(entity.getUserEntity().getStringAverageRating())
           .build();
     }
   }

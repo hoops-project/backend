@@ -29,12 +29,14 @@ import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.ParticipantUser;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -43,6 +45,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -121,7 +124,16 @@ public class GameService {
   public DetailResponse getGameDetail(Long gameId) {
     GameEntity game = gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
-    return DetailResponse.toDto(game);
+
+    List<ParticipantGameEntity> participantGameEntityList =
+        participantGameRepository
+            .findByGameEntityGameIdAndStatusAndDeletedDateTimeNull
+                (gameId, ACCEPT);
+
+    List<ParticipantUser> participantUserList =
+        participantGameEntityList.stream().map(ParticipantUser::toDto).toList();
+
+    return DetailResponse.toDto(game, participantUserList);
   }
 
   /**
