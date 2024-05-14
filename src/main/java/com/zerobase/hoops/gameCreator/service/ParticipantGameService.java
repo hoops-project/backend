@@ -10,6 +10,7 @@ import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
@@ -48,6 +49,7 @@ public class ParticipantGameService {
   private static GameEntity gameEntity;
 
   private static ParticipantGameEntity participantGameEntity;
+  private final NotificationService notificationService;
 
   /**
    * 경기 참가 희망자 리스트 조회
@@ -92,13 +94,14 @@ public class ParticipantGameService {
         (ACCEPT, request.getParticipantId());
 
     // 경기에 참가자가 다 찼을때 수락 못함
-    if(gameEntity.getHeadCount() <= count){
+    if (gameEntity.getHeadCount() <= count) {
       throw new CustomException(FULL_PARTICIPANT);
     }
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setAccept(participantGameEntity);
 
+    notificationService.send(result.getUserEntity(), "경기참가에 수락되었습니다.");
     participantGameRepository.save(result);
 
     log.info("acceptParticipant end");
@@ -121,6 +124,7 @@ public class ParticipantGameService {
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGameEntity);
 
+    notificationService.send(result.getUserEntity(), "경기참가에 거절되었습니다.");
     participantGameRepository.save(result);
 
     log.info("rejectParticipant end");
@@ -150,6 +154,7 @@ public class ParticipantGameService {
         ParticipantGameEntity.setKickout(participantGameEntity);
 
     participantGameRepository.save(result);
+    notificationService.send(result.getUserEntity(), "경기에서 강퇴당하였습니다.");
 
     log.info("kickoutParticipant end");
   }
@@ -173,7 +178,7 @@ public class ParticipantGameService {
 
   public void validationCreatorCheck(UserEntity user, GameEntity game) {
     // 경기 개설자만 수락,거절,강퇴 가능
-    if(!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
+    if (!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
   }
@@ -181,12 +186,12 @@ public class ParticipantGameService {
   public void validationCheck(UserEntity user, GameEntity game) {
     // 경기가 이미 시작하면 수락,거절,강퇴 불가능
     LocalDateTime nowDateTime = LocalDateTime.now();
-    if(game.getStartDateTime().isBefore(nowDateTime)) {
+    if (game.getStartDateTime().isBefore(nowDateTime)) {
       throw new CustomException(ALREADY_GAME_START);
     }
 
     // 경기 개설자는 ACCEPT 상태로 나둬야함
-    if(Objects.equals(user.getUserId(),
+    if (Objects.equals(user.getUserId(),
         participantGameEntity.getUserEntity().getUserId())) {
       throw new CustomException(NOT_UPDATE_CREATOR);
     }
