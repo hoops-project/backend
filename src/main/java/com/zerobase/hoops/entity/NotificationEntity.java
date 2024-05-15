@@ -1,6 +1,7 @@
-package com.zerobase.hoops.alarm.domain;
+package com.zerobase.hoops.entity;
 
 import com.zerobase.hoops.entity.UserEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +24,7 @@ public class NotificationEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(nullable = false)
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)

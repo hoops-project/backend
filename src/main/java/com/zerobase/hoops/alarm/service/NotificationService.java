@@ -1,7 +1,7 @@
 package com.zerobase.hoops.alarm.service;
 
 
-import com.zerobase.hoops.alarm.domain.NotificationEntity;
+import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.alarm.domain.NotificationDto;
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.alarm.repository.NotificationRepository;

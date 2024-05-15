@@ -1,6 +1,6 @@
 package com.zerobase.hoops.alarm.repository;
 
-import com.zerobase.hoops.alarm.domain.NotificationEntity;
+import com.zerobase.hoops.entity.NotificationEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
