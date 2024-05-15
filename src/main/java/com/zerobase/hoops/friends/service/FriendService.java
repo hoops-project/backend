@@ -12,6 +12,7 @@ import static com.zerobase.hoops.exception.ErrorCode.OTHER_FRIEND_FULL;
 import static com.zerobase.hoops.exception.ErrorCode.SELF_FRIEND_FULL;
 import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
@@ -52,6 +53,8 @@ public class FriendService {
   private final UserRepository userRepository;
 
   private final FriendCustomRepositoryImpl friendCustomRepository;
+
+  private final NotificationService notificationService;
 
   private static UserEntity user;
 
@@ -99,7 +102,7 @@ public class FriendService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     FriendEntity friendEntity = ApplyRequest.toEntity(user, friendUserEntity);
-
+    notificationService.send(friendUserEntity, "친구신청이 도착했습니다.");
     friendRepository.save(friendEntity);
 
     return ApplyResponse.toDto(friendEntity);
