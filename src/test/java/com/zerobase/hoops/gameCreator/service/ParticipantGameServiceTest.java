@@ -11,10 +11,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.zerobase.hoops.alarm.repository.EmitterRepository;
+import com.zerobase.hoops.alarm.repository.NotificationRepository;
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptRequest;
@@ -29,6 +34,7 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
+import com.zerobase.hoops.users.repository.EmailRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
@@ -55,6 +61,9 @@ class ParticipantGameServiceTest {
   private ParticipantGameService participantGameService;
 
   @Mock
+  private NotificationService notificationService;
+
+  @Mock
   private JwtTokenExtract jwtTokenExtract;
 
   @Mock
@@ -66,12 +75,20 @@ class ParticipantGameServiceTest {
   @Mock
   private GameRepository gameRepository;
 
+  @Mock
+  private NotificationRepository notificationRepository;
+
+  @Mock
+  private EmitterRepository emitterRepository;
+
   private UserEntity createdUser;
   private UserEntity applyedUser;
 
   private GameEntity createdGameEntity;
 
   private ParticipantGameEntity creatorParticipantGameEntity;
+
+  private NotificationEntity notificationEntity;
 
   @BeforeEach
   void setUp() {
@@ -127,6 +144,11 @@ class ParticipantGameServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .gameEntity(createdGameEntity)
         .userEntity(createdUser)
+        .build();
+    notificationEntity = NotificationEntity.builder()
+        .receiver(applyedUser)
+        .content("테스트내용")
+        .createdDateTime(LocalDateTime.now())
         .build();
   }
 
@@ -201,6 +223,11 @@ class ParticipantGameServiceTest {
     when(participantGameRepository.save(any()))
         .thenReturn(acceptPartEntity);
 
+    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
+
+    lenient().
+        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
+
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
@@ -262,6 +289,11 @@ class ParticipantGameServiceTest {
 
     when(participantGameRepository.save(any()))
         .thenReturn(rejectPartEntity);
+
+    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
+
+    lenient().
+        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
@@ -325,6 +357,11 @@ class ParticipantGameServiceTest {
 
     when(participantGameRepository.save(any()))
         .thenReturn(rejectPartEntity);
+
+    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
+
+    lenient().
+        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);

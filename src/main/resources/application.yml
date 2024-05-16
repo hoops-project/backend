@@ -1,66 +1,25 @@
+spring:
+  profiles:
+    group:
+      "local" : "local, secret"
+    active : local
+---
 server:
   port: 8080
 spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  datasource:
-    url: jdbc:h2:mem:test
-    username: sa
-    password:
-    driverClassName: org.h2.Driver
-  h2:
-    console:
-      enabled: true
+  sql:
+    init:
+      encoding: UTF-8
   jpa:
     defer-datasource-initialization: true
-    database-platform: H2
+    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
         show_sql: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
-  jwt:
-    secret: thiskeyisjwtsecretkeyforprovidethejwttokenbutsystemsaidshort
-    token-validity-in-seconds: 1800
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: smtptest357@gmail.com
-    password: dizvoxbqzeplgngh
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-  security:
-    oauth2:
-      client:
-        registration:
-          kakao:
-            client-id: 81ff5d41b61bd9fdbe010bdfe3dfa84c
-            client-secret: pXOElpX2yNj2uWcAzEHoXdDNIUuVs7Ft
-            redirect-uri: '{baseUrl}/api/oauth2/{registrationId}'
-            authorization-grant-type: authorization_code
-            client-authentication-method: client_secret_post
-            scope: profile_nickname, account_email, gender, birthday
-            client-name: Kakao
-
-        provider:
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
-admin-key: f0651a2bb00a1872478e85b506a6f552

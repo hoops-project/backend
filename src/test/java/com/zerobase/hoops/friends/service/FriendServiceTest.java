@@ -8,10 +8,16 @@ import static com.zerobase.hoops.friends.type.FriendStatus.REJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.zerobase.hoops.alarm.repository.EmitterRepository;
+import com.zerobase.hoops.alarm.repository.NotificationRepository;
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
@@ -57,6 +63,9 @@ class FriendServiceTest {
   private FriendService friendService;
 
   @Mock
+  private NotificationService notificationService;
+
+  @Mock
   private JwtTokenExtract jwtTokenExtract;
 
   @Mock
@@ -68,12 +77,20 @@ class FriendServiceTest {
   @Mock
   private FriendCustomRepositoryImpl friendCustomRepository;
 
+  @Mock
+  private NotificationRepository notificationRepository;
+
+  @Mock
+  private EmitterRepository emitterRepository;
+
   private UserEntity userEntity;
   private UserEntity friendUserEntity1;
 
   private UserEntity friendUserEntity2;
 
   private FriendEntity friendEntity;
+
+  private NotificationEntity notificationEntity;
 
   @BeforeEach
   void setUp() {
@@ -129,6 +146,11 @@ class FriendServiceTest {
         .userEntity(userEntity)
         .friendUserEntity(friendUserEntity1)
         .build();
+    notificationEntity = NotificationEntity.builder()
+        .receiver(friendUserEntity1)
+        .content("테스트내용")
+        .createdDateTime(LocalDateTime.now())
+        .build();
   }
 
   @Test
@@ -153,6 +175,11 @@ class FriendServiceTest {
         .thenReturn(10);
 
     when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity1));
+
+    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
+
+    lenient().
+        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
       FriendEntity savedFriendEntity = invocation.getArgument(0);

@@ -41,6 +41,7 @@ public class ManagerService {
 
     startBlackListCheckFromReportEntity(request);
     validateBlackList(userId, reportedId);
+
   }
 
   private void startBlackListCheckFromReportEntity(BlackListDto request) {

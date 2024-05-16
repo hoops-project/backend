@@ -56,9 +56,6 @@ class ReportServiceTest {
   @Mock
   private JwtTokenExtract jwtTokenExtract;
 
-  @MockBean
-  //private ManagerService managerService;
-
   private UserEntity userEntity;
   private UserEntity reportedUserEntity;
 
