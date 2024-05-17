@@ -1,5 +1,6 @@
 package com.zerobase.hoops.reports.service;
 
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
@@ -25,6 +26,7 @@ public class ReportService {
   public final ReportRepository reportRepository;
   public final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
+  private final NotificationService notificationService;
 
   public String reportContents(String reportId) {
     ReportEntity reportEntity = reportRepository.findById(
@@ -57,11 +59,18 @@ public class ReportService {
 
     checkExist(request, user);
 
+    notificationService.send(findManger(), "신고가 접수되었습니다.");
+
     reportRepository.save(request.toEntity(user, reportedUser));
   }
 
   private void checkExist(ReportDto request, UserEntity user) {
     boolean existReported = reportRepository.existsByUser_UserIdAndReportedUser_UserId(
         user.getUserId(), request.getReportedUserId());
+  }
+
+  private UserEntity findManger() {
+    return userRepository.findById(1L)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 }
