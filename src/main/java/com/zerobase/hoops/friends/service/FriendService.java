@@ -102,8 +102,9 @@ public class FriendService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     FriendEntity friendEntity = ApplyRequest.toEntity(user, friendUserEntity);
-    notificationService.send(friendUserEntity, "친구신청이 도착했습니다.");
+
     friendRepository.save(friendEntity);
+    notificationService.send(friendUserEntity, "친구신청이 도착했습니다.");
 
     return ApplyResponse.toDto(friendEntity);
   }

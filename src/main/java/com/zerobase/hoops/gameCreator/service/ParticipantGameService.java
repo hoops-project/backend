@@ -101,8 +101,9 @@ public class ParticipantGameService {
     ParticipantGameEntity result =
         ParticipantGameEntity.setAccept(participantGameEntity);
 
-    notificationService.send(result.getUserEntity(), "경기참가에 수락되었습니다.");
+
     participantGameRepository.save(result);
+    notificationService.send(result.getUserEntity(), "경기참가에 수락되었습니다.");
 
     log.info("acceptParticipant end");
   }
@@ -124,8 +125,9 @@ public class ParticipantGameService {
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGameEntity);
 
-    notificationService.send(result.getUserEntity(), "경기참가에 거절되었습니다.");
+
     participantGameRepository.save(result);
+    notificationService.send(result.getUserEntity(), "경기참가에 거절되었습니다.");
 
     log.info("rejectParticipant end");
   }

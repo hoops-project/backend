@@ -59,9 +59,10 @@ public class ReportService {
 
     checkExist(request, user);
 
-    notificationService.send(findManger(), "신고가 접수되었습니다.");
+
 
     reportRepository.save(request.toEntity(user, reportedUser));
+    notificationService.send(findManger(), "신고가 접수되었습니다.");
   }
 
   private void checkExist(ReportDto request, UserEntity user) {
