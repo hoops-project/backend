@@ -81,6 +81,8 @@ public class WebSecurityConfig {
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
     corsConfiguration.addAllowedOrigin("http://localhost:3000");
+    corsConfiguration.addAllowedOrigin("http://localhost:5173");
+    corsConfiguration.addAllowedOrigin("https://hoops-frontend-jet.vercel.app");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
 
