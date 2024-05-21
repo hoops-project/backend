@@ -47,7 +47,7 @@ public class EmailProvider {
     certificationMessage +=
         "<h3 style='text-align: center;'>"
             + "인증 링크 : "
-            + "<a href=\"http://localhost:8080/api/user/signup/confirm?id=" + id
+            + "<a href=\"https://hoops.services/api/user/signup/confirm?id=" + id
             + "&email=" + email + "&certificationNumber=" + certificationNumber
             + "\">"
             + "이곳을 눌러 인증을 완료해주세요. 링크는 3분 동안 유효합니다."
