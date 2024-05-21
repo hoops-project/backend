@@ -92,6 +92,7 @@ public enum ErrorCode {
       + "."),
   NOT_SELF_INVITE_REQUEST(HttpStatus.BAD_REQUEST.value(), "본인이 받은 경기 초대만 수락,"
       + "거절 할수 있습니다."),
+  NOT_GAME_INVITE(HttpStatus.BAD_REQUEST.value(), "해당 경기가 초대 불가능입니다."),
 
   // 신고
   AlREADY_REPORTED(HttpStatus.BAD_REQUEST.value(), "이미 신고가 완료되었습니다."),
