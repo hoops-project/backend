@@ -41,7 +41,7 @@ public class UserController {
    * ID 중복 검사
    */
   @Operation(summary = "ID 중복 검사")
-  @PostMapping("/check/id")
+  @GetMapping("/check/id")
   public ResponseEntity<Boolean> idCheck(
       @RequestParam(name = "id") String id
   ) {
@@ -54,7 +54,7 @@ public class UserController {
    * EMAIL 중복 검사
    */
   @Operation(summary = "EMAIL 중복 검사")
-  @PostMapping("/check/email")
+  @GetMapping("/check/email")
   public ResponseEntity<Boolean> emailCheck(
       @RequestParam(name = "email") String email
   ) {
@@ -67,7 +67,7 @@ public class UserController {
    * 별명 중복 검사
    */
   @Operation(summary = "별명 중복 검사")
-  @PostMapping("/check/nickname")
+  @GetMapping("/check/nickname")
   public ResponseEntity<Boolean> nickNameCheck(
       @RequestParam(name = "nickName") String nickName
   ) {
