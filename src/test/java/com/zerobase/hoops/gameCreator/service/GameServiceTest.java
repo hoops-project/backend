@@ -216,8 +216,16 @@ class GameServiceTest {
     // Given
     Long gameId = 1L;
 
+    List<ParticipantGameEntity> participantGameEntityList =
+        List.of(creatorParticipantGameEntity);
+
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
         .thenReturn(Optional.of(createdGameEntity));
+
+    // 게임에 참가한 사람이 게임 개설자 밖에 없다고 가정
+    when(participantGameRepository
+        .findByGameEntityGameIdAndStatusAndDeletedDateTimeNull(anyLong(),
+            eq(ACCEPT))).thenReturn(participantGameEntityList);
 
     // when
     DetailResponse detailResponse = gameService.getGameDetail(gameId);
@@ -238,6 +246,8 @@ class GameServiceTest {
     assertEquals(detailResponse.getMatchFormat(), createdGameEntity.getMatchFormat());
     assertEquals(detailResponse.getNickName(),
         createdGameEntity.getUserEntity().getNickName());
+    assertEquals(detailResponse.getUserId(),
+        createdGameEntity.getUserEntity().getUserId());
   }
 
   @Test
