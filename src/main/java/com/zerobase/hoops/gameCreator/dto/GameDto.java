@@ -180,6 +180,8 @@ public class GameDto {
 
     private String nickName;
 
+    private Long userId;
+
     private List<ParticipantUser> participantUserList;
 
     public static DetailResponse toDto(GameEntity gameEntity,
@@ -201,6 +203,7 @@ public class GameDto {
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .nickName(gameEntity.getUserEntity().getNickName())
+          .userId(gameEntity.getUserEntity().getUserId())
           .participantUserList(participantUserList)
           .build();
     }
