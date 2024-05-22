@@ -72,6 +72,9 @@ public class GameEntity {
   private String address;
 
   @Column(nullable = false)
+  private String placeName;
+
+  @Column(nullable = false)
   private Double latitude;
 
   @Column(nullable = false)

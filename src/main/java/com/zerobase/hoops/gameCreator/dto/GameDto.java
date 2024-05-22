@@ -59,6 +59,9 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotBlank(message = "위치명 필수 입력 값 입니다.")
+    private String placeName;
+
     @NotNull(message = "위도는 필수 입력 값 입니다.")
     private Double latitude;
 
@@ -78,6 +81,7 @@ public class GameDto {
           .startDateTime(request.getStartDateTime())
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
+          .placeName(request.getPlaceName())
           .latitude(request.getLatitude())
           .longitude(request.getLongitude())
           .cityName(CityName.getCityName(request.getAddress()))
@@ -170,6 +174,8 @@ public class GameDto {
 
     private String address;
 
+    private String placeName;
+
     private Double latitude;
 
     private Double longitude;
@@ -198,6 +204,7 @@ public class GameDto {
           .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .placeName(gameEntity.getPlaceName())
           .latitude(gameEntity.getLatitude())
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
