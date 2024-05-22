@@ -350,7 +350,7 @@ class GameServiceTest {
         GameEntity.class);
 
     // when
-    gameService.deleteGame(deleteRequest);
+    gameService.delete(deleteRequest);
 
     // Then
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());

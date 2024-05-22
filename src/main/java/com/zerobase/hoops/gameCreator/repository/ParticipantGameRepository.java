@@ -41,6 +41,9 @@ public interface ParticipantGameRepository extends
   List<ParticipantGameEntity> findByGameEntityGameIdAndStatusAndDeletedDateTimeNull(
       Long gameId,
       ParticipantGameStatus participantGameStatus);
+
+  Optional<ParticipantGameEntity> findByStatusAndGameEntityGameIdAndUserEntityUserId(
+      ParticipantGameStatus participantGameStatus, Long gameId, Long userId);
 }
 
 

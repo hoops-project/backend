@@ -8,13 +8,13 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -367,7 +367,7 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class DeleteResponse {
+  public static class DeleteGameResponse {
 
     private Long gameId;
 
@@ -399,8 +399,8 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    public static DeleteResponse toDto(GameEntity gameEntity) {
-      return DeleteResponse.builder()
+    public static DeleteGameResponse toDto(GameEntity gameEntity) {
+      return DeleteGameResponse.builder()
           .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
@@ -416,6 +416,31 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class WithDrawGameResponse {
+
+    private ParticipantGameStatus status;
+
+    private LocalDateTime withdrewDateTime;
+
+    private Long gameId;
+
+    private Long userId;
+
+    public static WithDrawGameResponse toDto(ParticipantGameEntity entity) {
+      return WithDrawGameResponse.builder()
+          .status(entity.getStatus())
+          .withdrewDateTime(entity.getWithdrewDateTime())
+          .gameId(entity.getGameEntity().getGameId())
+          .userId(entity.getUserEntity().getUserId())
           .build();
     }
   }
