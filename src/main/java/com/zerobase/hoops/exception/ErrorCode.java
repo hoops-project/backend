@@ -17,11 +17,13 @@ public enum ErrorCode {
   INVALID_NUMBER(HttpStatus.FORBIDDEN.value(), "유효하지 않은 인증번호입니다."),
   USER_NOT_CONFIRM(HttpStatus.BAD_REQUEST.value(), "인증되지 않은 회원입니다."),
 
-  NOT_FOUND_TOKEN(HttpStatus.BAD_REQUEST.value(), "토큰 형식의 값을 찾을 수 없습니다."),
+  NOT_FOUND_TOKEN(HttpStatus.UNAUTHORIZED.value(), "토큰 형식의 값을 찾을 수 없습니다."),
   INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 토큰입니다."),
   EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED.value(), "기간이 만료된 토큰입니다."),
   NOT_MATCHED_TOKEN(HttpStatus.UNAUTHORIZED.value(), "토큰 정보가 일치하지 않습니다."),
-  UNSUPPORTED_TOKEN(HttpStatus.BAD_REQUEST.value(), "지원하지 않는 토큰입니다."),
+  UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED.value(), "지원하지 않는 토큰입니다."),
+  ACCESS_DENIED(HttpStatus.UNAUTHORIZED.value(), "알 수 없는 이유로 요청이 거절되었습니다."),
+  ALREADY_LOGOUT(HttpStatus.BAD_REQUEST.value(), "이미 로그아웃한 회원입니다."),
 
   DUPLICATED_ID(HttpStatus.CONFLICT.value(), "이미 사용 중인 아이디입니다."),
   DUPLICATED_NICKNAME(HttpStatus.CONFLICT.value(), "이미 사용 중인 별명입니다."),
