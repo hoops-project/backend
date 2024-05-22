@@ -23,7 +23,7 @@ import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
-import com.zerobase.hoops.users.repository.AuthRepository;
+import com.zerobase.hoops.users.repository.redis.AuthRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -175,6 +175,7 @@ public class AuthService {
   public UserDto editUserInfo(HttpServletRequest request,
       EditDto.Request editDto, UserEntity user) {
     isSameId(request, user);
+    validateAccessTokenExistHeader(request);
 
     if (editDto.getPassword() != null) {
       String encodedNewPassword = passwordEncoder.encode(editDto.getPassword());

@@ -7,7 +7,7 @@ import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.users.provider.CertificationProvider;
 import com.zerobase.hoops.users.provider.EmailProvider;
-import com.zerobase.hoops.users.repository.EmailRepository;
+import com.zerobase.hoops.users.repository.redis.EmailRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.security.NoSuchAlgorithmException;
