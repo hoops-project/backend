@@ -9,6 +9,7 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.gameCreator.validation.ValidStartTime;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
@@ -50,6 +51,7 @@ public class GameDto {
     private Gender gender;
 
     @NotNull(message = "시작 날짜는 필수 입력 값 입니다.")
+    @ValidStartTime
     private LocalDateTime startDateTime;
 
     @NotNull(message = "친구 초대 여부는 필수 입력 값 입니다.")
@@ -247,6 +249,7 @@ public class GameDto {
     private Gender gender;
 
     @NotNull(message = "시작 날짜는 필수 입력 값 입니다.")
+    @ValidStartTime
     private LocalDateTime startDateTime;
 
     @NotNull(message = "친구 초대 여부는 필수 입력 값 입니다.")

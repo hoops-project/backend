@@ -42,10 +42,10 @@ public enum ErrorCode {
   NOT_UPDATE_HEADCOUNT(HttpStatus.BAD_REQUEST.value(),  "설정 하려는 인원수가 수락된 인원수 보다 적습니다."),
   NOT_UPDATE_MAN(HttpStatus.BAD_REQUEST.value(), "여자가 그룹에 참가중입니다."),
   NOT_UPDATE_WOMAN(HttpStatus.BAD_REQUEST.value(), "남자가 그룹에 참가중입니다."),
-  NOT_AFTER_THIRTY_MINUTE(HttpStatus.BAD_REQUEST.value(), "경기 시작 시간이 현재 시간의 30분 이후 이면 "
-      + "경기 생성 가능 합니다."),
-  ALREADY_GAME_CREATED(HttpStatus.BAD_REQUEST.value(), "설정한 경기 시작 시간 30분전 ~ 30분후 사이에"
-      + "이미 열린 경기가 있습니다."),
+  NOT_AFTER_THIRTY_MINUTE(HttpStatus.BAD_REQUEST.value(), "경기 시작 시간은 현재 시간으로부터 "
+      + "최소 30분 이후여야 합니다."),
+  ALREADY_GAME_CREATED(HttpStatus.BAD_REQUEST.value(), "설정한 경기 시작 시간 1시간 전부터 "
+      + "1시간 후까지(정각 제외) 이미 열린 경기가 있습니다."),
   NOT_UPDATE_STARTDATE(HttpStatus.BAD_REQUEST.value(), "변경 하려는 시작 시간이 기존에"
       + " 설정했던 시작 시간 보다 이후여야 합니다."),
   NOT_DELETE_STARTDATE(HttpStatus.BAD_REQUEST.value(),  "경기 시작 시간 30분 전에 "

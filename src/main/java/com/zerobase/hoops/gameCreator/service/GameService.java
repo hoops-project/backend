@@ -101,20 +101,17 @@ public class GameService {
    * 경기 생성 전 validation 체크
    */
   private void validationCreateGame(CreateRequest request) {
-    /**
-     *    주어진 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산하여
-     *    이 기간 동안 해당 주소에서 예정된 경기를 찾습니다.
-     **/
-    LocalDateTime startDatetime = request.getStartDateTime();
-    LocalDateTime beforeDatetime = startDatetime.minusMinutes(30);
-    LocalDateTime afterDateTime = startDatetime.plusMinutes(30);
+    LocalDateTime startDatetime = request.getStartDateTime(); // 예: 14:00
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1); // 13:00:01
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1); // 14:59:59
     LocalDateTime nowDateTime = LocalDateTime.now();
 
-    long aroundGameCount = gameRepository
-        .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
+    // 13:00:01부터 14:59:59까지의 기간 동안 동일한 주소에서 예정된 경기 수를 조회합니다.
+    boolean gameExists = gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
             (beforeDatetime, afterDateTime, request.getAddress());
 
-    validationCommon(aroundGameCount, beforeDatetime, nowDateTime,
+    validationCommon(gameExists, nowDateTime, startDatetime,
         request.getHeadCount(), request.getMatchFormat());
   }
 
@@ -174,23 +171,18 @@ public class GameService {
       throw new CustomException(NOT_GAME_CREATOR);
     }
 
-    /**
-     *   수정 하려는 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산하면
-     *   2024-05-02T06:30:00 ~ 2024-05-02T07:30:00 까지 입니다.
-     *   이 기간 동안 해당 주소에서 예정된 경기를 찾는데 수정 전 경기는 제외
-     */
-    LocalDateTime startDatetime = request.getStartDateTime();
-    LocalDateTime beforeDatetime = startDatetime.minusMinutes(30);
-    LocalDateTime afterDateTime = startDatetime.plusMinutes(30);
+    LocalDateTime startDatetime = request.getStartDateTime(); // 예: 14:00
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1); // 13:00:01
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1); // 14:59:59
     LocalDateTime nowDateTime = LocalDateTime.now();
 
-    long aroundGameCount = gameRepository
-        .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+    boolean gameExists = gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
             (beforeDatetime, afterDateTime, request.getAddress(),
                 request.getGameId());
 
 
-    validationCommon(aroundGameCount, beforeDatetime, nowDateTime,
+    validationCommon(gameExists, nowDateTime, startDatetime,
         request.getHeadCount(), request.getMatchFormat());
 
     /**
@@ -234,9 +226,11 @@ public class GameService {
   /**
    * 경기 생성, 수정 공통 validation
    */
-  private void validationCommon(long aroundGameCount,
-      LocalDateTime beforeDatetime, LocalDateTime nowDateTime,
+  private void validationCommon(boolean gameExists, LocalDateTime nowDateTime,
+      LocalDateTime startDateTime,
       Long headCount, MatchFormat matchFormat) {
+
+    LocalDateTime beforeDateTime = startDateTime.minusMinutes(30);
 
     // 3:3 매치 일때 6명 ~ 9명 설정 가능
     if(matchFormat == MatchFormat.THREEONTHREE) {
@@ -249,17 +243,14 @@ public class GameService {
       }
     }
 
-    /**
-     * 주어진 시작 시간에서 30분 전부터 30분 후까지의 시간 범위를 계산해
-     * 시간 범위에 해당하는 해당 주소에서 예정된 경기를 못찾을시
-     */
-    if(aroundGameCount == 0) {
+    // 시간 범위에 해당하는 해당 주소에서 예정된 경기를 찾을시
+    if(gameExists) {
+      throw new CustomException(ALREADY_GAME_CREATED);
+    } else { // 예정된 경기를 못찾을시
       // 입력한 경기 시작 시간은 현재시간 30분 보다 후 여야 함
-      if(beforeDatetime.isBefore(nowDateTime)) {
+      if(beforeDateTime.isBefore(nowDateTime)) {
         throw new CustomException(NOT_AFTER_THIRTY_MINUTE);
       }
-    } else { // 시간 범위에 해당하는 해당 주소에서 예정된 경기를 찾을시
-      throw new CustomException(ALREADY_GAME_CREATED);
     }
   }
 
