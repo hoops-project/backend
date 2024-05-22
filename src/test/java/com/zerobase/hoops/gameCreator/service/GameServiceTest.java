@@ -24,6 +24,7 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -60,6 +61,9 @@ class GameServiceTest {
 
   @Mock
   private GameRepository gameRepository;
+
+  @Mock
+  private InviteRepository inviteRepository;
 
   private UserEntity requestUser;
 
@@ -100,6 +104,7 @@ class GameServiceTest {
         .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -116,6 +121,7 @@ class GameServiceTest {
         .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -133,6 +139,7 @@ class GameServiceTest {
         .deletedDateTime(LocalDateTime.of(2024, 7, 10, 12, 0, 0))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -169,6 +176,7 @@ class GameServiceTest {
         .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -216,8 +224,16 @@ class GameServiceTest {
     // Given
     Long gameId = 1L;
 
+    List<ParticipantGameEntity> participantGameEntityList =
+        List.of(creatorParticipantGameEntity);
+
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
         .thenReturn(Optional.of(createdGameEntity));
+
+    // 게임에 참가한 사람이 게임 개설자 밖에 없다고 가정
+    when(participantGameRepository
+        .findByGameEntityGameIdAndStatusAndDeletedDateTimeNull(anyLong(),
+            eq(ACCEPT))).thenReturn(participantGameEntityList);
 
     // when
     DetailResponse detailResponse = gameService.getGameDetail(gameId);
@@ -238,6 +254,8 @@ class GameServiceTest {
     assertEquals(detailResponse.getMatchFormat(), createdGameEntity.getMatchFormat());
     assertEquals(detailResponse.getNickName(),
         createdGameEntity.getUserEntity().getNickName());
+    assertEquals(detailResponse.getUserId(),
+        createdGameEntity.getUserEntity().getUserId());
   }
 
   @Test
@@ -254,6 +272,7 @@ class GameServiceTest {
         .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -340,7 +359,7 @@ class GameServiceTest {
         GameEntity.class);
 
     // when
-    gameService.deleteGame(deleteRequest);
+    gameService.delete(deleteRequest);
 
     // Then
     verify(gameRepository).save(gameEntityArgumentCaptor.capture());

@@ -1,6 +1,7 @@
 package com.zerobase.hoops.config;
 
 import com.zerobase.hoops.security.JwtAuthenticationFilter;
+import com.zerobase.hoops.security.JwtExceptionFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class WebSecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtExceptionFilter jwtExceptionFilter;
 
   @Bean
   protected SecurityFilterChain configure(HttpSecurity httpSecurity)
@@ -47,7 +49,7 @@ public class WebSecurityConfig {
         .authorizeHttpRequests(request -> request
             .requestMatchers("/**", "/api/user/**",
                 "/swagger-ui/**", "/v3/api-docs/**",
-                "/api/auth/login", "/api/oauth2/**/**",
+                "/api/auth/login", "/api/oauth2/login/kakao",
                 "/api/game-user/**",
                 //로그인 개발되면 해당 부분 삭제
                 "/ws",
@@ -55,6 +57,8 @@ public class WebSecurityConfig {
                 "/h2-console/**").permitAll()
             .requestMatchers("/api/auth/**")
             .hasAnyRole("USER", "CREATOR", "ADMIN")
+            .requestMatchers("/api/oauth2/logout/kakao")
+            .hasAnyRole("USER")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .requestMatchers("/api/game-creator/game/detail")
             .permitAll()
@@ -73,7 +77,9 @@ public class WebSecurityConfig {
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,
-            UsernamePasswordAuthenticationFilter.class);
+            UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(jwtExceptionFilter,
+            JwtAuthenticationFilter.class);
     return httpSecurity.build();
   }
 

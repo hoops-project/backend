@@ -8,13 +8,13 @@ import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -59,6 +59,9 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotBlank(message = "위치명 필수 입력 값 입니다.")
+    private String placeName;
+
     @NotNull(message = "위도는 필수 입력 값 입니다.")
     private Double latitude;
 
@@ -78,6 +81,7 @@ public class GameDto {
           .startDateTime(request.getStartDateTime())
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
+          .placeName(request.getPlaceName())
           .latitude(request.getLatitude())
           .longitude(request.getLongitude())
           .cityName(CityName.getCityName(request.getAddress()))
@@ -114,6 +118,8 @@ public class GameDto {
 
     private String address;
 
+    private String placeName;
+
     private Double latitude;
 
     private Double longitude;
@@ -134,6 +140,7 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .placeName(gameEntity.getPlaceName())
           .latitude(gameEntity.getLatitude())
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
@@ -170,6 +177,8 @@ public class GameDto {
 
     private String address;
 
+    private String placeName;
+
     private Double latitude;
 
     private Double longitude;
@@ -179,6 +188,8 @@ public class GameDto {
     private MatchFormat matchFormat;
 
     private String nickName;
+
+    private Long userId;
 
     private List<ParticipantUser> participantUserList;
 
@@ -196,11 +207,13 @@ public class GameDto {
           .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .placeName(gameEntity.getPlaceName())
           .latitude(gameEntity.getLatitude())
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .nickName(gameEntity.getUserEntity().getNickName())
+          .userId(gameEntity.getUserEntity().getUserId())
           .participantUserList(participantUserList)
           .build();
     }
@@ -243,6 +256,9 @@ public class GameDto {
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @NotBlank(message = "위치명 필수 입력 값 입니다.")
+    private String placeName;
+
     @NotNull(message = "위도는 필수 입력 값 입니다.")
     private Double latitude;
 
@@ -264,6 +280,7 @@ public class GameDto {
           .createdDateTime(game.getCreatedDateTime())
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
+          .placeName(request.getPlaceName())
           .latitude(request.getLatitude())
           .longitude(request.getLongitude())
           .cityName(CityName.getCityName(request.getAddress()))
@@ -299,6 +316,8 @@ public class GameDto {
 
     private String address;
 
+    private String placeName;
+
     private Double latitude;
 
     private Double longitude;
@@ -319,6 +338,7 @@ public class GameDto {
           .createdDateTime(gameEntity.getCreatedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .placeName(gameEntity.getPlaceName())
           .latitude(gameEntity.getLatitude())
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
@@ -364,7 +384,7 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class DeleteResponse {
+  public static class DeleteGameResponse {
 
     private Long gameId;
 
@@ -388,6 +408,8 @@ public class GameDto {
 
     private String address;
 
+    private String placeName;
+
     private Double latitude;
 
     private Double longitude;
@@ -396,8 +418,8 @@ public class GameDto {
 
     private MatchFormat matchFormat;
 
-    public static DeleteResponse toDto(GameEntity gameEntity) {
-      return DeleteResponse.builder()
+    public static DeleteGameResponse toDto(GameEntity gameEntity) {
+      return DeleteGameResponse.builder()
           .gameId(gameEntity.getGameId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
@@ -409,10 +431,36 @@ public class GameDto {
           .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
+          .placeName(gameEntity.getPlaceName())
           .latitude(gameEntity.getLatitude())
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class WithDrawGameResponse {
+
+    private ParticipantGameStatus status;
+
+    private LocalDateTime withdrewDateTime;
+
+    private Long gameId;
+
+    private Long userId;
+
+    public static WithDrawGameResponse toDto(ParticipantGameEntity entity) {
+      return WithDrawGameResponse.builder()
+          .status(entity.getStatus())
+          .withdrewDateTime(entity.getWithdrewDateTime())
+          .gameId(entity.getGameEntity().getGameId())
+          .userId(entity.getUserEntity().getUserId())
           .build();
     }
   }

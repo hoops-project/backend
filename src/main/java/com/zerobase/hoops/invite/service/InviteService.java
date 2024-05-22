@@ -6,6 +6,7 @@ import static com.zerobase.hoops.exception.ErrorCode.ALREADY_PARTICIPANT_GAME;
 import static com.zerobase.hoops.exception.ErrorCode.FULL_PARTICIPANT;
 import static com.zerobase.hoops.exception.ErrorCode.GAME_NOT_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_ACCEPT_FRIEND;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_GAME_INVITE;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_INVITE_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_PARTICIPANT_GAME;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_SELF_INVITE_REQUEST;
@@ -80,6 +81,11 @@ public class InviteService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     validFriendUser(receiverUser.getUserId());
+
+    //해당 경기가 초대 불가능이면 막음
+    if(!game.getInviteYn()) {
+      throw new CustomException(NOT_GAME_INVITE);
+    }
 
     LocalDateTime nowDatetime = LocalDateTime.now();
 

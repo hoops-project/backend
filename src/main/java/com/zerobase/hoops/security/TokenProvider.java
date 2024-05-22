@@ -1,10 +1,16 @@
 package com.zerobase.hoops.security;
 
-import com.zerobase.hoops.users.repository.AuthRepository;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.manager.service.ManagerService;
+import com.zerobase.hoops.users.repository.redis.AuthRepository;
 import com.zerobase.hoops.users.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -21,18 +27,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenProvider {
 
-  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 5;
-  private static final long BLACK_TOKEN_EXPIRE_TIME = 1000L * 60 * 2;
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30;
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
   private final UserService userService;
   private final AuthRepository authRepository;
+  private final ManagerService managerService;
 
   @Getter
   private final Set<String> logOut =
@@ -101,11 +106,35 @@ public class TokenProvider {
   }
 
   public boolean validateToken(String token) {
-    if (!StringUtils.hasText(token)) {
-      return false;
+    try {
+      Jws<Claims> claims = Jwts.parserBuilder()
+          .setSigningKey(
+              getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
+          .build()
+          .parseClaimsJws(token);
+      managerService.checkBlackList(claims.getBody().getSubject());
+      checkLogOut(token);
+      return !claims.getBody().getExpiration().before(new Date());
+    } catch (IllegalArgumentException e) {
+      log.info("IllegalArgumentException!!");
+      throw new JwtException(ErrorCode.NOT_FOUND_TOKEN.getDescription());
+    } catch (MalformedJwtException e) {
+      log.info("MalformedJwtException!!");
+      throw new JwtException(ErrorCode.UNSUPPORTED_TOKEN.getDescription());
+    } catch (ExpiredJwtException e) {
+      log.info("ExpiredJwtException!!");
+      throw new JwtException(ErrorCode.EXPIRED_TOKEN.getDescription());
+    } catch (JwtException e) {
+      log.info("JwtException!!");
+      throw new JwtException(ErrorCode.INVALID_TOKEN.getDescription());
+    } catch (CustomException e) {
+      if(e.getErrorCode().equals(ErrorCode.ALREADY_LOGOUT)){
+        throw new JwtException(ErrorCode.ALREADY_LOGOUT.getDescription());
+      } else {
+        log.info("CustomException!!");
+        throw new JwtException(ErrorCode.BAN_FOR_10DAYS.getDescription());
+      }
     }
-    var claims = this.parseClaims(token);
-    return !claims.getExpiration().before(new Date());
   }
 
   public Authentication getAuthentication(String jwt) {
@@ -120,6 +149,12 @@ public class TokenProvider {
 
   public boolean isLogOut(String token) {
     return this.logOut.contains(token);
+  }
+
+  public void checkLogOut(String token) {
+    if (isLogOut(token)) {
+      throw new CustomException(ErrorCode.ALREADY_LOGOUT);
+    }
   }
 
   public void addToLogOutList(String token) {

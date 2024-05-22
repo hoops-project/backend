@@ -111,6 +111,18 @@ public class ParticipantGameEntity {
         .build();
   }
 
+  public static ParticipantGameEntity setWithdraw(ParticipantGameEntity entity) {
+    return ParticipantGameEntity.builder()
+        .participantId(entity.getParticipantId())
+        .status(ParticipantGameStatus.WITHDRAW)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(entity.getAcceptedDateTime())
+        .withdrewDateTime(LocalDateTime.now())
+        .gameEntity(entity.getGameEntity())
+        .userEntity(entity.getUserEntity())
+        .build();
+  }
+
   public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity) {
 
     LocalDateTime nowDateTime = LocalDateTime.now();

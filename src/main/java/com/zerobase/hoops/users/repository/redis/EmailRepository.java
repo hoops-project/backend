@@ -1,4 +1,4 @@
-package com.zerobase.hoops.users.repository;
+package com.zerobase.hoops.users.repository.redis;
 
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;

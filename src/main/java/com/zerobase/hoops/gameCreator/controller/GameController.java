@@ -2,7 +2,6 @@ package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.GameDto;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
-import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.service.GameService;
@@ -65,9 +64,9 @@ public class GameController {
    */
   @Operation(summary = "경기 삭제")
   @PatchMapping("/game/delete")
-  public ResponseEntity<DeleteResponse> deleteGame(
+  public ResponseEntity<Object> deleteGame(
       @RequestBody @Validated GameDto.DeleteRequest request) {
-    GameDto.DeleteResponse result = gameService.deleteGame(request);
+    Object result = gameService.delete(request);
     return ResponseEntity.ok(result);
   }
 

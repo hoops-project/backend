@@ -7,6 +7,7 @@ import static com.zerobase.hoops.exception.ErrorCode.NOT_CREATE_FIVEONFIVE;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_CREATE_THREEONTHREEE;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_DELETE_STARTDATE;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_GAME_CREATOR;
+import static com.zerobase.hoops.exception.ErrorCode.NOT_PARTICIPANT_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_HEADCOUNT;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_MAN;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_WOMAN;
@@ -20,35 +21,34 @@ import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
 
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
-import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteGameResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.ParticipantUser;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.WithDrawGameResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
-import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.invite.repository.InviteRepository;
+import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
-import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalLong;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -61,6 +61,8 @@ public class GameService {
   private final ParticipantGameRepository participantGameRepository;
 
   private final UserRepository userRepository;
+
+  private final InviteRepository inviteRepository;
 
   private final JwtTokenExtract jwtTokenExtract;
 
@@ -262,11 +264,9 @@ public class GameService {
   }
 
   /**
-   * 경기 삭제
+   * 경기 삭제 분기
    */
-  public DeleteResponse deleteGame(DeleteRequest request) {
-    log.info("deleteGame start");
-
+  public Object delete(DeleteRequest request) {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
     user = userRepository.findById(userId)
@@ -276,52 +276,18 @@ public class GameService {
     GameEntity game = gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
-    // USER 판별
-    boolean userFlag = false;
-
-    for (String role : user.getRoles()) {
-      if (role.equals("ROLE_USER")) {
-        userFlag = true;
-        break;
-      }
+    if(Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
+      return deleteGame(game);
+    } else { // 자신이 경기 개최자가 아닌 팀원 이라면
+      return withdrewGame(game);
     }
 
-    // USER 일때
-    // 관리자 일때는 PASS
-    if(userFlag) {
-      validationDeleteGame(user, game);
-    }
-
-    // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
-    List<ParticipantGameEntity> participantGameEntityList =
-        participantGameRepository.findByStatusInAndGameEntityGameId
-            (List.of(ACCEPT, APPLY), request.getGameId());
-
-    if (!participantGameEntityList.isEmpty()) {
-      for (ParticipantGameEntity entity : participantGameEntityList) {
-        entity.setStatus(DELETE);
-        entity.setDeletedDateTime(LocalDateTime.now());
-        participantGameRepository.save(entity);
-      }
-    }
-
-    // 경기 삭제
-    GameEntity gameEntity = DeleteRequest.toEntity(game);
-    gameRepository.save(gameEntity);
-
-    log.info("deleteGame end");
-
-    return DeleteResponse.toDto(gameEntity);
   }
 
   /**
-   * 경기 삭제 전 validation 체크
+   * 경기 삭제
    */
-  private void validationDeleteGame(UserEntity user, GameEntity game) {
-    // 자신이 경기 개최자가 아니면 삭제 못하게
-    if(!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
-      throw new CustomException(NOT_GAME_CREATOR);
-    }
+  private DeleteGameResponse deleteGame(GameEntity game) {
 
     // 설정한 경기 시작 30분 전에만 삭제 가능
     LocalDateTime beforeDatetime = game.getStartDateTime().minusMinutes(30);
@@ -330,7 +296,52 @@ public class GameService {
     if(nowDateTime.isAfter(beforeDatetime)) {
       throw new CustomException(NOT_DELETE_STARTDATE);
     }
+
+    // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
+    List<ParticipantGameEntity> participantGameEntityList =
+        participantGameRepository.findByStatusInAndGameEntityGameId
+            (List.of(ACCEPT, APPLY), game.getGameId());
+
+    participantGameEntityList.forEach(participantGame -> {
+      participantGame.setStatus(DELETE);
+      participantGame.setDeletedDateTime(LocalDateTime.now());
+      participantGameRepository.save(participantGame);
+    });
+
+    // 해당 경기에 초대 신청된 것들 다 CANCEL
+    List<InviteEntity> inviteEntityList = inviteRepository
+        .findByInviteStatusAndGameEntityGameId
+            (InviteStatus.REQUEST, game.getGameId());
+
+    inviteEntityList.forEach(invite -> {
+      invite.setInviteStatus(InviteStatus.CANCEL);
+      invite.setCanceledDateTime(LocalDateTime.now());
+      inviteRepository.save(invite);
+    });
+
+    // 경기 삭제
+    GameEntity gameEntity = DeleteRequest.toEntity(game);
+    gameRepository.save(gameEntity);
+
+    return DeleteGameResponse.toDto(gameEntity);
   }
 
+  /**
+   * 경기 팀원 탈퇴
+   */
+  private WithDrawGameResponse withdrewGame(GameEntity game) {
+
+    ParticipantGameEntity participantGameEntity =
+        participantGameRepository.findByStatusAndGameEntityGameIdAndUserEntityUserId
+            (ACCEPT, game.getGameId(), user.getUserId())
+            .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
+
+    ParticipantGameEntity result =
+        ParticipantGameEntity.setWithdraw(participantGameEntity);
+
+    participantGameRepository.save(result);
+
+    return WithDrawGameResponse.toDto(result);
+  }
 
 }
