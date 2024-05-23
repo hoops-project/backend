@@ -61,7 +61,7 @@ public class NotificationService {
     //클라이언트가 미수신한 Event 목록이 존재할 경우 전송하여 Event 유실 예방
     if (!lastEventId.isEmpty()) {
       Map<String, Object> events =
-          emitterRepository.findAllEventCacheStartWithEmitterId(
+          emitterRepository.findAllEventCacheStartWithUserId(
               String.valueOf(user.getUserId()));
       events.entrySet().stream()
           .filter(entry -> lastEventId.compareTo(entry.getKey()) < 0)
@@ -90,7 +90,7 @@ public class NotificationService {
     NotificationEntity notificationEntity = createNotification(receiver, content);
     notificationRepository.save(notificationEntity);
     Map<String, SseEmitter> sseEmitters =
-        emitterRepository.findAllStartWithByEmitterId(
+        emitterRepository.findAllStartWithByUserId(
             String.valueOf(receiver.getUserId())
         );
     sseEmitters.forEach(

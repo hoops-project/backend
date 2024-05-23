@@ -57,7 +57,7 @@ public class OAuth2Service {
     KakaoAccount kakaoAccount = kakaoUser.getKakao_account();
     String id = "kakao_" + kakaoUser.getId().toString();
 
-    if (!userRepository.existsByEmail(kakaoAccount.getEmail())) {
+    if (!userRepository.existsByEmailAndDeletedDateTimeNull(kakaoAccount.getEmail())) {
       KakaoDto.Request user = KakaoDto.Request.builder()
           .id(id)
           .email(kakaoAccount.getEmail())

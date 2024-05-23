@@ -222,7 +222,7 @@ class ParticipantGameServiceTest {
     lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
 
     lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
+        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
@@ -289,7 +289,7 @@ class ParticipantGameServiceTest {
     lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
 
     lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
+        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
@@ -357,7 +357,7 @@ class ParticipantGameServiceTest {
     lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
 
     lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
+        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
