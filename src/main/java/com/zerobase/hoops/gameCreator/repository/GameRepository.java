@@ -13,12 +13,6 @@ public interface GameRepository extends
 
   Optional<GameEntity> findByGameIdAndDeletedDateTimeNull(Long gameId);
 
-  long countByDeletedDateTimeNullAndUserEntityUserId(Long userId);
-
-  long countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot(
-      LocalDateTime beforeDatetime, LocalDateTime afterDateTime,
-      String address, Long gameId);
-
   List<GameEntity> findByUserEntityUserIdAndDeletedDateTimeNull(Long userId);
 
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(

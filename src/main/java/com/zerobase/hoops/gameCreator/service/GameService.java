@@ -25,7 +25,6 @@ import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
@@ -203,8 +202,8 @@ public class GameService {
     if (gender == MALEONLY || gender == FEMALEONLY) {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
-      long genderCount = participantGameRepository
-          .countByStatusAndGameEntityGameIdAndUserEntityGender
+      boolean genderExist = participantGameRepository
+          .existsByStatusAndGameEntityGameIdAndUserEntityGender
               (ACCEPT, request.getGameId(), queryGender);
 
       /**
@@ -212,7 +211,7 @@ public class GameService {
        *     경기에 수락된 인원들중 FEMALE 갯수를 검사
        *     FEMALE이 한명이라도 있으면 안되므로 Exception 발생
        */
-      if (genderCount >= 1) {
+      if (genderExist) {
         if (gender == MALEONLY) {
           throw new CustomException(NOT_UPDATE_MAN);
         } else {

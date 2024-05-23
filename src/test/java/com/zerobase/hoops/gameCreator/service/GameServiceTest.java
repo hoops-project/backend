@@ -22,6 +22,7 @@ import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
+import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -333,47 +334,243 @@ class GameServiceTest {
     when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
-    // aroundGameCount를 0으로 설정하여 이미 예정된 게임이 없는 상황을 가정합니다.
+    // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
-        .countByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
             (any(), any(), anyString(), anyLong()))
-        .thenReturn(0L);
+        .thenReturn(false);
 
-    // 현재 경기에 수락된 인원수가 없다고 가정
+    // 현재 경기에 수락된 인원수가 개설자 한명만 있다고 가정
     when(participantGameRepository.countByStatusAndGameEntityGameId
         (eq(ACCEPT), anyLong()))
-        .thenReturn(0L);
+        .thenReturn(1L);
 
     // 경기 수정
     when(gameRepository.save(any())).thenReturn(updatedGameEntity);
 
-    ArgumentCaptor<GameEntity> gameEntityArgumentCaptor = ArgumentCaptor.forClass(
-        GameEntity.class);
 
     // when
-    gameService.updateGame(updateRequest);
+    UpdateResponse result = gameService.updateGame(updateRequest);
 
     // Then
-    verify(gameRepository).save(gameEntityArgumentCaptor.capture());
-
-    GameEntity updatedGameEntity = gameEntityArgumentCaptor.getValue();
-
-    assertEquals(updatedGameEntity.getGameId(), this.updatedGameEntity.getGameId());
-    assertEquals(updatedGameEntity.getTitle(), this.updatedGameEntity.getTitle());
-    assertEquals(updatedGameEntity.getContent(), this.updatedGameEntity.getContent());
-    assertEquals(updatedGameEntity.getHeadCount(), this.updatedGameEntity.getHeadCount());
-    assertEquals(updatedGameEntity.getFieldStatus(), this.updatedGameEntity.getFieldStatus());
-    assertEquals(updatedGameEntity.getGender(), this.updatedGameEntity.getGender());
-    assertEquals(updatedGameEntity.getStartDateTime(), this.updatedGameEntity.getStartDateTime());
-    assertEquals(updatedGameEntity.getInviteYn(), this.updatedGameEntity.getInviteYn());
-    assertEquals(updatedGameEntity.getAddress(), this.updatedGameEntity.getAddress());
-    assertEquals(updatedGameEntity.getLatitude(), this.updatedGameEntity.getLatitude());
-    assertEquals(updatedGameEntity.getLongitude(), this.updatedGameEntity.getLongitude());
-    assertEquals(updatedGameEntity.getCityName(), this.updatedGameEntity.getCityName());
-    assertEquals(updatedGameEntity.getMatchFormat(), this.updatedGameEntity.getMatchFormat());
-    assertEquals(updatedGameEntity.getUserEntity().getUserId(),
-        this.updatedGameEntity.getUserEntity().getUserId());
+    assertEquals(result.getGameId(), this.updatedGameEntity.getGameId());
+    assertEquals(result.getTitle(), this.updatedGameEntity.getTitle());
+    assertEquals(result.getContent(), this.updatedGameEntity.getContent());
+    assertEquals(result.getHeadCount(), this.updatedGameEntity.getHeadCount());
+    assertEquals(result.getFieldStatus(), this.updatedGameEntity.getFieldStatus());
+    assertEquals(result.getGender(), this.updatedGameEntity.getGender());
+    assertEquals(result.getStartDateTime(), this.updatedGameEntity.getStartDateTime());
+    assertEquals(result.getInviteYn(), this.updatedGameEntity.getInviteYn());
+    assertEquals(result.getAddress(), this.updatedGameEntity.getAddress());
+    assertEquals(result.getLatitude(), this.updatedGameEntity.getLatitude());
+    assertEquals(result.getLongitude(), this.updatedGameEntity.getLongitude());
+    assertEquals(result.getCityName(), this.updatedGameEntity.getCityName());
+    assertEquals(result.getMatchFormat(), this.updatedGameEntity.getMatchFormat());
   }
+
+  @Test
+  @DisplayName("경기 수정 실패 : 경기 시작 시간은 현재 시간으로부터 최소 30분 이후여야 합니다.")
+  void updateGame_failIfStartTimeLessThan30MinutesAhead() {
+    // Given
+    UpdateRequest updateRequest = UpdateRequest.builder()
+        .gameId(1L)
+        .startDateTime(LocalDateTime.now().plusMinutes(15))
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .build();
+
+    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
+        createdGameEntity);
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // 이미 예정된 게임이 없는 상황을 가정합니다.
+    when(gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+            (any(), any(), anyString(), anyLong()))
+        .thenReturn(false);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.updateGame(updateRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_AFTER_THIRTY_MINUTE, exception.getErrorCode());
+  }
+
+
+  @Test
+  @DisplayName("경기 수정 실패 : 해당 시간 범위에 이미 경기가 존재")
+  void updateGame_failIfGameExistsInTimeRange() {
+    // Given
+    UpdateRequest updateRequest = UpdateRequest.builder()
+        .gameId(1L)
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .build();
+
+    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
+        createdGameEntity);
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // 이미 예정된 게임이 있음.
+    when(gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+            (any(), any(), anyString(), anyLong()))
+        .thenReturn(true);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.updateGame(updateRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.ALREADY_GAME_CREATED, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 수정 실패 : 변경 하려는 인원수가 팀원 수보다 작게 설정")
+  void updateGame_failWhenParticipantCountIsTooLow() {
+    // Given
+    UpdateRequest updateRequest = UpdateRequest.builder()
+        .gameId(1L)
+        .headCount(6L)
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .build();
+
+    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
+        createdGameEntity);
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // 이미 예정된 게임이 없는 상황을 가정합니다.
+    when(gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+            (any(), any(), anyString(), anyLong()))
+        .thenReturn(false);
+
+    when(participantGameRepository
+        .countByStatusAndGameEntityGameId(eq(ACCEPT), anyLong()))
+        .thenReturn(8L);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.updateGame(updateRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_UPDATE_HEADCOUNT, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 수정 실패 : 팀원 중 남성이 있을 때 경기 성별을 여성으로 변경하려고 할 때")
+  void updateGame_failWhenChangingGenderToFemaleWithMaleParticipants() {
+    // Given
+    UpdateRequest updateRequest = UpdateRequest.builder()
+        .gameId(1L)
+        .headCount(10L)
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .gender(Gender.FEMALEONLY)
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .build();
+
+    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
+        createdGameEntity);
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // 이미 예정된 게임이 없는 상황을 가정합니다.
+    when(gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+            (any(), any(), anyString(), anyLong()))
+        .thenReturn(false);
+
+    when(participantGameRepository
+        .countByStatusAndGameEntityGameId(eq(ACCEPT), anyLong()))
+        .thenReturn(8L);
+
+    when(participantGameRepository
+        .existsByStatusAndGameEntityGameIdAndUserEntityGender
+            (eq(ACCEPT), anyLong(), eq(GenderType.MALE)))
+        .thenReturn(true);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.updateGame(updateRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_UPDATE_WOMAN, exception.getErrorCode());
+  }
+
+
+  @Test
+  @DisplayName("경기 수정 실패 : 팀원 중 여성이 있을 때 경기 성별을 남성으로 변경하려고 할 때")
+  void updateGame_failWhenChangingGenderToMaleWithFemaleParticipants() {
+    // Given
+    UpdateRequest updateRequest = UpdateRequest.builder()
+        .gameId(1L)
+        .headCount(10L)
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .gender(Gender.MALEONLY)
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .build();
+
+    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
+        createdGameEntity);
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // 이미 예정된 게임이 없는 상황을 가정합니다.
+    when(gameRepository
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+            (any(), any(), anyString(), anyLong()))
+        .thenReturn(false);
+
+    when(participantGameRepository
+        .countByStatusAndGameEntityGameId(eq(ACCEPT), anyLong()))
+        .thenReturn(8L);
+
+    when(participantGameRepository
+        .existsByStatusAndGameEntityGameIdAndUserEntityGender
+            (eq(ACCEPT), anyLong(), eq(GenderType.FEMALE)))
+        .thenReturn(true);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.updateGame(updateRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_UPDATE_MAN, exception.getErrorCode());
+  }
+
+
+
+
+
 
   @Test
   @DisplayName("경기 삭제 성공")

@@ -18,7 +18,7 @@ public interface ParticipantGameRepository extends
   List<ParticipantGameEntity> findByStatusInAndGameEntityGameId(
       List<ParticipantGameStatus> accept, Long gameId);
 
-  long countByStatusAndGameEntityGameIdAndUserEntityGender(
+  boolean existsByStatusAndGameEntityGameIdAndUserEntityGender(
       ParticipantGameStatus participantGameStatus, Long gameId,
       GenderType queryGender);
 
@@ -39,8 +39,7 @@ public interface ParticipantGameRepository extends
       Long userId, List<ParticipantGameStatus> participantGameStatus);
 
   List<ParticipantGameEntity> findByGameEntityGameIdAndStatusAndDeletedDateTimeNull(
-      Long gameId,
-      ParticipantGameStatus participantGameStatus);
+      Long gameId, ParticipantGameStatus participantGameStatus);
 
   Optional<ParticipantGameEntity> findByStatusAndGameEntityGameIdAndUserEntityUserId(
       ParticipantGameStatus participantGameStatus, Long gameId, Long userId);
