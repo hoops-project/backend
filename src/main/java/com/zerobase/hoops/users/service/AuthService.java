@@ -5,6 +5,7 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.WITHDRAW;
 
+import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
@@ -50,6 +51,7 @@ public class AuthService {
   private final ParticipantGameRepository participantGameRepository;
   private final FriendRepository friendRepository;
   private final InviteRepository inviteRepository;
+  private final EmitterRepository emitterRepository;
 
   private final TokenProvider tokenProvider;
 
@@ -155,6 +157,11 @@ public class AuthService {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
+    emitterRepository.deleteAllStartWithUserId(
+        String.valueOf(userEntity.getUserId()));
+    emitterRepository.deleteAllEventCacheStartWithUserId(
+        String.valueOf(userEntity.getUserId()));
+
     tokenProvider.addToLogOutList(accessToken);
   }
 
@@ -256,7 +263,6 @@ public class AuthService {
           participantGame.setStatus(WITHDRAW);
           participantGameRepository.save(participantGame);
         });
-
 
     // 내가 참가한 방의 초대에서 삭제
     List<InviteEntity> inviteList =
