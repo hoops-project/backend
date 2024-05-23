@@ -7,6 +7,7 @@ import com.zerobase.hoops.entity.QFriendEntity;
 import com.zerobase.hoops.entity.QUserEntity;
 import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
 import com.zerobase.hoops.friends.repository.FriendCustomRepository;
+import com.zerobase.hoops.friends.type.FriendStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -34,9 +35,11 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .select(user.count())
         .from(user)
         .leftJoin(friend).on(user.userId.eq(friend.friendUserEntity.userId)
-            .and(friend.userEntity.userId.eq(userId)))
+            .and(friend.userEntity.userId.eq(userId))
+            .and(friend.status.eq(FriendStatus.ACCEPT)))
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId)));
+            .and(user.userId.ne(userId))
+            .and(user.deletedDateTime.isNull()));
 
     // Pageable에서 페이지 번호와 페이지 크기 가져오기
     int pageNumber = pageable.getPageNumber();
@@ -50,9 +53,11 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .from(user)
         .leftJoin(friend)
         .on(user.userId.eq(friend.friendUserEntity.userId)
-            .and(friend.userEntity.userId.eq(userId)))
+            .and(friend.userEntity.userId.eq(userId))
+            .and(friend.status.eq(FriendStatus.ACCEPT)))
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId)))
+            .and(user.userId.ne(userId))
+            .and(user.deletedDateTime.isNull()))
         .orderBy(user.nickName.asc())
         .offset((long) pageNumber * pageSize)
         .limit(pageSize).fetch();
