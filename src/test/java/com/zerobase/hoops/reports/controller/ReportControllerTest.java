@@ -156,7 +156,7 @@ class ReportControllerTest {
   @DisplayName("신고 성공")
   void report_success() throws Exception {
     // Given
-    given(userRepository.existsByEmail(anyString()))
+    given(userRepository.existsByEmailAndDeletedDateTimeNull(anyString()))
         .willReturn(true);
 
     // When
