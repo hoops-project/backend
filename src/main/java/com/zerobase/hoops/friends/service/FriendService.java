@@ -273,8 +273,8 @@ public class FriendService {
     setUpUser();
 
     Page<FriendEntity> friendEntityPage =
-        friendRepository.findByUserEntityUserId
-            (user.getUserId(), pageable);
+        friendRepository.findByStatusAndUserEntityUserId
+            (FriendStatus.ACCEPT, user.getUserId(), pageable);
 
     List<ListResponse> result = new ArrayList<>();
 

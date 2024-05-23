@@ -548,8 +548,8 @@ class FriendServiceTest {
 
     getCurrentUser();
 
-    when(friendRepository.findByUserEntityUserId
-        (1L, pageable))
+    when(friendRepository.findByStatusAndUserEntityUserId
+        (eq(ACCEPT), eq(1L), eq(pageable)))
         .thenReturn(searchResponsePage);
 
 
