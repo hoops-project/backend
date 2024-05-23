@@ -30,6 +30,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     QUserEntity user = QUserEntity.userEntity;
     QFriendEntity friend = QFriendEntity.friendEntity;
 
+    List<Long> excludedIds = List.of(userId, 1L);
+
     // Count query 생성
     JPAQuery<Long> countQuery = jpaQueryFactory
         .select(user.count())
@@ -38,8 +40,9 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
             .and(friend.userEntity.userId.eq(userId))
             .and(friend.status.eq(FriendStatus.ACCEPT)))
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId))
-            .and(user.deletedDateTime.isNull()));
+            .and(user.userId.notIn(excludedIds))
+            .and(user.deletedDateTime.isNull())
+            .and(user.userId.ne(1L)));
 
     // Pageable에서 페이지 번호와 페이지 크기 가져오기
     int pageNumber = pageable.getPageNumber();
@@ -56,7 +59,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
             .and(friend.userEntity.userId.eq(userId))
             .and(friend.status.eq(FriendStatus.ACCEPT)))
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
-            .and(user.userId.ne(userId))
+            .and(user.userId.notIn(excludedIds))
             .and(user.deletedDateTime.isNull()))
         .orderBy(user.nickName.asc())
         .offset((long) pageNumber * pageSize)
