@@ -179,7 +179,7 @@ class FriendServiceTest {
     lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
 
     lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
+        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
       FriendEntity savedFriendEntity = invocation.getArgument(0);
