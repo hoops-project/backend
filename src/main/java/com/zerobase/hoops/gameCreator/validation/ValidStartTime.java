@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidStartTime {
-  String message() default "Start time must be on the hour";
+  String message() default "시작 시간은 0~23시 정각 이여야 합니다.";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
 }
