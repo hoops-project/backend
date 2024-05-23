@@ -3,6 +3,7 @@ package com.zerobase.hoops.gameCreator.service;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -13,16 +14,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteGameResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.WithDrawGameResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -30,6 +35,7 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.invite.repository.InviteRepository;
+import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
@@ -39,6 +45,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -72,6 +79,8 @@ class GameServiceTest {
 
   private UserEntity requestUser;
 
+  private UserEntity receiveUser;
+
   private GameEntity createdGameEntity;
 
   private GameEntity updatedGameEntity;
@@ -79,8 +88,6 @@ class GameServiceTest {
   private GameEntity deletedGameEntity;
 
   private ParticipantGameEntity creatorParticipantGameEntity;
-
-  private ParticipantGameEntity deletedPartEntity;
 
   @BeforeEach
   void setUp() {
@@ -93,6 +100,21 @@ class GameServiceTest {
         .birthday(LocalDate.of(1990, 1, 1))
         .gender(GenderType.MALE)
         .nickName("test")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(true)
+        .build();
+    receiveUser = UserEntity.builder()
+        .userId(2L)
+        .id("test2")
+        .password("Testpass12!@")
+        .email("test2@example.com")
+        .name("test2")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("test2")
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
@@ -155,14 +177,6 @@ class GameServiceTest {
         .participantId(1L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(requestUser)
-        .build();
-    deletedPartEntity = ParticipantGameEntity.builder()
-        .participantId(1L)
-        .status(DELETE)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .deletedDateTime(LocalDateTime.of(2025, 10, 10, 12, 0, 0))
         .gameEntity(createdGameEntity)
         .userEntity(requestUser)
         .build();
@@ -567,21 +581,30 @@ class GameServiceTest {
     assertEquals(ErrorCode.NOT_UPDATE_MAN, exception.getErrorCode());
   }
 
-
-
-
-
-
   @Test
-  @DisplayName("경기 삭제 성공")
-  void deleteGame_success() {
+  @DisplayName("경기 삭제 성공 : 경기 개설자가 삭제")
+  void deleteGame_successGameCreator() {
     //Given
     DeleteRequest deleteRequest = DeleteRequest.builder()
         .gameId(1L)
         .build();
 
+    InviteEntity requestInvite = InviteEntity.builder()
+        .inviteId(1L)
+        .inviteStatus(InviteStatus.REQUEST)
+        .requestedDateTime(LocalDateTime.now())
+        .gameEntity(createdGameEntity)
+        .senderUserEntity(requestUser)
+        .receiverUserEntity(receiveUser)
+        .build();
+
     List<ParticipantGameEntity> groupList = new ArrayList<>();
     groupList.add(creatorParticipantGameEntity);
+
+    List<InviteEntity> inviteEntityList = new ArrayList<>();
+    inviteEntityList.add(requestInvite);
+
+    DeleteGameResponse response = DeleteGameResponse.toDto(deletedGameEntity);
 
     getCurrentUser();
 
@@ -593,26 +616,111 @@ class GameServiceTest {
     when(participantGameRepository.findByStatusInAndGameEntityGameId
         (anyList(), anyLong())).thenReturn(groupList);
 
-    when(participantGameRepository.save(any()))
-        .thenReturn(deletedPartEntity);
+    // 해당 경기에 초대 신청된 것들 다 CANCEL
+    when(inviteRepository.findByInviteStatusAndGameEntityGameId
+        (eq(InviteStatus.REQUEST), anyLong()))
+        .thenReturn(inviteEntityList);
 
     when(gameRepository.save(any())).thenReturn(deletedGameEntity);
 
-    ArgumentCaptor<GameEntity> gameEntityArgumentCaptor = ArgumentCaptor.forClass(
-        GameEntity.class);
-
     // when
-    gameService.delete(deleteRequest);
+    Object object = gameService.delete(deleteRequest);
+    DeleteGameResponse result = (DeleteGameResponse) object;
 
     // Then
-    verify(gameRepository).save(gameEntityArgumentCaptor.capture());
+    groupList.forEach(participant -> {
+      verify(participantGameRepository).save(participant);
+      assertEquals(DELETE, participant.getStatus());
+      assertNotNull(participant.getDeletedDateTime());
+    });
 
-    GameEntity captorEntity = gameEntityArgumentCaptor.getValue();
+    inviteEntityList.forEach(invite -> {
+      verify(inviteRepository).save(invite);
+      assertEquals(InviteStatus.CANCEL, invite.getInviteStatus());
+      assertNotNull(invite.getCanceledDateTime());
+    });
 
-    assertEquals(captorEntity.getGameId(), updatedGameEntity.getGameId());
-    assertEquals(captorEntity.getUserEntity().getUserId(),
-        updatedGameEntity.getUserEntity().getUserId());
+    assertEquals(response.getGameId(), result.getGameId());
+    assertNotNull(result.getDeletedDateTime());
+  }
 
+  @Test
+  @DisplayName("경기 삭제 성공 : 팀원이 삭제")
+  void deleteGame_successGameUser() {
+    //Given
+    DeleteRequest deleteRequest = DeleteRequest.builder()
+        .gameId(1L)
+        .build();
+
+    ParticipantGameEntity receivePartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(ACCEPT)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .acceptedDateTime(LocalDateTime.of(2025, 10, 10, 12, 0, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(receiveUser)
+        .build();
+
+    ParticipantGameEntity deletedPartEntity =
+        ParticipantGameEntity.setWithdraw(receivePartEntity);
+
+    WithDrawGameResponse response =
+        WithDrawGameResponse.toDto(deletedPartEntity);
+
+    getReceiveUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(updatedGameEntity));
+
+    // 자기 자신 CANCEL로 업데이트
+    when(participantGameRepository
+        .findByStatusAndGameEntityGameIdAndUserEntityUserId
+        (eq(ACCEPT), anyLong(), anyLong()))
+        .thenReturn(Optional.ofNullable(receivePartEntity));
+
+    when(participantGameRepository.save(any())).thenReturn(deletedPartEntity);
+
+    // when
+    Object object = gameService.delete(deleteRequest);
+    WithDrawGameResponse result = (WithDrawGameResponse) object;
+
+    // Then
+    assertEquals(response.getGameId(), result.getGameId());
+    assertEquals(response.getStatus(), result.getStatus());
+    assertEquals(response.getUserId(), result.getUserId());
+    assertNotNull(result.getWithdrewDateTime());
+  }
+
+  @Test
+  @DisplayName("경기 삭제 실패 : 경기 시작 30분 전에만 삭제 가능")
+  void deleteGame_fail() {
+    //Given
+    DeleteRequest deleteRequest = DeleteRequest.builder()
+        .gameId(1L)
+        .build();
+
+    GameEntity requestGameEntity = GameEntity.builder()
+        .gameId(1L)
+        .startDateTime(LocalDateTime.now().plusMinutes(15))
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .placeName("서울 농구장")
+        .userEntity(requestUser)
+        .build();
+
+    getCurrentUser();
+
+    // 경기
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
+        .thenReturn(Optional.ofNullable(requestGameEntity));
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      gameService.delete(deleteRequest);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_DELETE_STARTDATE, exception.getErrorCode());
   }
 
   private void getCurrentUser() {
@@ -620,6 +728,13 @@ class GameServiceTest {
 
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(requestUser));
+  }
+
+  private void getReceiveUser() {
+    when(jwtTokenExtract.currentUser()).thenReturn(receiveUser);
+
+    when(userRepository.findById(anyLong())).thenReturn(
+        Optional.ofNullable(receiveUser));
   }
 
 }
