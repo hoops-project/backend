@@ -86,28 +86,20 @@ public class UserService implements UserDetailsService {
   }
 
   public boolean emailCheck(String email) {
-    try {
-      boolean isExistEmail =
-          userRepository.existsByEmailAndDeletedDateTimeNull(email);
-      if (isExistEmail) {
-        throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
-      }
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
+    boolean isExistEmail =
+        userRepository.existsByEmailAndDeletedDateTimeNull(email);
+    if (isExistEmail) {
+      throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
     }
 
     return true;
   }
 
   public boolean nickNameCheck(String nickName) {
-    try {
-      boolean isExistNickname =
-          userRepository.existsByNickNameAndDeletedDateTimeNull(nickName);
-      if (isExistNickname) {
-        throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
-      }
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
+    boolean isExistNickname =
+        userRepository.existsByNickNameAndDeletedDateTimeNull(nickName);
+    if (isExistNickname) {
+      throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
     }
 
     return true;
