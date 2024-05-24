@@ -16,9 +16,12 @@ import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptRequest;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutRequest;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectRequest;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -79,7 +82,7 @@ public class ParticipantGameService {
   /**
    * 경기 참가 희망자 수락
    */
-  public void acceptParticipant(AcceptRequest request) {
+  public AcceptResponse acceptParticipant(AcceptRequest request) {
     log.info("acceptParticipant start");
 
     setUpUser();
@@ -91,7 +94,7 @@ public class ParticipantGameService {
     validationCheck(user, gameEntity);
 
     long count = participantGameRepository.countByStatusAndGameEntityGameId
-        (ACCEPT, request.getParticipantId());
+        (ACCEPT, gameEntity.getGameId());
 
     // 경기에 참가자가 다 찼을때 수락 못함
     if (gameEntity.getHeadCount() <= count) {
@@ -105,12 +108,13 @@ public class ParticipantGameService {
     participantGameRepository.save(result);
 
     log.info("acceptParticipant end");
+    return AcceptResponse.toDto(result);
   }
 
   /**
    * 경기 참가 희망자 거절
    */
-  public void rejectParticipant(RejectRequest request) {
+  public RejectResponse rejectParticipant(RejectRequest request) {
     log.info("rejectParticipant start");
 
     setUpUser();
@@ -128,12 +132,13 @@ public class ParticipantGameService {
     participantGameRepository.save(result);
 
     log.info("rejectParticipant end");
+    return RejectResponse.toDto(result);
   }
 
   /**
    * 경기 참가자 강퇴
    */
-  public void kickoutParticipant(KickoutRequest request) {
+  public KickoutResponse kickoutParticipant(KickoutRequest request) {
     log.info("kickoutParticipant start");
 
     setUpUser();
@@ -157,6 +162,7 @@ public class ParticipantGameService {
     notificationService.send(result.getUserEntity(), "경기에서 강퇴당하였습니다.");
 
     log.info("kickoutParticipant end");
+    return KickoutResponse.toDto(result);
   }
 
   public void setUpUser() {

@@ -1,7 +1,10 @@
 package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutResponse;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectResponse;
 import com.zerobase.hoops.gameCreator.service.ParticipantGameService;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,13 +50,9 @@ public class ParticipantGameController {
    */
   @Operation(summary = "경기 참가 희망자 수락")
   @PatchMapping("/accept")
-  public ResponseEntity<Map<String, String>>
+  public ResponseEntity<AcceptResponse>
   acceptParticipant(@RequestBody @Validated ParticipantDto.AcceptRequest request) {
-    participantGameService.acceptParticipant(request);
-
-    Map<String, String> result = new HashMap<>();
-    result.put("data", "SUCCESS");
-
+    AcceptResponse result = participantGameService.acceptParticipant(request);
     return ResponseEntity.ok(result);
   }
 
@@ -62,13 +61,9 @@ public class ParticipantGameController {
    */
   @Operation(summary = "경기 참가 희망자 거절")
   @PatchMapping("/reject")
-  public ResponseEntity<Map<String, String>>
+  public ResponseEntity<RejectResponse>
   rejectParticipant(@RequestBody @Validated ParticipantDto.RejectRequest request) {
-    participantGameService.rejectParticipant(request);
-
-    Map<String, String> result = new HashMap<>();
-    result.put("data", "SUCCESS");
-
+    RejectResponse result = participantGameService.rejectParticipant(request);
     return ResponseEntity.ok(result);
   }
 
@@ -77,13 +72,9 @@ public class ParticipantGameController {
    */
   @Operation(summary = "경기 참가자 강퇴")
   @PatchMapping("/kickout")
-  public ResponseEntity<Map<String, String>>
+  public ResponseEntity<KickoutResponse>
   kickoutParticipant(@RequestBody @Validated ParticipantDto.KickoutRequest request) {
-    participantGameService.kickoutParticipant(request);
-
-    Map<String, String> result = new HashMap<>();
-    result.put("data", "SUCCESS");
-
+    KickoutResponse result = participantGameService.kickoutParticipant(request);
     return ResponseEntity.ok(result);
   }
 

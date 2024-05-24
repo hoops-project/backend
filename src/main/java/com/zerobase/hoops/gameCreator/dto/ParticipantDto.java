@@ -86,6 +86,34 @@ public class ParticipantDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
+  public static class AcceptResponse {
+
+    private Long participantId;
+
+    private ParticipantGameStatus status;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime acceptedDateTime;
+
+    private Long userId;
+
+    public static ParticipantDto.AcceptResponse toDto(
+        ParticipantGameEntity participantGameEntity) {
+      return AcceptResponse.builder()
+          .participantId(participantGameEntity.getParticipantId())
+          .status(participantGameEntity.getStatus())
+          .createdDateTime(participantGameEntity.getCreatedDateTime())
+          .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
+          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
   public static class RejectRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
     @Min(1)
@@ -97,10 +125,69 @@ public class ParticipantDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
+  public static class RejectResponse {
+
+    private Long participantId;
+
+    private ParticipantGameStatus status;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime rejectedDateTime;
+
+    private Long userId;
+
+    public static ParticipantDto.RejectResponse toDto(
+        ParticipantGameEntity participantGameEntity) {
+      return RejectResponse.builder()
+          .participantId(participantGameEntity.getParticipantId())
+          .status(participantGameEntity.getStatus())
+          .createdDateTime(participantGameEntity.getCreatedDateTime())
+          .rejectedDateTime(participantGameEntity.getRejectedDateTime())
+          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
   public static class KickoutRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
     @Min(1)
     private Long participantId;
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class KickoutResponse {
+
+    private Long participantId;
+
+    private ParticipantGameStatus status;
+
+    private LocalDateTime createdDateTime;
+
+    private LocalDateTime acceptedDateTime;
+
+    private LocalDateTime kickoutDateTime;
+
+    private Long userId;
+
+    public static ParticipantDto.KickoutResponse toDto(
+        ParticipantGameEntity participantGameEntity) {
+      return KickoutResponse.builder()
+          .participantId(participantGameEntity.getParticipantId())
+          .status(participantGameEntity.getStatus())
+          .createdDateTime(participantGameEntity.getCreatedDateTime())
+          .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
+          .kickoutDateTime(participantGameEntity.getKickoutDateTime())
+          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+    }
   }
 
 }
