@@ -91,7 +91,9 @@ public class ParticipantGameService {
 
     validationCreatorCheck(user, gameEntity);
 
-    validationCheck(user, gameEntity);
+    validationGameStart(gameEntity);
+
+    validateIsNotCreator(user);
 
     long count = participantGameRepository.countByStatusAndGameEntityGameId
         (ACCEPT, gameEntity.getGameId());
@@ -123,7 +125,7 @@ public class ParticipantGameService {
 
     validationCreatorCheck(user, gameEntity);
 
-    validationCheck(user, gameEntity);
+    validateIsNotCreator(user);
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGameEntity);
@@ -153,7 +155,9 @@ public class ParticipantGameService {
 
     validationCreatorCheck(user, gameEntity);
 
-    validationCheck(user, gameEntity);
+    validationGameStart(gameEntity);
+
+    validateIsNotCreator(user);
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setKickout(participantGameEntity);
@@ -182,21 +186,26 @@ public class ParticipantGameService {
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 
+  // 경기 개설자만 수락,거절,강퇴 가능
   public void validationCreatorCheck(UserEntity user, GameEntity game) {
-    // 경기 개설자만 수락,거절,강퇴 가능
+
     if (!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
   }
 
-  public void validationCheck(UserEntity user, GameEntity game) {
-    // 경기가 이미 시작하면 수락,거절,강퇴 불가능
+  // 경기가 이미 시작하면 수락,강퇴 불가능
+  public void validationGameStart(GameEntity game) {
+
     LocalDateTime nowDateTime = LocalDateTime.now();
     if (game.getStartDateTime().isBefore(nowDateTime)) {
       throw new CustomException(ALREADY_GAME_START);
     }
+  }
 
-    // 경기 개설자는 ACCEPT 상태로 나둬야함
+  // 경기 개설자는 ACCEPT 상태로 나둬야함
+  public void validateIsNotCreator(UserEntity user) {
+
     if (Objects.equals(user.getUserId(),
         participantGameEntity.getUserEntity().getUserId())) {
       throw new CustomException(NOT_UPDATE_CREATOR);
