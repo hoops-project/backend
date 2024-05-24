@@ -28,8 +28,8 @@ public interface ParticipantGameRepository extends
   Optional<ParticipantGameEntity> findByParticipantIdAndStatus(
       Long participantId, ParticipantGameStatus participantGameStatus);
 
-  boolean existsByStatusAndGameEntityGameIdAndUserEntityUserId(
-      ParticipantGameStatus participantGameStatus,
+  boolean existsByStatusInAndGameEntityGameIdAndUserEntityUserId(
+      List<ParticipantGameStatus> participantGameStatus,
       Long gameId, Long receiverUserId);
 
   List<ParticipantGameEntity> findByGameEntityGameIdAndStatusNotAndDeletedDateTimeNull(
@@ -43,6 +43,10 @@ public interface ParticipantGameRepository extends
 
   Optional<ParticipantGameEntity> findByStatusAndGameEntityGameIdAndUserEntityUserId(
       ParticipantGameStatus participantGameStatus, Long gameId, Long userId);
+
+  boolean existsByStatusAndGameEntityGameIdAndUserEntityUserId(
+      ParticipantGameStatus participantGameStatus, Long gameId,
+      Long userId);
 }
 
 

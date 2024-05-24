@@ -37,7 +37,6 @@ import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -114,11 +113,11 @@ public class InviteService {
       throw new CustomException(NOT_PARTICIPANT_GAME);
     }
 
-    // 해당 경기에 이미 참가해 있을 경우 막음
+    // 해당 경기에 이미 참가 하거나 요청한 경우 막음
     boolean participantGameFlag = participantGameRepository
-        .existsByStatusAndGameEntityGameIdAndUserEntityUserId
-            (ParticipantGameStatus.ACCEPT, request.getGameId(),
-                request.getReceiverUserId());
+        .existsByStatusInAndGameEntityGameIdAndUserEntityUserId
+            (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY)
+                ,request.getGameId(), request.getReceiverUserId());
 
     if(participantGameFlag) {
       throw new CustomException(ALREADY_PARTICIPANT_GAME);
