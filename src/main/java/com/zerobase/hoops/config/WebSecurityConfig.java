@@ -55,6 +55,8 @@ public class WebSecurityConfig {
                 "/ws",
                 //--------------------
                 "/h2-console/**").permitAll()
+            .requestMatchers("/api/chat/create")
+            .hasAnyRole("USER")
             .requestMatchers("/api/auth/**")
             .hasAnyRole("USER", "CREATOR", "ADMIN")
             .requestMatchers("/api/oauth2/logout/kakao")
