@@ -108,7 +108,7 @@ public class UserService implements UserDetailsService {
   public void confirmEmail(
       String id, String email, String certificationNumber) {
     if (!checkCertificationNumber(email, certificationNumber)) {
-      throw new CustomException(ErrorCode.INVALID_NUMBER);
+      throw new CustomException(ErrorCode.NOT_MATCHED_NUMBER);
     }
 
     UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
@@ -131,23 +131,23 @@ public class UserService implements UserDetailsService {
         .equals(certificationNumber);
   }
 
-  public UserDto getUserInfo(String userId) {
-    UserEntity userEntity = userRepository.findById(userId)
+  public UserDto getUserInfo(String id) {
+    UserEntity userEntity = userRepository.findByIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     return UserDto.fromEntity(userEntity);
   }
 
   @Override
-  public UserDetails loadUserByUsername(String email)
+  public UserDetails loadUserByUsername(String id)
       throws UsernameNotFoundException {
-    return userRepository.findByEmailAndDeletedDateTimeNull(email)
+    return userRepository.findByIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
 
   public String findId(String email) {
     UserEntity user =
-        userRepository.findByEmail(email)
+        userRepository.findByEmailAndDeletedDateTimeNull(email)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -156,7 +156,7 @@ public class UserService implements UserDetailsService {
 
   public boolean findPassword(String id) throws NoSuchAlgorithmException {
     UserEntity user =
-        userRepository.findById(id)
+        userRepository.findByIdAndDeletedDateTimeNull(id)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 

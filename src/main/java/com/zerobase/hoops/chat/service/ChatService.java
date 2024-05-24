@@ -1,6 +1,5 @@
 package com.zerobase.hoops.chat.service;
 
-
 import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.Content;
 import com.zerobase.hoops.chat.domain.dto.MessageDTO;
@@ -63,7 +62,7 @@ public class ChatService {
   }
 
   public UserEntity findUser(String senderId) {
-    return userRepository.findById(senderId)
+    return userRepository.findByIdAndDeletedDateTimeNull(senderId)
         .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 

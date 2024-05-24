@@ -39,6 +39,8 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         setResponse(response, ErrorCode.BAN_FOR_10DAYS);
       } else if (ErrorCode.ALREADY_LOGOUT.getDescription().equals(message)) {
         setResponse(response, ErrorCode.ALREADY_LOGOUT);
+      } else if (ErrorCode.EXPIRED_REFRESH_TOKEN.getDescription().equals(message)) {
+        setResponse(response, ErrorCode.EXPIRED_REFRESH_TOKEN);
       } else {
         setResponse(response, ErrorCode.ACCESS_DENIED);
       }
