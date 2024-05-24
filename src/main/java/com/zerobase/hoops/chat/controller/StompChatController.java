@@ -2,6 +2,7 @@ package com.zerobase.hoops.chat.controller;
 
 import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.Content;
+import com.zerobase.hoops.chat.domain.dto.CreateRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.MessageDTO;
 import com.zerobase.hoops.chat.service.ChatService;
 import com.zerobase.hoops.entity.UserEntity;
@@ -59,8 +60,8 @@ public class StompChatController {
 
   @PostMapping("/api/chat/create")
   public ResponseEntity<ChatRoomDTO> createChatRoom(
-      @RequestBody Long gameId) {
-    ChatRoomDTO roomDTO = chatService.createChatRoom(gameId);
+      @RequestBody CreateRoomDTO createRoomDTO) {
+    ChatRoomDTO roomDTO = chatService.createChatRoom(createRoomDTO);
 
     return ResponseEntity.ok(roomDTO);
   }
