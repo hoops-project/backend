@@ -230,11 +230,16 @@ class InviteServiceTest {
         .thenReturn(false);
 
     // 해당 경기에 참가해 잇는 사람이 초대할 경우를 가정
-    // 초대 받는 사람이 해당 경기에 참가 안했을 경우를 가정
     when(participantGameRepository
         .existsByStatusAndGameEntityGameIdAndUserEntityUserId
-            (eq(ParticipantGameStatus.ACCEPT), anyLong(), anyLong()))
-        .thenReturn(true)
+            (eq(ParticipantGameStatus.ACCEPT), eq(1L), eq(1L)))
+        .thenReturn(true);
+
+    // 초대 받는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
+    when(participantGameRepository
+        .existsByStatusInAndGameEntityGameIdAndUserEntityUserId
+            (eq(List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY))
+                ,eq(1L), eq(2L)))
         .thenReturn(false);
 
     // 경기 인원이 경기개설자(1명 만) 있다고 가정
@@ -245,7 +250,7 @@ class InviteServiceTest {
 
     when(inviteRepository.save(any(InviteEntity.class))).thenAnswer(invocation -> {
       InviteEntity savedInviteEntity = invocation.getArgument(0);
-      savedInviteEntity.setInviteId(1L); // friendId 동적 할당
+      savedInviteEntity.setInviteId(1L); // inviteId 동적 할당
       savedInviteEntity.setRequestedDateTime(LocalDateTime.now());
       return savedInviteEntity;
     });
