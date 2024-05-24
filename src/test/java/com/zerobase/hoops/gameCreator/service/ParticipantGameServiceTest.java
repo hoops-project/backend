@@ -6,6 +6,7 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.KICKOUT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.REJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -21,7 +22,10 @@ import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptRequest;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutRequest;
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectRequest;
@@ -125,7 +129,7 @@ class ParticipantGameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .latitude(32.13123)
@@ -166,7 +170,7 @@ class ParticipantGameServiceTest {
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     when(participantGameRepository.findByStatusAndGameEntityGameId
-        (eq(APPLY), anyLong())).thenReturn(participantList);
+        (eq(APPLY), eq(gameId))).thenReturn(participantList);
 
     // when
     List<DetailResponse> result = participantGameService
@@ -177,11 +181,9 @@ class ParticipantGameServiceTest {
   }
 
   @Test
-  @DisplayName("경기 참가 희망자 수락")
+  @DisplayName("경기 참가 희망자 수락 성공")
   void acceptParticipant_success() {
     // Given
-    Long gameId = 1L;
-
     AcceptRequest request = AcceptRequest.builder()
         .participantId(2L)
         .build();
@@ -203,49 +205,75 @@ class ParticipantGameServiceTest {
         .userEntity(applyedUser)
         .build();
 
-    Long count = 1L;
-
     getCurrentUser();
 
-    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(APPLY)))
+    when(participantGameRepository.findByParticipantIdAndStatus
+        (eq(request.getParticipantId()), eq(APPLY)))
         .thenReturn(Optional.ofNullable(applyPartEntity));
 
+    assert applyPartEntity != null;
     when(gameRepository.findByGameIdAndDeletedDateTimeNull
-        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+        (eq(applyPartEntity.getGameEntity().getGameId())))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
 
+    // 경기에 참가자가 1명만 있다고 가정
     when(participantGameRepository.countByStatusAndGameEntityGameId
-        (eq(ACCEPT), anyLong())).thenReturn(count);
+        (eq(ACCEPT), eq(createdGameEntity.getGameId()))).thenReturn(1L);
 
     when(participantGameRepository.save(any()))
         .thenReturn(acceptPartEntity);
 
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
-
-    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
-        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
-
     // when
-    participantGameService.acceptParticipant(request);
+    AcceptResponse response = participantGameService.acceptParticipant(request);
 
     // Then
-    verify(participantGameRepository)
-        .save(participantGameEntityArgumentCaptor.capture());
-
-    ParticipantGameEntity result
-        = participantGameEntityArgumentCaptor.getValue();
-
     assertEquals(acceptPartEntity.getParticipantId(),
-        result.getParticipantId());
-    assertEquals(acceptPartEntity.getStatus(), result.getStatus());
-    assertEquals(acceptPartEntity.getCreatedDateTime(),
-        result.getCreatedDateTime());
-    assertEquals(acceptPartEntity.getGameEntity().getGameId(),
-        result.getGameEntity().getGameId());
+        response.getParticipantId());
+    assertEquals(acceptPartEntity.getStatus(), response.getStatus());
     assertEquals(acceptPartEntity.getUserEntity().getUserId(),
-        result.getUserEntity().getUserId());
+        response.getUserId());
+  }
+
+  @Test
+  @DisplayName("경기 참가 희망자 수락 실패 : 경기가 이미 시작 함")
+  void acceptParticipant_failIfGameAlreadyStarted() {
+    // Given
+    AcceptRequest request = AcceptRequest.builder()
+        .participantId(2L)
+        .build();
+
+    createdGameEntity = GameEntity.builder()
+        .gameId(1L)
+        .startDateTime(LocalDateTime.now().minusHours(1))
+        .userEntity(createdUser)
+        .build();
+
+    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
+        .participantId(2L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .gameEntity(createdGameEntity)
+        .userEntity(applyedUser)
+        .build();
+
+    getCurrentUser();
+
+    when(participantGameRepository.findByParticipantIdAndStatus
+        (eq(request.getParticipantId()), eq(APPLY)))
+        .thenReturn(Optional.ofNullable(applyPartEntity));
+
+    assert applyPartEntity != null;
+    when(gameRepository.findByGameIdAndDeletedDateTimeNull
+        (eq(applyPartEntity.getGameEntity().getGameId())))
+        .thenReturn(Optional.ofNullable(createdGameEntity));
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.acceptParticipant(request);
+    });
+
+    // Then
+    assertEquals(ErrorCode.ALREADY_GAME_START, exception.getErrorCode());
   }
 
   @Test
@@ -285,11 +313,6 @@ class ParticipantGameServiceTest {
 
     when(participantGameRepository.save(any()))
         .thenReturn(rejectPartEntity);
-
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
