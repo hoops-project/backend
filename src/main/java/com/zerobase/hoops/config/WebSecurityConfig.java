@@ -47,7 +47,7 @@ public class WebSecurityConfig {
         .headers(header -> header
             .frameOptions(FrameOptionsConfig::disable))
         .authorizeHttpRequests(request -> request
-            .requestMatchers("/", "/api/user/**",
+            .requestMatchers("/api/user/**",
                 "/swagger-ui/**", "/v3/api-docs/**",
                 "/api/auth/login", "/api/oauth2/login/kakao",
                 "/api/game-user/**",
