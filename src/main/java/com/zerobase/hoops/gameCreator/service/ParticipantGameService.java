@@ -25,7 +25,6 @@ import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
-import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,7 +56,7 @@ public class ParticipantGameService {
   /**
    * 경기 참가 희망자 리스트 조회
    */
-  public List<DetailResponse> getParticipantList(Long gameId) {
+  public List<DetailResponse> getApplyParticipantList(Long gameId) {
     log.info("getParticipantList start");
 
     setUpUser();
@@ -76,6 +75,27 @@ public class ParticipantGameService {
         .toList();
 
     log.info("getParticipantList end");
+    return detailResponseList;
+  }
+
+  /**
+   * 경기 참가자 리스트 조회
+   */
+  public List<DetailResponse> getAcceptParticipantList(Long gameId) {
+
+    setUpUser();
+
+    GameEntity game =
+        gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+            .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+    List<ParticipantGameEntity> list = participantGameRepository
+        .findByStatusAndGameEntityGameId(ACCEPT, gameId);
+
+    List<DetailResponse> detailResponseList = list.stream()
+        .map(DetailResponse::toDto)
+        .toList();
+
     return detailResponseList;
   }
 
@@ -169,6 +189,8 @@ public class ParticipantGameService {
     return KickoutResponse.toDto(result);
   }
 
+
+
   public void setUpUser() {
     Long userId = jwtTokenExtract.currentUser().getUserId();
 
@@ -211,5 +233,6 @@ public class ParticipantGameService {
       throw new CustomException(NOT_UPDATE_CREATOR);
     }
   }
+
 
 }
