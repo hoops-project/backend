@@ -102,7 +102,10 @@ public enum ErrorCode {
   NOT_EXIST_REPORTED(HttpStatus.BAD_REQUEST.value(), "신고 내용이 없습니다."),
 
   // 서버 오류
-  INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류");
+  INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류"),
+
+  // 채팅
+  CANNOT_ENTER_CHAT(HttpStatus.BAD_REQUEST.value(), "채팅에 참가할 수 없습니다.");
 
   private final int statusCode;
   private final String description;

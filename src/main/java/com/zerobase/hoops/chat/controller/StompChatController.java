@@ -37,6 +37,8 @@ public class StompChatController {
 
     UserEntity user = chatService.findUser(senderId);
 
+    chatService.checkAcceptUser(gameId, user.getUserId());
+
     messagingTemplate.convertAndSend("/sub/" + gameId,
         user.getNickName() + "님이 입장했습니다");
   }
