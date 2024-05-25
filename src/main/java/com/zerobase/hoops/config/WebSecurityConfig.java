@@ -51,9 +51,7 @@ public class WebSecurityConfig {
                 "/swagger-ui/**", "/v3/api-docs/**",
                 "/api/auth/login", "/api/oauth2/login/kakao",
                 "/api/game-user/**",
-                //로그인 개발되면 해당 부분 삭제
-                "/ws",
-                //--------------------
+                "/chat","/pub/**","/sub/**",
                 "/h2-console/**").permitAll()
             .requestMatchers("/api/chat/create")
             .hasAnyRole("USER")
@@ -91,6 +89,7 @@ public class WebSecurityConfig {
     corsConfiguration.addAllowedOrigin("http://localhost:5173");
     corsConfiguration.addAllowedOrigin("https://hoops-frontend-jet.vercel.app");
     corsConfiguration.addAllowedOrigin("https://hoops.services");
+    corsConfiguration.addAllowedOriginPattern("*");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
 
