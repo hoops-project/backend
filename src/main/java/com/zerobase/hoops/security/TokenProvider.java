@@ -50,29 +50,40 @@ public class TokenProvider {
    * AccessToken 생성
    */
   public String createAccessToken(String id, String email, List<String> role) {
-    return generateToken(id, email, role, ACCESS_TOKEN_EXPIRE_TIME);
+    return generateAccessToken(id, email, role, ACCESS_TOKEN_EXPIRE_TIME);
   }
 
   /**
    * RefreshToken 생성
    */
-  public String createRefreshToken(String id, String email, List<String> role) {
+  public String createRefreshToken(String id) {
 
     String refreshToken =
-        generateToken(id, email, role, REFRESH_TOKEN_EXPIRE_TIME);
+        generateRefreshToken(id, REFRESH_TOKEN_EXPIRE_TIME);
 
     authRepository.saveRefreshToken(
         id, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
     return refreshToken;
   }
 
-  public String generateToken(String id, String email, List<String> roles,
-      Long expireTime) {
+  public String generateAccessToken(String id, String email,
+      List<String> roles, Long expireTime) {
 
-    Claims claims = Jwts.claims().setSubject(email);
-    claims.put("id", id);
+    Claims claims = Jwts.claims().setSubject(id);
+    claims.put("email", email);
     claims.put("roles", roles);
 
+    return returnToken(claims, expireTime);
+  }
+
+  public String generateRefreshToken(String id, Long expireTime) {
+
+    Claims claims = Jwts.claims().setSubject(id);
+
+    return returnToken(claims, expireTime);
+  }
+
+  private String returnToken(Claims claims, Long expireTime) {
     var now = new Date();
     var expireDate = new Date(now.getTime() + expireTime);
 
@@ -107,6 +118,7 @@ public class TokenProvider {
 
   public boolean validateToken(String token) {
     try {
+      validateRefreshToken(token);
       Jws<Claims> claims = Jwts.parserBuilder()
           .setSigningKey(
               getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
@@ -129,10 +141,17 @@ public class TokenProvider {
       throw new JwtException(ErrorCode.INVALID_TOKEN.getDescription());
     } catch (CustomException e) {
       if(e.getErrorCode().equals(ErrorCode.ALREADY_LOGOUT)){
+        log.info("CustomException!!");
         throw new JwtException(ErrorCode.ALREADY_LOGOUT.getDescription());
-      } else {
+      } else if (e.getErrorCode().equals(ErrorCode.BAN_FOR_10DAYS)) {
         log.info("CustomException!!");
         throw new JwtException(ErrorCode.BAN_FOR_10DAYS.getDescription());
+      } else if (e.getErrorCode().equals(ErrorCode.EXPIRED_REFRESH_TOKEN)) {
+        log.info("CustomException!!");
+        throw new JwtException(ErrorCode.EXPIRED_REFRESH_TOKEN.getDescription());
+      } else {
+        log.info("CustomException!!");
+        throw new JwtException(ErrorCode.ACCESS_DENIED.getDescription());
       }
     }
   }
@@ -154,6 +173,12 @@ public class TokenProvider {
   public void checkLogOut(String token) {
     if (isLogOut(token)) {
       throw new CustomException(ErrorCode.ALREADY_LOGOUT);
+    }
+  }
+
+  public void validateRefreshToken(String token) {
+    if (token.length() == 152 && parseClaims(token).getExpiration().before(new Date())) {
+      throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
     }
   }
 

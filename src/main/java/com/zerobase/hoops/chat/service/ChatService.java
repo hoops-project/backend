@@ -1,8 +1,8 @@
 package com.zerobase.hoops.chat.service;
 
-
 import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.Content;
+import com.zerobase.hoops.chat.domain.dto.CreateRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.MessageDTO;
 import com.zerobase.hoops.chat.domain.repository.ChatRoomRepository;
 import com.zerobase.hoops.chat.domain.repository.MessageRepository;
@@ -30,11 +30,11 @@ public class ChatService {
   /**
    * 채팅방 생성 및 DB에 저장하는 메서드
    *
-   * @param gameId
+   * @param createRoomDTO
    * @return
    */
-  public ChatRoomDTO createChatRoom(Long gameId) {
-    GameEntity gameEntity = gameRepository.findById(gameId)
+  public ChatRoomDTO createChatRoom(CreateRoomDTO createRoomDTO) {
+    GameEntity gameEntity = gameRepository.findById(createRoomDTO.getGameId())
             .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     ChatRoomEntity chattingRoom = ChatRoomEntity.builder()
@@ -63,7 +63,7 @@ public class ChatService {
   }
 
   public UserEntity findUser(String senderId) {
-    return userRepository.findById(senderId)
+    return userRepository.findByIdAndDeletedDateTimeNull(senderId)
         .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 

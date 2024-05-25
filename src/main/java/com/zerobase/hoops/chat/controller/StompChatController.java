@@ -2,6 +2,7 @@ package com.zerobase.hoops.chat.controller;
 
 import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.Content;
+import com.zerobase.hoops.chat.domain.dto.CreateRoomDTO;
 import com.zerobase.hoops.chat.domain.dto.MessageDTO;
 import com.zerobase.hoops.chat.service.ChatService;
 import com.zerobase.hoops.entity.UserEntity;
@@ -18,7 +19,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -58,10 +58,10 @@ public class StompChatController {
     messagingTemplate.convertAndSend("/sub/" + gameId, messageDTO);
   }
 
-  @PostMapping("/chat/create")
+  @PostMapping("/api/chat/create")
   public ResponseEntity<ChatRoomDTO> createChatRoom(
-      @RequestBody Long gameId) {
-    ChatRoomDTO roomDTO = chatService.createChatRoom(gameId);
+      @RequestBody CreateRoomDTO createRoomDTO) {
+    ChatRoomDTO roomDTO = chatService.createChatRoom(createRoomDTO);
 
     return ResponseEntity.ok(roomDTO);
   }

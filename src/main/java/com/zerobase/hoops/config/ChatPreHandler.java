@@ -1,6 +1,5 @@
 package com.zerobase.hoops.config;
 
-
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.security.TokenProvider;
 import io.jsonwebtoken.Claims;
@@ -122,7 +121,7 @@ public class ChatPreHandler implements ChannelInterceptor {
 
       try {
         Claims claims = tokenProvider.parseClaims(accessToken);
-        return claims.get("id", String.class);
+        return claims.get("sub", String.class);
       } catch (ExpiredJwtException | MalformedJwtException e) {
         throw new CustomException(EXPIRED_TOKEN);
       }

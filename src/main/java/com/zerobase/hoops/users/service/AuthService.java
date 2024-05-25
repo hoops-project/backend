@@ -82,8 +82,7 @@ public class AuthService {
         tokenProvider.createAccessToken(userDto.getId(),
             userDto.getEmail(), userDto.getRoles());
     String refreshToken =
-        tokenProvider.createRefreshToken(userDto.getId(),
-            userDto.getEmail(), userDto.getRoles());
+        tokenProvider.createRefreshToken(userDto.getId());
 
     return new TokenDto(userDto.getId(), accessToken, refreshToken);
   }
@@ -92,18 +91,10 @@ public class AuthService {
   public TokenDto refreshToken(
       HttpServletRequest request, UserEntity userEntity
   ) {
-
-    String expiredAccessToken = validateAccessTokenExistHeader(request);
-    String refreshToken = validateRefreshTokenExistHeader(request);
+    String refreshToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(refreshToken);
-    String id = claims.get("id", String.class);
-    String email = claims.get("sub", String.class);
-    List<String> roles = (List<String>) claims.get("roles");
-
-    if (!tokenUserMatch(expiredAccessToken, refreshToken)) {
-      throw new CustomException(ErrorCode.NOT_MATCHED_TOKEN);
-    }
+    String id = claims.get("sub", String.class);
 
     if (!userEntity.getId().equals(id)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
@@ -115,11 +106,11 @@ public class AuthService {
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
 
-    userRepository.findById(id)
+    UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String responseAccessToken =
-        tokenProvider.createAccessToken(id, email, roles);
+        tokenProvider.createAccessToken(id, user.getEmail(), user.getRoles());
 
     return new TokenDto(id, responseAccessToken, refreshToken);
   }
@@ -148,7 +139,7 @@ public class AuthService {
     String refreshToken = validateRefreshTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(accessToken);
-    String id = claims.get("id", String.class);
+    String id = claims.get("sub", String.class);
 
     if (tokenUserMatch(accessToken, refreshToken) &&
         id.equals(userEntity.getId())) {
@@ -168,8 +159,8 @@ public class AuthService {
   private boolean tokenUserMatch(String accessToken, String refreshToken) {
     Claims accessClaims = tokenProvider.parseClaims(accessToken);
     Claims refreshClaims = tokenProvider.parseClaims(refreshToken);
-    String accessId = accessClaims.get("id", String.class);
-    String refreshId = refreshClaims.get("id", String.class);
+    String accessId = accessClaims.get("sub", String.class);
+    String refreshId = refreshClaims.get("sub", String.class);
 
     return accessId.equals(refreshId);
   }
@@ -199,7 +190,7 @@ public class AuthService {
     String accessToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(accessToken);
-    String id = claims.get("id", String.class);
+    String id = claims.get("sub", String.class);
 
     if (!user.getId().equals(id)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);

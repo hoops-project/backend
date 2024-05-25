@@ -126,7 +126,8 @@ class UserServiceTest {
         .passwordCheck("MismatchPassword")
         .email("sign@hoops.com")
         .name("성공")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .birthday(LocalDate.parse("19900101",
+            DateTimeFormatter.ofPattern("yyyyMMdd")))
         .gender("MALE")
         .nickName("별명")
         .playStyle("BALANCE")
@@ -134,7 +135,8 @@ class UserServiceTest {
         .build();
 
     //when
-    Throwable exception = assertThrows(CustomException.class, () -> userService.signUpUser(request));
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.signUpUser(request));
 
     // then
     assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
@@ -150,7 +152,8 @@ class UserServiceTest {
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
         .name("성공")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .birthday(LocalDate.parse("19900101",
+            DateTimeFormatter.ofPattern("yyyyMMdd")))
         .gender("MALE")
         .nickName("별명")
         .playStyle("BALANCE")
@@ -158,8 +161,10 @@ class UserServiceTest {
         .build();
 
     // when
-    when(userRepository.existsByIdAndDeletedDateTimeNull(request.getId())).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.signUpUser(request));
+    when(userRepository.existsByIdAndDeletedDateTimeNull(
+        request.getId())).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.signUpUser(request));
 
     // then
     assertEquals("이미 사용 중인 아이디입니다.", exception.getMessage());
@@ -175,7 +180,8 @@ class UserServiceTest {
         .passwordCheck("Hoops!@#456")
         .email("test@hoops.com") // already existing email
         .name("성공")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .birthday(LocalDate.parse("19900101",
+            DateTimeFormatter.ofPattern("yyyyMMdd")))
         .gender("MALE")
         .nickName("별명")
         .playStyle("BALANCE")
@@ -183,8 +189,10 @@ class UserServiceTest {
         .build();
 
     // when
-    when(userRepository.existsByEmailAndDeletedDateTimeNull(request.getEmail())).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.signUpUser(request));
+    when(userRepository.existsByEmailAndDeletedDateTimeNull(
+        request.getEmail())).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.signUpUser(request));
 
     // then
     assertEquals("이미 사용 중인 이메일입니다.", exception.getMessage());
@@ -200,7 +208,8 @@ class UserServiceTest {
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
         .name("성공")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .birthday(LocalDate.parse("19900101",
+            DateTimeFormatter.ofPattern("yyyyMMdd")))
         .gender("MALE")
         .nickName("테스트별명")
         .playStyle("BALANCE")
@@ -208,8 +217,10 @@ class UserServiceTest {
         .build();
 
     // when
-    when(userRepository.existsByNickNameAndDeletedDateTimeNull(request.getNickName())).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.signUpUser(request));
+    when(userRepository.existsByNickNameAndDeletedDateTimeNull(
+        request.getNickName())).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.signUpUser(request));
 
     // then
     assertEquals("이미 사용 중인 별명입니다.", exception.getMessage());
@@ -225,14 +236,16 @@ class UserServiceTest {
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
         .name("성공")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .birthday(LocalDate.parse("19900101",
+            DateTimeFormatter.ofPattern("yyyyMMdd")))
         .gender("MALE")
         .nickName("별명")
         .playStyle("BALANCE")
         .ability("DRIBBLE")
         .build();
 
-    when(emailProvider.sendCertificationMail(any(), any(), any())).thenReturn(false);
+    when(emailProvider.sendCertificationMail(any(), any(), any())).thenReturn(
+        false);
 
     // then
     assertThrows(CustomException.class, () -> userService.signUpUser(request));
@@ -258,8 +271,10 @@ class UserServiceTest {
     String duplicatedId = "duplicatedId";
 
     // when
-    when(userRepository.existsByIdAndDeletedDateTimeNull(duplicatedId)).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.idCheck(duplicatedId));
+    when(userRepository.existsByIdAndDeletedDateTimeNull(
+        duplicatedId)).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.idCheck(duplicatedId));
 
     // then
     assertEquals("이미 사용 중인 아이디입니다.", exception.getMessage());
@@ -273,11 +288,14 @@ class UserServiceTest {
     String duplicatedEmail = "duplicatedEmail";
 
     // when
-    when(userRepository.existsByEmailAndDeletedDateTimeNull(email)).thenReturn(false);
-    when(userRepository.existsByEmailAndDeletedDateTimeNull(duplicatedEmail)).thenReturn(true);
+    when(userRepository.existsByEmailAndDeletedDateTimeNull(email)).thenReturn(
+        false);
+    when(userRepository.existsByEmailAndDeletedDateTimeNull(
+        duplicatedEmail)).thenReturn(true);
 
     // then
-    assertThrows(CustomException.class, () -> userService.emailCheck(duplicatedEmail));
+    assertThrows(CustomException.class,
+        () -> userService.emailCheck(duplicatedEmail));
     assertTrue(userService.emailCheck(email));
   }
 
@@ -288,8 +306,10 @@ class UserServiceTest {
     String duplicatedEmail = "duplicatedEmail";
 
     // when
-    when(userRepository.existsByEmailAndDeletedDateTimeNull(duplicatedEmail)).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.emailCheck(duplicatedEmail));
+    when(userRepository.existsByEmailAndDeletedDateTimeNull(
+        duplicatedEmail)).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.emailCheck(duplicatedEmail));
 
     // then
     assertEquals("이미 사용 중인 이메일입니다.", exception.getMessage());
@@ -303,11 +323,14 @@ class UserServiceTest {
     String duplicatedNickName = "duplicatedNickName";
 
     // when
-    when(userRepository.existsByNickNameAndDeletedDateTimeNull(nickName)).thenReturn(false);
-    when(userRepository.existsByNickNameAndDeletedDateTimeNull(duplicatedNickName)).thenReturn(true);
+    when(userRepository.existsByNickNameAndDeletedDateTimeNull(
+        nickName)).thenReturn(false);
+    when(userRepository.existsByNickNameAndDeletedDateTimeNull(
+        duplicatedNickName)).thenReturn(true);
 
     // then
-    assertThrows(CustomException.class, () -> userService.nickNameCheck(duplicatedNickName));
+    assertThrows(CustomException.class,
+        () -> userService.nickNameCheck(duplicatedNickName));
     assertTrue(userService.nickNameCheck(nickName));
   }
 
@@ -318,8 +341,10 @@ class UserServiceTest {
     String duplicatedNickName = "duplicatedNickName";
 
     // when
-    when(userRepository.existsByNickNameAndDeletedDateTimeNull(duplicatedNickName)).thenReturn(true);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.nickNameCheck(duplicatedNickName));
+    when(userRepository.existsByNickNameAndDeletedDateTimeNull(
+        duplicatedNickName)).thenReturn(true);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.nickNameCheck(duplicatedNickName));
 
     // then
     assertEquals("이미 사용 중인 별명입니다.", exception.getMessage());
@@ -327,7 +352,7 @@ class UserServiceTest {
 
   @Test
   @DisplayName("User_ConfirmEmail_Success")
-  void confirmEmailTest() {
+  void confirmEmailTest_Success() {
     // given
     String id = user.getId();
     String email = user.getEmail();
@@ -335,8 +360,10 @@ class UserServiceTest {
 
     // when
     when(emailRepository.hasKey(anyString())).thenReturn(true);
-    when(emailRepository.getCertificationNumber(anyString())).thenReturn(certificationNumber);
-    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
+    when(emailRepository.getCertificationNumber(anyString())).thenReturn(
+        certificationNumber);
+    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(
+        Optional.of(user));
 
     // then
     userService.confirmEmail(id, email, certificationNumber);
@@ -345,7 +372,44 @@ class UserServiceTest {
         email, "wrongCertificationNumber"));
   }
 
-  // confirmEmail 실패 코드
+  @Test
+  @DisplayName("User_ConfirmEmail_Fail_InvalidEmail")
+  void confirmEmailTest_InvalidEmail() {
+    // given
+    String id = "id";
+    String invalidEmail = "invalidEmail@test.com";
+    String certificationNumber = "certificationNumber";
+
+    // when
+    when(emailRepository.hasKey(invalidEmail)).thenReturn(false);
+
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.confirmEmail(id, invalidEmail, certificationNumber));
+
+    // then
+    assertEquals("해당 이메일로 발송된 인증번호가 없습니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("User_ConfirmEmail_Fail_InvalidCertificationNumber")
+  void confirmEmailTest_InvalidCertificationNumber() {
+    // given
+    String id = "id";
+    String email = "email@test.com";
+    String certificationNumber = "certificationNumber";
+    String invalidCertificationNumber = "invalidCertificationNumber";
+
+    // when
+    when(emailRepository.hasKey(email)).thenReturn(true);
+    when(emailRepository.getCertificationNumber(email)).thenReturn(
+        certificationNumber);
+
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.confirmEmail(id, email, invalidCertificationNumber));
+
+    // then
+    assertEquals("인증번호가 일치하지 않습니다.", exception.getMessage());
+  }
 
   @Test
   @DisplayName("User_findId_Success")
@@ -358,12 +422,15 @@ class UserServiceTest {
     UserEntity existingUser = UserEntity.builder().id(expectedId).build();
 
     // when
-    when(userRepository.findByEmail(existingEmail)).thenReturn(Optional.of(existingUser));
-    when(userRepository.findByEmail(nonExistingEmail)).thenReturn(Optional.empty());
+    when(userRepository.findByEmailAndDeletedDateTimeNull(
+        existingEmail)).thenReturn(Optional.of(existingUser));
+    when(userRepository.findByEmailAndDeletedDateTimeNull(
+        nonExistingEmail)).thenReturn(Optional.empty());
 
     // then
     assertEquals(expectedId, userService.findId(existingEmail));
-    assertThrows(CustomException.class, () -> userService.findId(nonExistingEmail));
+    assertThrows(CustomException.class,
+        () -> userService.findId(nonExistingEmail));
   }
 
   @Test
@@ -373,8 +440,10 @@ class UserServiceTest {
     String nonExistingEmail = "nonExistingEmail@test.com";
 
     // when
-    when(userRepository.findByEmail(nonExistingEmail)).thenReturn(Optional.empty());
-    Throwable exception = assertThrows(CustomException.class, () -> userService.findId(nonExistingEmail));
+    when(userRepository.findByEmailAndDeletedDateTimeNull(
+        nonExistingEmail)).thenReturn(Optional.empty());
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.findId(nonExistingEmail));
 
     // then
     assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());
@@ -386,11 +455,14 @@ class UserServiceTest {
     // given
     String existingId = "existingId";
 
-    UserEntity existingUser = UserEntity.builder().id(existingId).email("existingEmail@test.com").build();
+    UserEntity existingUser = UserEntity.builder().id(existingId)
+        .email("existingEmail@test.com").build();
 
     // when
-    when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-    when(emailProvider.sendTemporaryPasswordMail(anyString(), anyString())).thenReturn(true);
+    when(userRepository.findByIdAndDeletedDateTimeNull(existingId)).thenReturn(
+        Optional.of(existingUser));
+    when(emailProvider.sendTemporaryPasswordMail(anyString(),
+        anyString())).thenReturn(true);
 
     // then
     assertTrue(userService.findPassword(existingId));
@@ -403,8 +475,10 @@ class UserServiceTest {
     String nonExistingId = "nonExistingId";
 
     // when
-    when(userRepository.findById(nonExistingId)).thenReturn(Optional.empty());
-    Throwable exception = assertThrows(CustomException.class, () -> userService.findPassword(nonExistingId));
+    when(userRepository.findByIdAndDeletedDateTimeNull(
+        nonExistingId)).thenReturn(Optional.empty());
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.findPassword(nonExistingId));
 
     // then
     assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());
@@ -416,12 +490,16 @@ class UserServiceTest {
     // given
     String existingId = "existingId";
 
-    UserEntity existingUser = UserEntity.builder().id(existingId).email("existingEmail@test.com").build();
+    UserEntity existingUser = UserEntity.builder().id(existingId)
+        .email("existingEmail@test.com").build();
 
     // when
-    when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
-    when(emailProvider.sendTemporaryPasswordMail(any(), any())).thenReturn(false);
-    Throwable exception = assertThrows(CustomException.class, () -> userService.findPassword(existingId));
+    when(userRepository.findByIdAndDeletedDateTimeNull(existingId)).thenReturn(
+        Optional.of(existingUser));
+    when(emailProvider.sendTemporaryPasswordMail(any(), any())).thenReturn(
+        false);
+    Throwable exception = assertThrows(CustomException.class,
+        () -> userService.findPassword(existingId));
 
     // then
     assertEquals("메일 발송에 실패하였습니다.", exception.getMessage());
