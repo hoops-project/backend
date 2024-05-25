@@ -137,7 +137,7 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user
   ) {
-    if (user.getId().startsWith("kakao")) {
+    if (user != null && user.getId().startsWith("kakao")) {
       oAuth2Service.kakaoLogout(request, user);
       oAuth2Service.kakaoUnlink(request, user);
     }
