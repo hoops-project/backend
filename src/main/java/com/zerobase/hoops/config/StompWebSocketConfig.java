@@ -15,7 +15,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final ChatPreHandler chatPreHandler;
