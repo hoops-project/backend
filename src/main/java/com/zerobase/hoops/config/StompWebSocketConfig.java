@@ -29,12 +29,13 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
   public void registerStompEndpoints(StompEndpointRegistry registry) {
 
     registry.addEndpoint("/chat")
+        .setAllowedOrigins("*")
+        .withSockJS();
 
+    registry
+        .addEndpoint("/chat")
+        .addInterceptors()
         .setAllowedOrigins("*");
-
-    // 브라우저가 WebSocket을 지원하지 않을 경우 fallback 옵션 활성화
-    // test 실행 후 주석 해제 예정
-//        .withSockJS();
 
   }
 
