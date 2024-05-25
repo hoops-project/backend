@@ -8,19 +8,16 @@ import com.zerobase.hoops.chat.service.ChatService;
 import com.zerobase.hoops.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.socket.messaging.SessionConnectEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -28,7 +25,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class StompChatController {
 
   private final ChatService chatService;
-  private final SimpMessageSendingOperations messagingTemplate;
+  private final SimpMessagingTemplate messagingTemplate;
 
   @MessageMapping("/enter/{gameId}")
   public void enter(@DestinationVariable Long gameId
@@ -66,28 +63,5 @@ public class StompChatController {
     return ResponseEntity.ok(roomDTO);
   }
 
-  /**
-   * 새로운 사용자가 웹 소켓을 연결할 때 실행됨
-   *
-   * @param event
-   */
-  @EventListener
-  public void handleWebSocketConnectListener(SessionConnectEvent event) {
-    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-    String sessionId = accessor.getSessionId();
-    log.info("new connected sessionId : " + sessionId);
-  }
 
-  /**
-   * 사용자가 웹 소켓 연결을 끊으면 실행됨
-   *
-   * @param event
-   */
-  @EventListener
-  public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-    String sessionId = accessor.getSessionId();
-
-    log.info("sessionId Disconnected : " + sessionId);
-  }
 }
