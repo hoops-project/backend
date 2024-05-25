@@ -39,6 +39,8 @@ public class ParticipantDto {
 
     private String mannerPoint;
 
+    private Long userId;
+
     public static ParticipantDto.DetailResponse toDto(
         ParticipantGameEntity participantGameEntity){
       return DetailResponse.builder()
@@ -50,6 +52,7 @@ public class ParticipantDto {
           .playStyle(participantGameEntity.getUserEntity().getPlayStyle())
           .ability(participantGameEntity.getUserEntity().getAbility())
           .mannerPoint(participantGameEntity.getUserEntity().getStringAverageRating())
+          .userId(participantGameEntity.getUserEntity().getUserId())
           .build();
     }
 
