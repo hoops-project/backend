@@ -52,7 +52,8 @@ public class WebSecurityConfig {
                 "/api/auth/login", "/api/oauth2/login/kakao",
                 "/api/game-user/**",
                 "/chat","/pub/**","/sub/**",
-                "/h2-console/**").permitAll()
+                "/h2-console/**",
+                "/api/game-creator/game/detail").permitAll()
             .requestMatchers("/api/chat/create")
             .hasAnyRole("USER")
             .requestMatchers("/api/auth/**")
@@ -60,8 +61,6 @@ public class WebSecurityConfig {
             .requestMatchers("/api/oauth2/logout/kakao")
             .hasAnyRole("USER")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/game-creator/game/detail")
-            .permitAll()
             .requestMatchers(
                 "/api/game-creator/game/create",
                 "/api/game-creator/game/update")
