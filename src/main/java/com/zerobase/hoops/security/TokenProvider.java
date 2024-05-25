@@ -177,7 +177,7 @@ public class TokenProvider {
   }
 
   public void validateRefreshToken(String token) {
-    if (token.length() == 152) {
+    if (token.length() == 152 && parseClaims(token).getExpiration().before(new Date())) {
       throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
     }
   }
