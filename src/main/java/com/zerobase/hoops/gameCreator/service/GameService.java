@@ -20,6 +20,8 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
 
+import com.zerobase.hoops.chatYohan.repository.ChatRoomRepository;
+import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -65,6 +67,8 @@ public class GameService {
 
   private final JwtTokenExtract jwtTokenExtract;
 
+  private final ChatRoomRepository chatRoomRepository;
+
   private static UserEntity user;
 
   /**
@@ -90,6 +94,12 @@ public class GameService {
         ParticipantGameEntity.toGameCreatorEntity(gameEntity, user);
 
     participantGameRepository.save(participantGameEntity);
+
+    // 채팅 룸 개설
+    ChatRoomEntity chatRoomEntity = new ChatRoomEntity();
+    chatRoomEntity.saveGameInfo(gameEntity);
+    chatRoomRepository.save(chatRoomEntity);
+    //
 
     log.info("createGame end");
 

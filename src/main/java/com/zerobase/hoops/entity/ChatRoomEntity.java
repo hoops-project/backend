@@ -20,4 +20,7 @@ public class ChatRoomEntity {
   @JoinColumn(name = "game_id")
   private GameEntity gameEntity;
 
+  public void saveGameInfo(GameEntity game){
+    this.gameEntity = game;
+  }
 }
