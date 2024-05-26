@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.alarm.domain.NotificationDto;
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.manager.service.ManagerService;
@@ -100,11 +101,14 @@ class NotificationControllerTest {
     // given
     List<NotificationDto> notificationDtos = new ArrayList<>();
     notificationDtos.add(
-        new NotificationDto(1L, "첫번째알림", LocalDateTime.now().plusDays(1)));
+        new NotificationDto(1L, "FRIEND",
+            "첫번째알림", LocalDateTime.now().plusDays(1)));
     notificationDtos.add(
-        new NotificationDto(2L, "두번째알림", LocalDateTime.now().plusDays(2)));
+        new NotificationDto(2L,"REPORT",
+            "두번째알림", LocalDateTime.now().plusDays(2)));
     notificationDtos.add(
-        new NotificationDto(3L, "세번째알림", LocalDateTime.now().plusDays(3)));
+        new NotificationDto(3L, "REJECTED_GAME",
+            "세번째알림", LocalDateTime.now().plusDays(3)));
 
     // when
     when(notificationService.findAllById(any())).thenReturn(notificationDtos);

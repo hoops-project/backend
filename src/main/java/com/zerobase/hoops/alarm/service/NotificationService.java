@@ -1,6 +1,7 @@
 package com.zerobase.hoops.alarm.service;
 
 
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.alarm.domain.NotificationDto;
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
@@ -86,8 +87,9 @@ public class NotificationService {
   }
 
   @Transactional
-  public void send(UserEntity receiver, String content) {
-    NotificationEntity notificationEntity = createNotification(receiver, content);
+  public void send(NotificationType type, UserEntity receiver, String content) {
+    NotificationEntity notificationEntity = createNotification(
+        type, receiver, content);
     notificationRepository.save(notificationEntity);
     Map<String, SseEmitter> sseEmitters =
         emitterRepository.findAllStartWithByUserId(
@@ -102,9 +104,11 @@ public class NotificationService {
     );
   }
 
-  private NotificationEntity createNotification(UserEntity receiver, String content) {
+  private NotificationEntity createNotification(NotificationType type,
+      UserEntity receiver, String content) {
     return NotificationEntity.builder()
         .receiver(receiver)
+        .notificationType(type)
         .content(content)
         .createdDateTime(LocalDateTime.now())
         .build();

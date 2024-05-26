@@ -1,5 +1,6 @@
 package com.zerobase.hoops.reports.service;
 
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
@@ -59,7 +60,8 @@ public class ReportService {
 
     checkExist(request, user);
 
-    notificationService.send(findManger(), "신고가 접수되었습니다.");
+    notificationService.send(NotificationType.REPORT, findManger(),
+        "신고가 접수되었습니다.");
 
     reportRepository.save(request.toEntity(user, reportedUser));
   }

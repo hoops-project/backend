@@ -10,6 +10,7 @@ import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -126,7 +127,8 @@ public class ParticipantGameService {
     ParticipantGameEntity result =
         ParticipantGameEntity.setAccept(participantGameEntity);
 
-    notificationService.send(result.getUserEntity(), "경기참가에 수락되었습니다.");
+    notificationService.send(NotificationType.ACCEPTED_GAME,
+        result.getUserEntity(), "경기참가에 수락되었습니다.");
     participantGameRepository.save(result);
 
     log.info("acceptParticipant end");
@@ -150,7 +152,8 @@ public class ParticipantGameService {
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGameEntity);
 
-    notificationService.send(result.getUserEntity(), "경기참가에 거절되었습니다.");
+    notificationService.send(NotificationType.REJECTED_GAME,
+        result.getUserEntity(), "경기참가에 거절되었습니다.");
     participantGameRepository.save(result);
 
     log.info("rejectParticipant end");
@@ -183,12 +186,12 @@ public class ParticipantGameService {
         ParticipantGameEntity.setKickout(participantGameEntity);
 
     participantGameRepository.save(result);
-    notificationService.send(result.getUserEntity(), "경기에서 강퇴당하였습니다.");
+    notificationService.send(NotificationType.KICKED_OUT,
+        result.getUserEntity(), "경기에서 강퇴당하였습니다.");
 
     log.info("kickoutParticipant end");
     return KickoutResponse.toDto(result);
   }
-
 
 
   public void setUpUser() {
