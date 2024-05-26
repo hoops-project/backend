@@ -95,7 +95,7 @@ public class WebSecurityConfig {
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
     // 웹소켓 로컬 테스트
-    corsConfiguration.addAllowedOrigin("http://127.0.0.1:5000");
+    corsConfiguration.addAllowedOrigin("http://127.0.0.1:5001");
     //
     corsConfiguration.addAllowedOrigin("http://localhost:5173");
     corsConfiguration.addAllowedOrigin(
