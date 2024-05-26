@@ -72,6 +72,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     List<String> publicPaths = List.of(
         "/api/user", "/api/auth/login", "/api/oauth2/login/kakao",
     "/swagger-ui", "/v3/api-docs", "/api/game-user", "/chat", "/pub", "/sub",
+        // 로컬 웹소켓 테스트
+        "/ws",
+        //
         "/api/game-creator/game/detail");
     return publicPaths.stream().anyMatch(requestURI::startsWith);
   }

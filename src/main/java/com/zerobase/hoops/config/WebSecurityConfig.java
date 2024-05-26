@@ -3,6 +3,7 @@ package com.zerobase.hoops.config;
 import com.zerobase.hoops.security.JwtAuthenticationFilter;
 import com.zerobase.hoops.security.JwtExceptionFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+@Slf4j
 @Configurable
 @Configuration
 @EnableWebSecurity
@@ -47,11 +48,19 @@ public class WebSecurityConfig {
         .headers(header -> header
             .frameOptions(FrameOptionsConfig::disable))
         .authorizeHttpRequests(request -> request
-            .requestMatchers("/api/user/**",
-                "/swagger-ui/**", "/v3/api-docs/**",
-                "/api/auth/login", "/api/oauth2/login/kakao",
+            .requestMatchers(
+                "/api/user/**",
+                //웹소켓 로컬 테스트
+                "/ws/**",
+                //
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/api/auth/login",
+                "/api/oauth2/login/kakao",
                 "/api/game-user/**",
-                "/chat","/pub/**","/sub/**",
+                "/chat",
+                "/pub/**",
+                "/sub/**",
                 "/h2-console/**",
                 "/api/game-creator/game/detail").permitAll()
             .requestMatchers("/api/chat/create")
@@ -85,7 +94,9 @@ public class WebSecurityConfig {
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
+    // 웹소켓 로컬 테스트
     corsConfiguration.addAllowedOrigin("http://127.0.0.1:5000");
+    //
     corsConfiguration.addAllowedOrigin("http://localhost:5173");
     corsConfiguration.addAllowedOrigin(
         "https://hoops-frontend-jet.vercel.app");
