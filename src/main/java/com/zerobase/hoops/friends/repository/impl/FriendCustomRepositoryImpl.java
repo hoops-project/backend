@@ -38,7 +38,10 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     List<Long> excludedIds = jpaQueryFactory
         .select(user.userId)
         .from(user)
-        .where(user.roles.any().in("ROLE_OWNER"))
+        .where(
+            user.roles.any().in("ROLE_OWNER")
+            .and(user.deletedDateTime.isNull())
+        )
         .fetch();
 
     excludedIds.add(userId);
@@ -47,9 +50,13 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     JPAQuery<Long> countQuery = jpaQueryFactory
         .select(user.count())
         .from(user)
-        .leftJoin(friend).on(user.userId.eq(friend.friendUserEntity.userId)
+        .leftJoin(friend)
+        .on(
+            user.userId.eq(friend.friendUserEntity.userId)
             .and(friend.userEntity.userId.eq(userId))
-            .and(friend.status.eq(FriendStatus.ACCEPT)))
+            .and(friend.status.in
+                (List.of(FriendStatus.ACCEPT, FriendStatus.APPLY)))
+        )
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
             .and(user.userId.notIn(excludedIds))
             .and(user.deletedDateTime.isNull()));
@@ -65,9 +72,12 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
                 user.stringAverageRating, friend.friendId))
         .from(user)
         .leftJoin(friend)
-        .on(user.userId.eq(friend.friendUserEntity.userId)
+        .on(
+            user.userId.eq(friend.friendUserEntity.userId)
             .and(friend.userEntity.userId.eq(userId))
-            .and(friend.status.eq(FriendStatus.ACCEPT)))
+            .and(friend.status.in
+                (List.of(FriendStatus.ACCEPT, FriendStatus.APPLY)))
+        )
         .where(user.nickName.likeIgnoreCase("%" + nickName + "%")
             .and(user.userId.notIn(excludedIds))
             .and(user.deletedDateTime.isNull()))
@@ -107,6 +117,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .innerJoin(user)
         .on(friend.friendUserEntity.userId.eq(user.userId)
             .and(friend.userEntity.userId.eq(userId))
+            .and(user.deletedDateTime.isNull())
             .and(friend.status.eq(FriendStatus.ACCEPT))
             .and(friend.friendUserEntity.userId.notIn(excludedIds))
         )
@@ -128,6 +139,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .innerJoin(user)
         .on(friend.friendUserEntity.userId.eq(user.userId)
             .and(friend.userEntity.userId.eq(userId))
+            .and(user.deletedDateTime.isNull())
             .and(friend.status.eq(FriendStatus.ACCEPT))
             .and(friend.friendUserEntity.userId.notIn(excludedIds))
         )
