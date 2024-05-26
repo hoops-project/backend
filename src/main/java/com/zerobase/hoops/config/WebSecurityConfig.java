@@ -85,12 +85,15 @@ public class WebSecurityConfig {
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
+    corsConfiguration.addAllowedOrigin("http://127.0.0.1:5000");
     corsConfiguration.addAllowedOrigin("http://localhost:5173");
-    corsConfiguration.addAllowedOrigin("https://hoops-frontend-jet.vercel.app");
+    corsConfiguration.addAllowedOrigin(
+        "https://hoops-frontend-jet.vercel.app");
     corsConfiguration.addAllowedOrigin("https://hoops.services");
     corsConfiguration.addAllowedOriginPattern("*");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
+    corsConfiguration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfiguration);
