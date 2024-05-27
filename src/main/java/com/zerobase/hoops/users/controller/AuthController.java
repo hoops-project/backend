@@ -88,6 +88,9 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
+    if (userEntity.getId().startsWith("kakao_")) {
+      oAuth2Service.kakaoLogout(request, userEntity);
+    }
     authService.logOutUser(request, userEntity);
 
     return ResponseEntity.ok(HttpStatus.OK);
