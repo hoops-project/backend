@@ -61,7 +61,7 @@ public class ReportService {
     checkExist(request, user);
 
     notificationService.send(NotificationType.REPORT, findManger(),
-        "신고가 접수되었습니다.");
+        user.getNickName() + "에게서 신고가 접수되었습니다.");
 
     reportRepository.save(request.toEntity(user, reportedUser));
   }

@@ -128,7 +128,9 @@ public class ParticipantGameService {
         ParticipantGameEntity.setAccept(participantGameEntity);
 
     notificationService.send(NotificationType.ACCEPTED_GAME,
-        result.getUserEntity(), "경기참가에 수락되었습니다.");
+        result.getUserEntity()
+        , result.getGameEntity().getTitle() +
+        "에 참가가 수락되었습니다.");
     participantGameRepository.save(result);
 
     log.info("acceptParticipant end");
@@ -153,7 +155,9 @@ public class ParticipantGameService {
         ParticipantGameEntity.setReject(participantGameEntity);
 
     notificationService.send(NotificationType.REJECTED_GAME,
-        result.getUserEntity(), "경기참가에 거절되었습니다.");
+        result.getUserEntity()
+        , result.getGameEntity().getTitle() +
+        "에 참가가 거절되었습니다.");
     participantGameRepository.save(result);
 
     log.info("rejectParticipant end");
@@ -187,7 +191,9 @@ public class ParticipantGameService {
 
     participantGameRepository.save(result);
     notificationService.send(NotificationType.KICKED_OUT,
-        result.getUserEntity(), "경기에서 강퇴당하였습니다.");
+        result.getUserEntity()
+        , result.getGameEntity().getTitle() +
+        "에서 강퇴당하였습니다.");
 
     log.info("kickoutParticipant end");
     return KickoutResponse.toDto(result);

@@ -105,7 +105,7 @@ public class FriendService {
 
     FriendEntity friendEntity = ApplyRequest.toEntity(user, friendUserEntity);
     notificationService.send(NotificationType.FRIEND,
-        friendUserEntity, "친구신청이 도착했습니다.");
+        friendUserEntity, user.getNickName() + "의 친구신청이 도착했습니다.");
     friendRepository.save(friendEntity);
 
     return ApplyResponse.toDto(friendEntity);
