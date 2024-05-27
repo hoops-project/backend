@@ -1,5 +1,12 @@
 package com.zerobase.hoops.chatYohan.config;
 
+import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
+import com.zerobase.hoops.security.JwtTokenExtract;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -8,16 +15,20 @@ import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.messaging.support.ChannelInterceptor;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class ConnectionConfig implements WebSocketMessageBrokerConfigurer {
+
+  private final JwtTokenExtract jwtTokenExtract;
+  private final ParticipantGameRepository participantGameRepository;
 
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -39,34 +50,36 @@ public class ConnectionConfig implements WebSocketMessageBrokerConfigurer {
     registry.setApplicationDestinationPrefixes("/app");
   }
 
-//  @Override
-//  public void configureClientInboundChannel(ChannelRegistration registration) {
-//    registration.interceptors(new ChannelInterceptor() {
-//      @Override
-//      public Message<?> preSend(Message<?> message, MessageChannel channel) {
-//        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-//        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-//          String authToken = accessor.getFirstNativeHeader("Authorization");
-//
-//          log.info("Received STOMP CONNECT command with Authorization header: {}", authToken);
-//
-//          if (authToken != null && authToken.startsWith("Bearer ")) {
-//            authToken = authToken.substring(7);
-//            // Token 검증 로직 추가
-//            // 예: JWT 검증
-//            // boolean valid = jwtTokenProvider.validateToken(authToken);
-//            // if (!valid) {
-//            //     throw new IllegalArgumentException("Invalid Token");
-//            // }
-//            log.info("Authorization token validated successfully.");
-//          } else {
-//            log.error("Authorization header is missing or invalid");
-//            throw new IllegalArgumentException("Authorization header is missing or invalid");
-//          }
-//        }
-//        return message;
-//      }
-//    });
-//  }
+  @Override
+  public void configureClientInboundChannel(
+      ChannelRegistration registration) {
+    registration.interceptors(new ChannelInterceptor() {
+      @Override
+      public Message<?> preSend(Message<?> message,
+          MessageChannel channel) {
+        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(
+            message, StompHeaderAccessor.class);
 
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+          String authToken = accessor.getFirstNativeHeader(
+              "Authorization");
+          String gameId = accessor.getFirstNativeHeader("gameId");
+          if (!isValidUser(authToken, gameId)) {
+            throw new CustomException(ErrorCode.NOT_ACCEPT_USER_FOR_GAME);
+          }
+        }
+        return message;
+      }
+    });
+  }
+
+  private boolean isValidUser(String token, String gameId) {
+    Long gameIdNumber = Long.parseLong(gameId);
+    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    if (user == null) {
+      return false;
+    }
+    return participantGameRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+        gameIdNumber, user.getUserId(), ParticipantGameStatus.ACCEPT);
+  }
 }

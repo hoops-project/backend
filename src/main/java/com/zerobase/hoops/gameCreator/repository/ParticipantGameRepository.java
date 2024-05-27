@@ -47,6 +47,10 @@ public interface ParticipantGameRepository extends
   boolean existsByStatusAndGameEntityGameIdAndUserEntityUserId(
       ParticipantGameStatus participantGameStatus, Long gameId,
       Long userId);
+
+  boolean existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+      Long gameId, Long userId, ParticipantGameStatus status);
+
 }
 
 
