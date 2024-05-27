@@ -57,14 +57,38 @@ public class OAuth2Service {
     KakaoAccount kakaoAccount = kakaoUser.getKakao_account();
     String id = "kakao_" + kakaoUser.getId().toString();
 
-    if (!userRepository.existsByEmailAndDeletedDateTimeNull(kakaoAccount.getEmail())) {
-      KakaoDto.Request user = KakaoDto.Request.builder()
-          .id(id)
-          .email(kakaoAccount.getEmail())
-          .name(properties.getNickname())
-          .nickName(properties.getNickname())
-          .gender(kakaoAccount.getGender().toUpperCase())
-          .build();
+    if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() == null
+        && !userRepository.existsByEmailAndDeletedDateTimeNull(id + "@kakao.com")) {
+      KakaoDto.Request user = kakaoUserDto(
+          id,
+          id + "@kakao.com",
+          properties.getNickname()
+          , "MALE");
+
+      userRepository.save(KakaoDto.Request.toEntity(user));
+
+      LogInDto.Request logInDto = kakaoUserLogin(id);
+      return authService.logInUser(logInDto);
+    } else if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() != null
+        && !userRepository.existsByEmailAndDeletedDateTimeNull(id + "@kakao.com")) {
+      KakaoDto.Request user = kakaoUserDto(
+          id,
+          id + "@kakao.com",
+          properties.getNickname()
+          , kakaoAccount.getGender());
+
+      userRepository.save(KakaoDto.Request.toEntity(user));
+
+      LogInDto.Request logInDto = kakaoUserLogin(id);
+      return authService.logInUser(logInDto);
+    } else if (kakaoAccount.getEmail() != null && kakaoAccount.getGender() == null
+        && !userRepository.existsByEmailAndDeletedDateTimeNull(kakaoAccount.getEmail())) {
+      KakaoDto.Request user = kakaoUserDto(
+          id,
+          kakaoAccount.getEmail(),
+          properties.getNickname()
+          , "MALE");
+
       userRepository.save(KakaoDto.Request.toEntity(user));
 
       LogInDto.Request logInDto = kakaoUserLogin(id);
@@ -82,6 +106,17 @@ public class OAuth2Service {
         requestUserInfo(kakaoOAuthTokenDto, session);
 
     return getUserInfo(userInfoResponse);
+  }
+
+  private KakaoDto.Request kakaoUserDto(String id, String email,
+      String nickName, String gender) {
+    return KakaoDto.Request.builder()
+        .id(id)
+        .email(email)
+        .name(nickName)
+        .nickName(nickName)
+        .gender(gender.toUpperCase())
+        .build();
   }
 
   public ResponseEntity<String> requestAccessToken(String code) {
