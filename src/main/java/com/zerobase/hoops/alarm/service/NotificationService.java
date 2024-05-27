@@ -114,7 +114,7 @@ public class NotificationService {
         .build();
   }
 
-  @Transactional
+
   public List<NotificationDto> findAllById(UserEntity loginUser) {
     List<NotificationDto> responses =
         notificationRepository
