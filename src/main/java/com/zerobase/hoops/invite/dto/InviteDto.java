@@ -244,7 +244,7 @@ public class InviteDto {
 
     private AbilityType senderUserAbility;
 
-    private String senderUserStringAverageRating;
+    private String mannerPoint;
 
     private String receiverUserNickName;
 
@@ -287,7 +287,7 @@ public class InviteDto {
           .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
           .senderUserPlayStyle(inviteEntity.getSenderUserEntity().getPlayStyle())
           .senderUserAbility(inviteEntity.getSenderUserEntity().getAbility())
-          .senderUserStringAverageRating(inviteEntity.getSenderUserEntity().getStringAverageRating())
+          .mannerPoint(inviteEntity.getSenderUserEntity().getStringAverageRating())
           .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
           .gameId(inviteEntity.getGameEntity().getGameId())
           .title(inviteEntity.getGameEntity().getTitle())
