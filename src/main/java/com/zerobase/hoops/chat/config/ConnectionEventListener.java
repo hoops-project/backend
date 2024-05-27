@@ -1,7 +1,7 @@
-package com.zerobase.hoops.chatYohan.config;
+package com.zerobase.hoops.chat.config;
 
-import com.zerobase.hoops.chatYohan.chat.ChatMessage;
-import com.zerobase.hoops.chatYohan.chat.MessageType;
+import com.zerobase.hoops.chat.chat.ChatMessage;
+import com.zerobase.hoops.chat.chat.MessageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;

@@ -56,9 +56,6 @@ public class WebSecurityConfig {
                 "/api/oauth2/login/kakao",
                 "/api/oauth2/kakao",
                 "/api/game-user/**",
-                "/chat",
-                "/pub/**",
-                "/sub/**",
                 "/h2-console/**",
                 "/api/game-creator/game/detail").permitAll()
             .requestMatchers("/ws/**").permitAll()
@@ -100,7 +97,6 @@ public class WebSecurityConfig {
     corsConfiguration.addAllowedOrigin(
         "https://hoops-frontend-jet.vercel.app");
     corsConfiguration.addAllowedOrigin("https://hoops.services");
-    corsConfiguration.addAllowedOriginPattern("*");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
     corsConfiguration.addExposedHeader("Authorization");

@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chatYohan.chat;
+package com.zerobase.hoops.chat.chat;
 
 public enum MessageType {
   CHAT,

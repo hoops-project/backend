@@ -20,7 +20,7 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
 
-import com.zerobase.hoops.chatYohan.repository.ChatRoomRepository;
+import com.zerobase.hoops.chat.repository.ChatRoomRepository;
 import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;

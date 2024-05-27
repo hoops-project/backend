@@ -13,7 +13,7 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.chatYohan.repository.ChatRoomRepository;
+import com.zerobase.hoops.chat.repository.ChatRoomRepository;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;

@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chatYohan.config;
+package com.zerobase.hoops.chat.config;
 
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;

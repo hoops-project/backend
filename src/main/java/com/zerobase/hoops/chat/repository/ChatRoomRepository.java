@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chatYohan.repository;
+package com.zerobase.hoops.chat.repository;
 
 import com.zerobase.hoops.entity.ChatRoomEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

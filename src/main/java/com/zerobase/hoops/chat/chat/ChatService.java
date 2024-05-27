@@ -1,6 +1,6 @@
-package com.zerobase.hoops.chatYohan.chat;
+package com.zerobase.hoops.chat.chat;
 
-import com.zerobase.hoops.chatYohan.repository.ChatRoomRepository;
+import com.zerobase.hoops.chat.repository.ChatRoomRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.security.TokenProvider;
