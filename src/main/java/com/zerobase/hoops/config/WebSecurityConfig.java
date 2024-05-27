@@ -50,9 +50,6 @@ public class WebSecurityConfig {
         .authorizeHttpRequests(request -> request
             .requestMatchers(
                 "/api/user/**",
-                //웹소켓 로컬 테스트
-                "/ws/**",
-                //
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
                 "/api/auth/login",
@@ -64,6 +61,7 @@ public class WebSecurityConfig {
                 "/sub/**",
                 "/h2-console/**",
                 "/api/game-creator/game/detail").permitAll()
+            .requestMatchers("/ws/**").permitAll()
             .requestMatchers("/api/chat/create")
             .hasAnyRole("USER")
             .requestMatchers("/api/auth/**")
