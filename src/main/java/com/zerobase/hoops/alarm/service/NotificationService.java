@@ -117,7 +117,8 @@ public class NotificationService {
   @Transactional
   public List<NotificationDto> findAllById(UserEntity loginUser) {
     List<NotificationDto> responses =
-        notificationRepository.findAllByReceiverUserId(loginUser.getUserId())
+        notificationRepository
+            .findAllByReceiverUserIdOrderByCreatedDateTimeDesc(loginUser.getUserId())
             .stream().map(NotificationDto::entityToDto)
             .collect(Collectors.toList());
 
