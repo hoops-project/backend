@@ -66,9 +66,6 @@ public class OAuth2Service {
           , "MALE");
 
       userRepository.save(KakaoDto.Request.toEntity(user));
-
-      LogInDto.Request logInDto = kakaoUserLogin(id);
-      return authService.logInUser(logInDto);
     } else if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() != null
         && !userRepository.existsByEmailAndDeletedDateTimeNull(id + "@kakao.com")) {
       KakaoDto.Request user = kakaoUserDto(
@@ -78,9 +75,6 @@ public class OAuth2Service {
           , kakaoAccount.getGender());
 
       userRepository.save(KakaoDto.Request.toEntity(user));
-
-      LogInDto.Request logInDto = kakaoUserLogin(id);
-      return authService.logInUser(logInDto);
     } else if (kakaoAccount.getEmail() != null && kakaoAccount.getGender() == null
         && !userRepository.existsByEmailAndDeletedDateTimeNull(kakaoAccount.getEmail())) {
       KakaoDto.Request user = kakaoUserDto(
@@ -90,9 +84,14 @@ public class OAuth2Service {
           , "MALE");
 
       userRepository.save(KakaoDto.Request.toEntity(user));
+    } else {
+      KakaoDto.Request user = kakaoUserDto(
+          id,
+          kakaoAccount.getEmail(),
+          properties.getNickname()
+          , kakaoAccount.getGender());
 
-      LogInDto.Request logInDto = kakaoUserLogin(id);
-      return authService.logInUser(logInDto);
+      userRepository.save(KakaoDto.Request.toEntity(user));
     }
     LogInDto.Request logInDto = kakaoUserLogin(id);
     return authService.logInUser(logInDto);
