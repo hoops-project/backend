@@ -117,16 +117,16 @@ class ReportControllerTest {
             .userName("User1")
             .mannerPoint("Excellent")
             .gender(GenderType.MALE)
-            .abilityType(AbilityType.SHOOT)
-            .playStyleType(PlayStyleType.AGGRESSIVE)
+            .ability(AbilityType.SHOOT)
+            .playStyle(PlayStyleType.AGGRESSIVE)
             .build(),
         ReportListResponseDto.builder()
             .userId(2L)
             .userName("User2")
             .mannerPoint("Good")
             .gender(GenderType.FEMALE)
-            .abilityType(AbilityType.SHOOT)
-            .playStyleType(PlayStyleType.BALANCE)
+            .ability(AbilityType.SHOOT)
+            .playStyle(PlayStyleType.BALANCE)
             .build()
     );
     // When

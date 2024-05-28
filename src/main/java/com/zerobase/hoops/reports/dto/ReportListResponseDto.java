@@ -15,8 +15,8 @@ public class ReportListResponseDto {
   private String userName;
   private String mannerPoint;
   private GenderType gender;
-  private AbilityType abilityType;
-  private PlayStyleType playStyleType;
+  private AbilityType ability;
+  private PlayStyleType playStyle;
 
   public static ReportListResponseDto of (ReportEntity reportEntity) {
 
@@ -26,8 +26,8 @@ public class ReportListResponseDto {
         .userName(reportEntity.getReportedUser().getName())
         .mannerPoint(reportEntity.getReportedUser().getStringAverageRating())
         .gender(reportEntity.getReportedUser().getGender())
-        .abilityType(reportEntity.getReportedUser().getAbility())
-        .playStyleType(reportEntity.getReportedUser().getPlayStyle())
+        .ability(reportEntity.getReportedUser().getAbility())
+        .playStyle(reportEntity.getReportedUser().getPlayStyle())
         .build();
   }
 }
