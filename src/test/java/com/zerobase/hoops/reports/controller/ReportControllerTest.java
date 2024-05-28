@@ -31,6 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -129,8 +132,14 @@ class ReportControllerTest {
             .playStyle(PlayStyleType.BALANCE)
             .build()
     );
+
+    // List를 Page로 변환
+    Page<ReportListResponseDto> reportListResponseDtoPage = listToPage(mockReportList,
+        PageRequest.of(page, size));
+
+
     // When
-    when(reportService.reportList(page, size)).thenReturn(mockReportList);
+    when(reportService.reportList(page, size)).thenReturn(reportListResponseDtoPage);
 
     // Then
     ResultActions resultActions =
@@ -141,6 +150,12 @@ class ReportControllerTest {
                     .param("size", String.valueOf(size)))
             .andDo(print())
             .andExpect(status().isForbidden());
+  }
+
+  public static <T> Page<T> listToPage(List<T> list, PageRequest pageRequest) {
+    int start = (int) pageRequest.getOffset();
+    int end = Math.min((start + pageRequest.getPageSize()), list.size());
+    return new PageImpl<>(list.subList(start, end), pageRequest, list.size());
   }
 
   @WithMockUser

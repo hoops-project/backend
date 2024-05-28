@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -37,13 +38,14 @@ public class ReportService {
     return reportEntity.getContent();
   }
 
-  public List<ReportListResponseDto> reportList(int page, int size) {
+  public Page<ReportListResponseDto> reportList(int page, int size) {
     Page<ReportEntity> reportPage = reportRepository.findByBlackListStartDateTimeIsNull(
         PageRequest.of(page, size));
-    List<ReportEntity> reportList = reportPage.getContent();
+    List<ReportListResponseDto> reportList = reportPage.getContent().stream()
+        .map(ReportListResponseDto::of)
+        .toList();
 
-    return reportList.stream().map(ReportListResponseDto::of)
-        .collect(Collectors.toList());
+    return new PageImpl<>(reportList, reportPage.getPageable(), reportPage.getTotalElements());
   }
 
   public void reportUser(ReportDto request) {

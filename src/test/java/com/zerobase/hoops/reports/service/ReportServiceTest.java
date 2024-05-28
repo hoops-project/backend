@@ -150,13 +150,13 @@ class ReportServiceTest {
     when(reportRepository.findByBlackListStartDateTimeIsNull(
         any(PageRequest.class)))
         .thenReturn(reportPage);
-    List<ReportListResponseDto> result = reportService.reportList(0, 10);
+    Page<ReportListResponseDto> result = reportService.reportList(0, 10);
 
     // Then
     verify(reportRepository).findByBlackListStartDateTimeIsNull(
         any(PageRequest.class));
     assertThat(result).isNotNull();
-    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.getSize()).isEqualTo(2);
   }
 
   @Test
