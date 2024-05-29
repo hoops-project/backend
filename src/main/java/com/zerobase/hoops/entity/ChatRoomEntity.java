@@ -15,6 +15,8 @@ public class ChatRoomEntity {
   @Column(name = "room_id")
   private Long roomId;
 
+  @Column(nullable = false)
+  private Long sessionId;
 
   @OneToOne
   @JoinColumn(name = "game_id")
@@ -22,5 +24,8 @@ public class ChatRoomEntity {
 
   public void saveGameInfo(GameEntity game){
     this.gameEntity = game;
+  }
+  public void changeNewSessionId(Long newSessionId){
+    this.sessionId = newSessionId;
   }
 }

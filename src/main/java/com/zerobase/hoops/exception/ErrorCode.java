@@ -106,6 +106,10 @@ public enum ErrorCode {
 
   // 채팅
   NOT_ACCEPT_USER_FOR_GAME(HttpStatus.BAD_REQUEST.value(), "경기 개최자가 승인한 유저만 채팅에 참여할 수 있습니다."),
+  NOT_EXIST_CHATROOM(HttpStatus.BAD_REQUEST.value(), "해당하는 채팅룸이 없습니다."),
+  NOT_EXIST_MESSAGE_FOR_CHATROOM(HttpStatus.BAD_REQUEST.value(), "메세지 전송을 위한 채팅룸이 없습니다."),
+  NOT_EXIST_CHATROOM_SESSION(HttpStatus.BAD_REQUEST.value(), "채팅룸의 sessionId가 없습니다."),
+  NOT_EXIST_USER_SESSION(HttpStatus.BAD_REQUEST.value(), "User Session이 없습니다"),
   CANNOT_ENTER_CHAT(HttpStatus.BAD_REQUEST.value(), "채팅에 참가할 수 없습니다.");
 
   private final int statusCode;
