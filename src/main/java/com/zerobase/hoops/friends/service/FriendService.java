@@ -228,12 +228,6 @@ public class FriendService {
         friendRepository.findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus
                 (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
-
-    // 자신이 받은 친구만 삭제 가능
-    if(!Objects.equals(user.getUserId(),
-        selfFriendEntity.getUserEntity().getUserId())) {
-      throw new CustomException(NOT_SELF_ACCEPT);
-    }
     
     FriendEntity selfResult = DeleteRequest.toSelfEntity(selfFriendEntity);
 
