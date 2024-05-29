@@ -72,12 +72,12 @@ public class FriendService {
     }
 
     // 이미 친구 신청, 수락 상태이면 신청 불가
-    int count =
-        friendRepository.countByFriendUserEntityUserIdAndStatusIn
-            (request.getFriendUserId(),
+    boolean exist =
+        friendRepository.existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatusIn
+            (user.getUserId(), request.getFriendUserId(),
             List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
 
-    if(count >= 1) {
+    if(exist) {
       throw new CustomException(ALREADY_APPLY_ACCEPT_STATUS);
     }
 

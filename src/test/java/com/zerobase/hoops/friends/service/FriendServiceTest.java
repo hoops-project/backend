@@ -164,9 +164,9 @@ class FriendServiceTest {
     getCurrentUser();
 
     // 친구 신청, 수락 상태가 없다고 가정
-    when(friendRepository.countByFriendUserEntityUserIdAndStatusIn
-            (anyLong(), any()))
-        .thenReturn(0);
+    when(friendRepository.existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatusIn
+            (anyLong(), anyLong(), any()))
+        .thenReturn(false);
     
     // 자신 및 상대방 친구목록에 10명이 있다고 가정
     when(friendRepository.countByUserEntityUserIdAndStatus
@@ -175,11 +175,6 @@ class FriendServiceTest {
         .thenReturn(10);
 
     when(userRepository.findById(2L)).thenReturn(Optional.of(friendUserEntity1));
-
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByUserId(anyString())).thenReturn(null);
 
     when(friendRepository.save(any())).thenAnswer(invocation -> {
       FriendEntity savedFriendEntity = invocation.getArgument(0);
