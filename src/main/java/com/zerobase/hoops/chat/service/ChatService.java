@@ -32,7 +32,9 @@ public class ChatService {
   public void sendMessage(ChatMessage chatMessage, String gameId,
       String token) {
     Long gameIdNumber = Long.parseLong(gameId);
+    log.info("메세지 보내기 토큰확인" + token);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    log.info("메세지 보내기 토큰확인 + 유저 닉네임" + user.getNickName());
     ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_GameId(
             gameIdNumber)
         .orElseThrow(
@@ -77,6 +79,7 @@ public class ChatService {
   public void loadMessagesAndSend(String gameId, String token) {
     Long gameIdNumber = Long.parseLong(gameId);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    log.info("메세지 로딩 확인 => 닉네임 나와야함" + user.getNickName());
     ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_GameId(
             gameIdNumber)
         .orElseThrow(
