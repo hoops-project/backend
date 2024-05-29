@@ -15,7 +15,8 @@ public class ChatRoomEntity {
   @Column(name = "room_id")
   private Long roomId;
 
-  private Long sessionId;
+  @Column(nullable = false)
+  private Long sessionId = 0L;
 
   @OneToOne
   @JoinColumn(name = "game_id")
