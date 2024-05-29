@@ -40,7 +40,6 @@ public class JwtTokenExtract {
   public UserEntity getUserFromToken(String authorizationHeader) {
     if (authorizationHeader == null || !authorizationHeader.startsWith(
         "Bearer ")) {
-      log.info("getUserFromToken 안됨" + authorizationHeader);
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
     String token = authorizationHeader.substring(7);
