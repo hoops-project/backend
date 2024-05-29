@@ -30,8 +30,7 @@ public class MessageEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "message_id", nullable = false)
   private Long messageId;
-
-  @Column(nullable = false)
+  
   private Long sessionId;
 
   @Column(columnDefinition = "TEXT")
