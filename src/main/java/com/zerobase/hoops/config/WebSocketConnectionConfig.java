@@ -76,6 +76,7 @@ public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigur
   private boolean isValidUser(String token, String gameId) {
     Long gameIdNumber = Long.parseLong(gameId);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    log.info("채팅 입장 유효한지 체크 " + user.getNickName());
     if (user == null) {
       return false;
     }
