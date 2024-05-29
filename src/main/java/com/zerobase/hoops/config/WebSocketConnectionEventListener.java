@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chat.config;
+package com.zerobase.hoops.config;
 
 import com.zerobase.hoops.chat.chat.ChatMessage;
 import com.zerobase.hoops.chat.chat.MessageType;
@@ -11,7 +11,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Component
 @RequiredArgsConstructor
-public class ConnectionEventListener {
+public class WebSocketConnectionEventListener {
 
   private final SimpMessageSendingOperations messageTemplate;
 

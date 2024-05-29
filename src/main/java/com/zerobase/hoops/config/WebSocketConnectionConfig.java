@@ -1,4 +1,4 @@
-package com.zerobase.hoops.chat.config;
+package com.zerobase.hoops.config;
 
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
@@ -25,7 +25,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSocketMessageBroker
-public class ConnectionConfig implements WebSocketMessageBrokerConfigurer {
+public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigurer {
 
   private final JwtTokenExtract jwtTokenExtract;
   private final ParticipantGameRepository participantGameRepository;
