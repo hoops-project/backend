@@ -124,7 +124,7 @@ public class TokenProvider {
               getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
           .build()
           .parseClaimsJws(token);
-      managerService.checkBlackList(claims.getBody().getSubject());
+      managerService.checkBlackList(claims.getBody().get("email", String.class));
       checkLogOut(token);
       return !claims.getBody().getExpiration().before(new Date());
     } catch (IllegalArgumentException e) {
