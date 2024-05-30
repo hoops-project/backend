@@ -88,8 +88,12 @@ public class GameUserService {
     List<ParticipantGameEntity> userList = checkMannerPointList(gameId);
     List<MannerPointListResponse> mannerPointUserList = new ArrayList<>();
 
-    userList.forEach(
-        (e) -> mannerPointUserList.add(MannerPointListResponse.of(e)));
+    Long currentUserId = jwtTokenExtract.currentUser().getUserId();
+    
+    userList.stream()
+        .filter(user -> !user.getUserEntity().getUserId().equals(currentUserId))
+        .forEach(user -> mannerPointUserList.add(MannerPointListResponse.of(user)));
+
     return mannerPointUserList;
   }
 
