@@ -31,6 +31,7 @@ public class MessageEntity {
   @Column(name = "message_id", nullable = false)
   private Long messageId;
 
+  @Builder.Default
   @Column(nullable = false)
   private Long sessionId = 0L;
 

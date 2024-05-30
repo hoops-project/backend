@@ -15,6 +15,7 @@ public class ChatRoomEntity {
   @Column(name = "room_id")
   private Long roomId;
 
+  @Builder.Default
   @Column(nullable = false)
   private Long sessionId = 0L;
 
