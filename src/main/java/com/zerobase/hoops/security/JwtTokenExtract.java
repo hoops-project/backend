@@ -47,7 +47,7 @@ public class JwtTokenExtract {
     try {
       Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
       String userLoginId = claimsJws.getBody().getSubject();
-      UserEntity userEntity = userRepository.findByIdAndDeletedDateTimeNull(
+      UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(
               userLoginId)
           .orElseThrow(
               () -> new CustomException(ErrorCode.USER_NOT_FOUND));

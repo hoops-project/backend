@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface ChatRoomRepository extends
     JpaRepository<ChatRoomEntity, Long> {
 
-  Optional<ChatRoomEntity> findByGameEntity_GameId(Long gameId);
+  Optional<ChatRoomEntity> findByGameEntity_Id(Long gameId);
 }

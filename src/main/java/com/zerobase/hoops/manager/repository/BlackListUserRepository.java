@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface BlackListUserRepository extends
     JpaRepository<BlackListUserEntity, Long> {
 
-  Optional<BlackListUserEntity> findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+  Optional<BlackListUserEntity> findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
       String id, LocalDate currentDate);
 
 }

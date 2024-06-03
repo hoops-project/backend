@@ -93,8 +93,8 @@ class AuthServiceTest {
   @BeforeEach
   void setUp() {
     user = UserEntity.builder()
-        .userId(1L)
-        .id("test")
+        .id(1L)
+        .loginId("test")
         .password(passwordEncoder.encode("test"))
         .email("test@hoops.com")
         .name("테스트")
@@ -110,8 +110,8 @@ class AuthServiceTest {
     userRepository.save(user);
 
     notConfirmedUser = UserEntity.builder()
-        .userId(1L)
-        .id("notConfirmedTest")
+        .id(1L)
+        .loginId("notConfirmedTest")
         .password(passwordEncoder.encode("test"))
         .email("notConfirmedTest@hoops.com")
         .name("미인증")
@@ -138,7 +138,7 @@ class AuthServiceTest {
 
     // when
     when(passwordEncoder.matches(password, user.getPassword())).thenReturn(true);
-    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
 
     UserDto result = authService.logInUser(request);
 
@@ -156,7 +156,7 @@ class AuthServiceTest {
     LogInDto.Request request = new LogInDto.Request(nonExistingId, password);
 
     //when
-    when(userRepository.findByIdAndDeletedDateTimeNull(nonExistingId)).thenReturn(Optional.empty());
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(nonExistingId)).thenReturn(Optional.empty());
 
     Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
@@ -174,7 +174,7 @@ class AuthServiceTest {
     LogInDto.Request request = new LogInDto.Request(id, wrongPassword);
 
     // when
-    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
     Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
     // then
@@ -191,7 +191,7 @@ class AuthServiceTest {
     LogInDto.Request request = new LogInDto.Request(id, password);
 
     // when
-    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(notConfirmedUser));
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(notConfirmedUser));
     Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
     // then
@@ -225,12 +225,12 @@ class AuthServiceTest {
     String refreshToken = "refreshToken";
     String newAccessToken = "newAccessToken";
 
-    Claims claims = Jwts.claims().setSubject(user.getId());
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
 
     // when
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
-    when(userRepository.findByIdAndDeletedDateTimeNull(user.getId())).thenReturn(Optional.of(user));
-    when(tokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRoles())).thenReturn(newAccessToken);
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(user.getLoginId())).thenReturn(Optional.of(user));
+    when(tokenProvider.createAccessToken(user.getLoginId(), user.getEmail(), user.getRoles())).thenReturn(newAccessToken);
 
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
@@ -284,11 +284,11 @@ class AuthServiceTest {
     // given
     String refreshToken = "refreshToken";
 
-    Claims claims = Jwts.claims().setSubject(user.getId());
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
 
     // when
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
-    doThrow(new CustomException(ErrorCode.NOT_FOUND_TOKEN)).when(authRepository).findById(user.getId());
+    doThrow(new CustomException(ErrorCode.NOT_FOUND_TOKEN)).when(authRepository).findById(user.getLoginId());
 
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
@@ -305,7 +305,7 @@ class AuthServiceTest {
     // given
     String refreshToken = "refreshToken";
 
-    Claims claims = Jwts.claims().setSubject(user.getId());
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
 
     // when
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
@@ -331,29 +331,29 @@ class AuthServiceTest {
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
     when(request.getHeader("refreshToken")).thenReturn(refreshToken);
 
-    Claims accessClaims = Jwts.claims().setSubject(user.getId());
+    Claims accessClaims = Jwts.claims().setSubject(user.getLoginId());
     accessClaims.put("id", user.getId());
-    Claims refreshClaims = Jwts.claims().setSubject(user.getId());
+    Claims refreshClaims = Jwts.claims().setSubject(user.getLoginId());
     refreshClaims.put("id", user.getId());
 
     when(tokenProvider.parseClaims(accessToken)).thenReturn(accessClaims);
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(refreshClaims);
 
-    doNothing().when(authRepository).deleteById(user.getId());
+    doNothing().when(authRepository).deleteById(user.getLoginId());
     doNothing().when(emitterRepository).deleteAllStartWithUserId(
-        String.valueOf(user.getUserId()));
+        String.valueOf(user.getId()));
     doNothing().when(emitterRepository).deleteAllEventCacheStartWithUserId(
-        String.valueOf(user.getUserId()));
+        String.valueOf(user.getId()));
     doNothing().when(tokenProvider).addToLogOutList(accessToken);
 
     authService.logOutUser(request, user);
 
     // then
-    verify(authRepository, times(1)).deleteById(user.getId());
+    verify(authRepository, times(1)).deleteById(user.getLoginId());
     verify(emitterRepository, times(1)).deleteAllStartWithUserId(
-        String.valueOf(user.getUserId()));
+        String.valueOf(user.getId()));
     verify(emitterRepository, times(1)).deleteAllEventCacheStartWithUserId(
-        String.valueOf(user.getUserId()));
+        String.valueOf(user.getId()));
     verify(tokenProvider, times(1)).addToLogOutList(accessToken);
   }
 
@@ -397,7 +397,7 @@ class AuthServiceTest {
     // when
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
-    when(tokenProvider.parseClaims(anyString())).thenReturn(Jwts.claims().setSubject(user.getId()));
+    when(tokenProvider.parseClaims(anyString())).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
 
     UserDto result = authService.getUserInfo(request, user);
 
@@ -413,7 +413,7 @@ class AuthServiceTest {
     // given
     String invalidAccessToken = "invalidAccessToken";
     UserEntity user = new UserEntity();
-    user.setId("testUser");
+    user.setLoginId("testUser");
 
     // when
     HttpServletRequest request = mock(HttpServletRequest.class);
@@ -441,7 +441,7 @@ class AuthServiceTest {
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(
         "Bearer " + accessToken);
     when(tokenProvider.parseClaims(accessToken)).thenReturn(
-        Jwts.claims().setSubject(user.getId()));
+        Jwts.claims().setSubject(user.getLoginId()));
 
     UserDto result = authService.editUserInfo(request, editDto, user);
 
@@ -462,16 +462,16 @@ class AuthServiceTest {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
     when(request.getHeader("refreshToken")).thenReturn(refreshToken);
-    when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getId()));
-    when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getId()));
-    lenient().when(gameRepository.findByUserEntityUserIdAndDeletedDateTimeNull(user.getUserId())).thenReturn(new ArrayList<>());
-    lenient().when(participantGameRepository.findByGameEntityGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
-    lenient().when(participantGameRepository.findByUserEntityUserIdAndStatusInAndWithdrewDateTimeNull(user.getUserId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
-    lenient().when(inviteRepository.findByInviteStatusAndGameEntityGameId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
-    when(inviteRepository.findByInviteStatusAndSenderUserEntityUserIdOrReceiverUserEntityUserId(
-        InviteStatus.REQUEST, user.getUserId(), user.getUserId())).thenReturn(new ArrayList<>());
-    lenient().when(friendRepository.findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(user.getUserId(), user.getUserId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
-    lenient().when(userRepository.findByIdAndDeletedDateTimeNull(anyString())).thenReturn(Optional.of(user));
+    when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
+    lenient().when(gameRepository.findByUserEntityIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
+    lenient().when(inviteRepository.findByInviteStatusAndGameEntityId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
+    when(inviteRepository.findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
+        InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());
+    lenient().when(friendRepository.findByUserEntityIdOrFriendUserEntityIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
+    lenient().when(userRepository.findByLoginIdAndDeletedDateTimeNull(anyString())).thenReturn(Optional.of(user));
 
     authService.deactivateUser(request, user);
 

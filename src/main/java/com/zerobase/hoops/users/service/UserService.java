@@ -77,7 +77,7 @@ public class UserService implements UserDetailsService {
   }
 
   public boolean idCheck(String id) {
-    boolean isExistId = userRepository.existsByIdAndDeletedDateTimeNull(id);
+    boolean isExistId = userRepository.existsByLoginIdAndDeletedDateTimeNull(id);
     if (isExistId) {
       throw new CustomException(ErrorCode.DUPLICATED_ID);
     }
@@ -111,7 +111,7 @@ public class UserService implements UserDetailsService {
       throw new CustomException(ErrorCode.NOT_MATCHED_NUMBER);
     }
 
-    UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
+    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     user.confirm();
 
@@ -132,7 +132,7 @@ public class UserService implements UserDetailsService {
   }
 
   public UserDto getUserInfo(String id) {
-    UserEntity userEntity = userRepository.findByIdAndDeletedDateTimeNull(id)
+    UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     return UserDto.fromEntity(userEntity);
   }
@@ -140,7 +140,7 @@ public class UserService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String id)
       throws UsernameNotFoundException {
-    return userRepository.findByIdAndDeletedDateTimeNull(id)
+    return userRepository.findByLoginIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
@@ -151,12 +151,12 @@ public class UserService implements UserDetailsService {
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    return user.getId();
+    return user.getLoginId();
   }
 
   public boolean findPassword(String id) throws NoSuchAlgorithmException {
     UserEntity user =
-        userRepository.findByIdAndDeletedDateTimeNull(id)
+        userRepository.findByLoginIdAndDeletedDateTimeNull(id)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 

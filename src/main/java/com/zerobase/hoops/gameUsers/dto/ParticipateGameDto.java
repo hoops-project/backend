@@ -34,7 +34,7 @@ public class ParticipateGameDto {
   public static ParticipateGameDto fromEntity(
       ParticipantGameEntity participantGameEntity) {
     return ParticipateGameDto.builder()
-        .participantId(participantGameEntity.getParticipantId())
+        .participantId(participantGameEntity.getId())
         .status(participantGameEntity.getStatus())
         .createdDateTime(participantGameEntity.getCreatedDateTime())
         .acceptedDateTime(participantGameEntity.getAcceptedDateTime())

@@ -68,7 +68,7 @@ public class ReportService {
   }
 
   private void checkExist(ReportDto request, UserEntity user) {
-    boolean existReported = reportRepository.existsByUser_UserIdAndReportedUser_UserId(
+    boolean existReported = reportRepository.existsByUser_IdAndReportedUser_Id(
         user.getId(), request.getReportedUserId());
   }
 

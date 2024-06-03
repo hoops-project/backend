@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-  boolean existsByIdAndDeletedDateTimeNull(String id);
+  boolean existsByLoginIdAndDeletedDateTimeNull(String id);
 
   boolean existsByEmailAndDeletedDateTimeNull(String email);
 
@@ -16,6 +16,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
   Optional<UserEntity> findByEmailAndDeletedDateTimeNull(String email);
 
-  Optional<UserEntity> findByIdAndDeletedDateTimeNull(String id);
+  Optional<UserEntity> findByLoginIdAndDeletedDateTimeNull(String id);
 
 }

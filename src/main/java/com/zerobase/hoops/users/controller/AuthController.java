@@ -88,7 +88,7 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
-    if (userEntity.getId().startsWith("kakao_")) {
+    if (userEntity.getLoginId().startsWith("kakao_")) {
       oAuth2Service.kakaoLogout(request, userEntity);
     }
     authService.logOutUser(request, userEntity);
@@ -140,7 +140,7 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user
   ) {
-    if (user != null && user.getId().startsWith("kakao")) {
+    if (user != null && user.getLoginId().startsWith("kakao")) {
       oAuth2Service.kakaoLogout(request, user);
       oAuth2Service.kakaoUnlink(request, user);
     }

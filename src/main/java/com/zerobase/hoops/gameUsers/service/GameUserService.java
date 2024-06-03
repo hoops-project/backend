@@ -61,7 +61,7 @@ public class GameUserService {
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    GameEntity gameEntity = gameUserRepository.findByGameIdAndStartDateTimeBefore(
+    GameEntity gameEntity = gameUserRepository.findByIdAndStartDateTimeBefore(
             gameId, LocalDateTime.now())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
@@ -73,7 +73,7 @@ public class GameUserService {
 
   private void checkExistRate(MannerPointDto request, Long userId,
       Long gameId) {
-    boolean checking = mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(
+    boolean checking = mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(
         userId, request.getReceiverId(), gameId);
 
     if (checking) {
@@ -106,17 +106,17 @@ public class GameUserService {
 
     Long gameLongId = Long.valueOf(gameId);
 
-    gameUserRepository.findByGameIdAndStartDateTimeBefore(
+    gameUserRepository.findByIdAndStartDateTimeBefore(
             gameLongId, LocalDateTime.now())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
-    boolean finalCheck = gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+    boolean finalCheck = gameCheckOutRepository.existsByGameEntity_IdAndUserEntity_IdAndStatus(
         gameLongId, userId, ParticipantGameStatus.ACCEPT);
 
     if (!finalCheck) {
       throw new CustomException(ErrorCode.GAME_NOT_FOUND);
     }
-    return gameCheckOutRepository.findByStatusAndGameEntity_GameId(
+    return gameCheckOutRepository.findByStatusAndGameEntity_Id(
             ParticipantGameStatus.ACCEPT, gameLongId)
         .orElseThrow(
             () -> new CustomException(ErrorCode.GAME_NOT_FOUND));
@@ -227,12 +227,12 @@ public class GameUserService {
 
   private void checkValidated(Long gameId, GameEntity game,
       UserEntity user) {
-    if (gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserId(
+    if (gameCheckOutRepository.existsByGameEntity_IdAndUserEntity_Id(
         gameId,
         user.getId())) {
       throw new CustomException(ErrorCode.DUPLICATED_TRY_TO_JOIN_GAME);
     }
-    if (gameCheckOutRepository.countByStatusAndGameEntityGameId(
+    if (gameCheckOutRepository.countByStatusAndGameEntityId(
         ParticipantGameStatus.ACCEPT, gameId) >= game.getHeadCount()) {
       throw new CustomException(ErrorCode.FULL_PEOPLE_GAME);
     }
@@ -281,7 +281,7 @@ public class GameUserService {
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    return gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
+    return gameCheckOutRepository.findByUserEntity_IdAndStatus(
             user.getId(), ParticipantGameStatus.ACCEPT)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
   }

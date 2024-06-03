@@ -17,7 +17,7 @@ public class MannerPointListResponse {
   public static MannerPointListResponse of(
       ParticipantGameEntity participantGame) {
     return MannerPointListResponse.builder()
-        .gameId(participantGame.getGameEntity().getGameId())
+        .gameId(participantGame.getGameEntity().getId())
         .title(participantGame.getGameEntity().getTitle())
         .address(participantGame.getGameEntity().getAddress())
         .player(participantGame.getUserEntity().getNickName())

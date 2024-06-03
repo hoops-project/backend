@@ -74,7 +74,7 @@ class NotificationControllerTest {
   void subscribeTest() throws Exception {
 
     UserEntity user = UserEntity.builder()
-        .userId(2L)
+        .id(2L)
         .roles(Collections.singletonList("OWNER"))
         .gender(GenderType.MALE)
         .build();

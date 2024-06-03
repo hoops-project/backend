@@ -80,7 +80,7 @@ public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigur
     if (user == null) {
       return false;
     }
-    return participantGameRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+    return participantGameRepository.existsByGameEntity_IdAndUserEntity_IdAndStatus(
         gameIdNumber, user.getId(), ParticipantGameStatus.ACCEPT);
   }
 }

@@ -55,8 +55,8 @@ class UserServiceTest {
   void setUp() {
     // Initialize your test setup here if needed
     user = UserEntity.builder()
-        .userId(1L)
-        .id("test")
+        .id(1L)
+        .loginId("test")
         .password("Hoops!@#456")
         .email("test@hoops.com")
         .name("테스트")
@@ -161,7 +161,7 @@ class UserServiceTest {
         .build();
 
     // when
-    when(userRepository.existsByIdAndDeletedDateTimeNull(
+    when(userRepository.existsByLoginIdAndDeletedDateTimeNull(
         request.getId())).thenReturn(true);
     Throwable exception = assertThrows(CustomException.class,
         () -> userService.signUpUser(request));
@@ -258,7 +258,7 @@ class UserServiceTest {
     String id = "id";
 
     // when
-    when(userRepository.existsByIdAndDeletedDateTimeNull(id)).thenReturn(false);
+    when(userRepository.existsByLoginIdAndDeletedDateTimeNull(id)).thenReturn(false);
 
     // then
     assertTrue(userService.idCheck(id));
@@ -271,7 +271,7 @@ class UserServiceTest {
     String duplicatedId = "duplicatedId";
 
     // when
-    when(userRepository.existsByIdAndDeletedDateTimeNull(
+    when(userRepository.existsByLoginIdAndDeletedDateTimeNull(
         duplicatedId)).thenReturn(true);
     Throwable exception = assertThrows(CustomException.class,
         () -> userService.idCheck(duplicatedId));
@@ -354,7 +354,7 @@ class UserServiceTest {
   @DisplayName("User_ConfirmEmail_Success")
   void confirmEmailTest_Success() {
     // given
-    String id = user.getId();
+    String id = user.getLoginId();
     String email = user.getEmail();
     String certificationNumber = "certificationNumber";
 
@@ -362,7 +362,7 @@ class UserServiceTest {
     when(emailRepository.hasKey(anyString())).thenReturn(true);
     when(emailRepository.getCertificationNumber(anyString())).thenReturn(
         certificationNumber);
-    when(userRepository.findByIdAndDeletedDateTimeNull(id)).thenReturn(
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(
         Optional.of(user));
 
     // then
@@ -419,7 +419,7 @@ class UserServiceTest {
     String nonExistingEmail = "nonExistingEmail@test.com";
     String expectedId = "expectedId";
 
-    UserEntity existingUser = UserEntity.builder().id(expectedId).build();
+    UserEntity existingUser = UserEntity.builder().loginId(expectedId).build();
 
     // when
     when(userRepository.findByEmailAndDeletedDateTimeNull(
@@ -455,11 +455,11 @@ class UserServiceTest {
     // given
     String existingId = "existingId";
 
-    UserEntity existingUser = UserEntity.builder().id(existingId)
+    UserEntity existingUser = UserEntity.builder().loginId(existingId)
         .email("existingEmail@test.com").build();
 
     // when
-    when(userRepository.findByIdAndDeletedDateTimeNull(existingId)).thenReturn(
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(existingId)).thenReturn(
         Optional.of(existingUser));
     when(emailProvider.sendTemporaryPasswordMail(anyString(),
         anyString())).thenReturn(true);
@@ -475,7 +475,7 @@ class UserServiceTest {
     String nonExistingId = "nonExistingId";
 
     // when
-    when(userRepository.findByIdAndDeletedDateTimeNull(
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(
         nonExistingId)).thenReturn(Optional.empty());
     Throwable exception = assertThrows(CustomException.class,
         () -> userService.findPassword(nonExistingId));
@@ -490,11 +490,11 @@ class UserServiceTest {
     // given
     String existingId = "existingId";
 
-    UserEntity existingUser = UserEntity.builder().id(existingId)
+    UserEntity existingUser = UserEntity.builder().loginId(existingId)
         .email("existingEmail@test.com").build();
 
     // when
-    when(userRepository.findByIdAndDeletedDateTimeNull(existingId)).thenReturn(
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(existingId)).thenReturn(
         Optional.of(existingUser));
     when(emailProvider.sendTemporaryPasswordMail(any(), any())).thenReturn(
         false);

@@ -60,7 +60,7 @@ public class AuthService {
   public UserDto logInUser(LogInDto.Request request) {
 
     UserEntity user =
-        userRepository.findByIdAndDeletedDateTimeNull(request.getId())
+        userRepository.findByLoginIdAndDeletedDateTimeNull(request.getId())
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String password = request.getPassword();
@@ -106,7 +106,7 @@ public class AuthService {
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
 
-    UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
+    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(id)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String responseAccessToken =
@@ -212,7 +212,7 @@ public class AuthService {
     // 내가 생성한 경기 삭제
     List<GameEntity> gameList =
         gameRepository
-            .findByUserEntityUserIdAndDeletedDateTimeNull(user.getId());
+            .findByUserEntityIdAndDeletedDateTimeNull(user.getId());
     gameList.stream().forEach(game -> {
       game.setDeletedDateTime(now);
       gameRepository.save(game);
@@ -220,8 +220,8 @@ public class AuthService {
       // 내가 생성한 경기의 참가 테이블 삭제
       List<ParticipantGameEntity> participantList =
           participantGameRepository
-              .findByGameEntityGameIdAndStatusNotAndDeletedDateTimeNull(
-                  game.getGameId(), WITHDRAW);
+              .findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(
+                  game.getId(), WITHDRAW);
       participantList.stream().forEach(
           participantGame -> {
             participantGame.setDeletedDateTime(now);
@@ -231,8 +231,8 @@ public class AuthService {
 
       // 내가 생성한 경기의 초대 테이블 삭제
       List<InviteEntity> inviteList = inviteRepository
-          .findByInviteStatusAndGameEntityGameId(
-              InviteStatus.REQUEST, game.getGameId());
+          .findByInviteStatusAndGameEntityId(
+              InviteStatus.REQUEST, game.getId());
       inviteList.stream().forEach(
           invite -> {
             invite.setInviteStatus(InviteStatus.DELETE);
@@ -246,7 +246,7 @@ public class AuthService {
     // 내가 참가한 방의 참가 테이블에서 탈퇴 처리
     List<ParticipantGameEntity> participantList =
         participantGameRepository
-            .findByUserEntityUserIdAndStatusInAndWithdrewDateTimeNull(
+            .findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(
                 user.getId(), List.of(APPLY, ACCEPT));
     participantList.stream().forEach(
         participantGame -> {
@@ -258,7 +258,7 @@ public class AuthService {
     // 내가 참가한 방의 초대에서 삭제
     List<InviteEntity> inviteList =
         inviteRepository
-            .findByInviteStatusAndSenderUserEntityUserIdOrReceiverUserEntityUserId(
+            .findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
                 InviteStatus.REQUEST, user.getId(), user.getId());
     inviteList.stream().forEach(
         invite -> {
@@ -271,7 +271,7 @@ public class AuthService {
     // 친구 목록에 있는 사람들 서로 삭제
     List<FriendEntity> friendList =
         friendRepository
-            .findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(
+            .findByUserEntityIdOrFriendUserEntityIdAndStatusNotAndDeletedDateTimeNull(
                 user.getId(), user.getId(), FriendStatus.DELETE);
     friendList.stream().forEach(friend -> {
       friend.setStatus(FriendStatus.DELETE);

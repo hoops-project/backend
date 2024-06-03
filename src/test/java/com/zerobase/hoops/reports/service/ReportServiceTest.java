@@ -64,8 +64,8 @@ class ReportServiceTest {
   @BeforeEach
   void setUp() {
     userEntity = UserEntity.builder()
-        .userId(1L)
-        .id("user1")
+        .id(1L)
+        .loginId("user1")
         .password("password123")
         .email("user@example.com")
         .name("John Doe")
@@ -79,8 +79,8 @@ class ReportServiceTest {
         .emailAuth(true)
         .build();
     reportedUserEntity = UserEntity.builder()
-        .userId(2L)
-        .id("user1")
+        .id(2L)
+        .loginId("user1")
         .password("password123")
         .email("reported@example.com")
         .name("John Doe")

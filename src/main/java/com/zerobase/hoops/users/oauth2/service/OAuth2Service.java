@@ -59,7 +59,7 @@ public class OAuth2Service {
     String id = "kakao_" + kakaoUser.getId().toString();
 
     if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() == null
-        && !userRepository.existsByIdAndDeletedDateTimeNull(id)) {
+        && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
           id,
           id + "@kakao.com",
@@ -68,7 +68,7 @@ public class OAuth2Service {
 
       userRepository.save(KakaoDto.Request.toEntity(user));
     } else if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() != null
-        && !userRepository.existsByIdAndDeletedDateTimeNull(id)) {
+        && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
           id,
           id + "@kakao.com",
@@ -77,7 +77,7 @@ public class OAuth2Service {
 
       userRepository.save(KakaoDto.Request.toEntity(user));
     } else if (kakaoAccount.getEmail() != null && kakaoAccount.getGender() == null
-        && !userRepository.existsByIdAndDeletedDateTimeNull(id)) {
+        && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
           id,
           "kakao_" + kakaoAccount.getEmail(),
@@ -85,7 +85,7 @@ public class OAuth2Service {
           , "MALE");
 
       userRepository.save(KakaoDto.Request.toEntity(user));
-    } else if (!userRepository.existsByIdAndDeletedDateTimeNull(id)) {
+    } else if (!userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
           id,
           "kakao_" + kakaoAccount.getEmail(),
@@ -176,7 +176,7 @@ public class OAuth2Service {
 
   public void kakaoLogout(HttpServletRequest request,
       UserEntity userEntity) {
-    String id = userEntity.getId();
+    String id = userEntity.getLoginId();
     String kakaoId = id.substring(6);
 
     HttpHeaders headers = new HttpHeaders();
@@ -198,7 +198,7 @@ public class OAuth2Service {
   }
 
   public void kakaoUnlink(HttpServletRequest request, UserEntity userEntity) {
-    String id = userEntity.getId();
+    String id = userEntity.getLoginId();
     String kakaoId = id.substring(6);
 
     HttpHeaders headers = new HttpHeaders();

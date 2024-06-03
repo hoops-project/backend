@@ -17,6 +17,6 @@ public interface GameUserRepository extends
   List<GameEntity> findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
       String partOfAddress, LocalDateTime currentDateTime);
 
-  Optional<GameEntity> findByGameIdAndStartDateTimeBefore(Long gameId,
+  Optional<GameEntity> findByIdAndStartDateTimeBefore(Long gameId,
       LocalDateTime dateTime);
 }

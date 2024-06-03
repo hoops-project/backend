@@ -52,10 +52,10 @@ class ManagerServiceTest {
         .blackUser(new UserEntity())
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setId(loginId);
+    blackListUserEntity.getBlackUser().setLoginId(loginId);
 
     // When
-    when(blackListUserRepository.findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
+    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
         LocalDate.now()))
         .thenReturn(Optional.of(blackListUserEntity));
 
@@ -70,7 +70,7 @@ class ManagerServiceTest {
     String loginId = "testUser";
 
     // When
-    when(blackListUserRepository.findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
+    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
         LocalDate.now()))
         .thenReturn(Optional.empty());
 
@@ -87,11 +87,11 @@ class ManagerServiceTest {
     request.setReportedId(1L);
 
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(2L);
+    userEntity.setId(2L);
 
     UserEntity reportedUserEntity = new UserEntity();
-    reportedUserEntity.setId("reportedUser");
-    reportedUserEntity.setUserId(1L);
+    reportedUserEntity.setLoginId("reportedUser");
+    reportedUserEntity.setId(1L);
 
     ReportEntity reportEntity = ReportEntity.builder()
         .reportedUser(reportedUserEntity)
@@ -102,10 +102,10 @@ class ManagerServiceTest {
     when(userRepository.findById(2L)).thenReturn(Optional.of(userEntity));
     when(userRepository.findById(1L)).thenReturn(
         Optional.of(reportedUserEntity));
-    when(blackListUserRepository.findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
         "reportedUser", LocalDate.now()))
         .thenReturn(Optional.empty());
-    when(reportRepository.findByReportedUser_UserId(1L)).thenReturn(
+    when(reportRepository.findByReportedUser_Id(1L)).thenReturn(
         Optional.of(reportEntity));
 
     // When
@@ -122,11 +122,11 @@ class ManagerServiceTest {
     request.setReportedId(1L);
 
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(2L);
+    userEntity.setId(2L);
 
     UserEntity reportedUserEntity = new UserEntity();
-    reportedUserEntity.setId("reportedUser");
-    reportedUserEntity.setUserId(1L);
+    reportedUserEntity.setLoginId("reportedUser");
+    reportedUserEntity.setId(1L);
 
     BlackListUserEntity blackListUserEntity = BlackListUserEntity.builder()
         .blackUser(reportedUserEntity)
@@ -188,13 +188,13 @@ class ManagerServiceTest {
         .blackUser(new UserEntity())
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setId(blackUserId);
+    blackListUserEntity.getBlackUser().setLoginId(blackUserId);
 
     UnLockBlackListDto request = new UnLockBlackListDto();
     request.setBlackUserId(blackUserId);
 
     // When
-    when(blackListUserRepository.findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
         blackUserId, LocalDate.now()))
         .thenReturn(Optional.of(blackListUserEntity));
 
@@ -211,7 +211,7 @@ class ManagerServiceTest {
     unLockBlackListDto.setBlackUserId(blackUser);
 
     // When
-    when(blackListUserRepository.findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
         blackUser, LocalDate.now()))
         .thenReturn(Optional.empty());
 

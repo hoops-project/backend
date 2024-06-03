@@ -77,12 +77,12 @@ class ReportControllerTest {
     String reportContents = "Report contents for report1";
 
     UserEntity user = UserEntity.builder()
-        .userId(1L)
+        .id(1L)
         .gender(GenderType.MALE)
         .build();
 
     UserEntity receiverUser = UserEntity.builder()
-        .userId(2L)
+        .id(2L)
         .gender(GenderType.MALE)
         .build();
 

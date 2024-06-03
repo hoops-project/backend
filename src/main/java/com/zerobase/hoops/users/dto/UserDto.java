@@ -34,7 +34,7 @@ public class UserDto {
   public static UserDto fromEntity(UserEntity userEntity) {
     return UserDto.builder()
         .userId(userEntity.getId())
-        .id(userEntity.getId())
+        .id(userEntity.getLoginId())
         .password(userEntity.getPassword())
         .email(userEntity.getEmail())
         .name(userEntity.getName())

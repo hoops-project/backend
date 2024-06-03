@@ -118,7 +118,7 @@ public class NotificationService {
   public List<NotificationDto> findAllById(UserEntity loginUser) {
     List<NotificationDto> responses =
         notificationRepository
-            .findAllByReceiverUserIdOrderByCreatedDateTimeDesc(loginUser.getId())
+            .findAllByReceiverIdOrderByCreatedDateTimeDesc(loginUser.getId())
             .stream().map(NotificationDto::entityToDto)
             .collect(Collectors.toList());
 
