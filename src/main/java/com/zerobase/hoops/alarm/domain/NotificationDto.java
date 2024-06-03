@@ -13,10 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NotificationDto {
 
-  // 알림 id (Pk)
   private Long id;
 
-  // 알림 내용
   private String content;
 
   private String type;

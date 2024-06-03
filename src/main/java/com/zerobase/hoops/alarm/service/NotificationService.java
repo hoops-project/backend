@@ -47,12 +47,9 @@ public class NotificationService {
         new SseEmitter(DEFAULT_TIMEOUT));
 
     // 상황별 emitter 연결 종료 처리
-    // (1) sseEmitter 연결이 완료될 경우
     emitter.onCompletion(
         () -> emitterRepository.deleteByEmitterId(emitterId));
-    // (2) sseEmitter 연결에 타임아웃이 발생할 경우
     emitter.onTimeout(() -> emitterRepository.deleteByEmitterId(emitterId));
-    // (3) sseEmitter 연결에 오류가 발생할 경우
     emitter.onError((e) -> emitterRepository.deleteByEmitterId(emitterId));
 
     // 503 Service Unavailable 방지용 dummy event 전송
