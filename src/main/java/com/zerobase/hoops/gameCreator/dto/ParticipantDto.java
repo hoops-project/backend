@@ -52,7 +52,7 @@ public class ParticipantDto {
           .playStyle(participantGameEntity.getUserEntity().getPlayStyle())
           .ability(participantGameEntity.getUserEntity().getAbility())
           .mannerPoint(participantGameEntity.getUserEntity().getStringAverageRating())
-          .userId(participantGameEntity.getUserEntity().getUserId())
+          .userId(participantGameEntity.getUserEntity().getId())
           .build();
     }
 
@@ -108,7 +108,7 @@ public class ParticipantDto {
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
-          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+          .userId(participantGameEntity.getUserEntity().getId()).build();
     }
   }
 
@@ -147,7 +147,7 @@ public class ParticipantDto {
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .rejectedDateTime(participantGameEntity.getRejectedDateTime())
-          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+          .userId(participantGameEntity.getUserEntity().getId()).build();
     }
   }
 
@@ -189,7 +189,7 @@ public class ParticipantDto {
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
           .kickoutDateTime(participantGameEntity.getKickoutDateTime())
-          .userId(participantGameEntity.getUserEntity().getUserId()).build();
+          .userId(participantGameEntity.getUserEntity().getId()).build();
     }
   }
 

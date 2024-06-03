@@ -22,7 +22,7 @@ public class ReportListResponseDto {
 
     return ReportListResponseDto.builder()
         .reportId(reportEntity.getId())
-        .userId(reportEntity.getReportedUser().getUserId())
+        .userId(reportEntity.getReportedUser().getId())
         .userName(reportEntity.getReportedUser().getName())
         .mannerPoint(reportEntity.getReportedUser().getStringAverageRating())
         .gender(reportEntity.getReportedUser().getGender())

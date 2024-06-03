@@ -149,9 +149,9 @@ public class AuthService {
     }
 
     emitterRepository.deleteAllStartWithUserId(
-        String.valueOf(userEntity.getUserId()));
+        String.valueOf(userEntity.getId()));
     emitterRepository.deleteAllEventCacheStartWithUserId(
-        String.valueOf(userEntity.getUserId()));
+        String.valueOf(userEntity.getId()));
 
     tokenProvider.addToLogOutList(accessToken);
   }
@@ -212,7 +212,7 @@ public class AuthService {
     // 내가 생성한 경기 삭제
     List<GameEntity> gameList =
         gameRepository
-            .findByUserEntityUserIdAndDeletedDateTimeNull(user.getUserId());
+            .findByUserEntityUserIdAndDeletedDateTimeNull(user.getId());
     gameList.stream().forEach(game -> {
       game.setDeletedDateTime(now);
       gameRepository.save(game);
@@ -247,7 +247,7 @@ public class AuthService {
     List<ParticipantGameEntity> participantList =
         participantGameRepository
             .findByUserEntityUserIdAndStatusInAndWithdrewDateTimeNull(
-                user.getUserId(), List.of(APPLY, ACCEPT));
+                user.getId(), List.of(APPLY, ACCEPT));
     participantList.stream().forEach(
         participantGame -> {
           participantGame.setWithdrewDateTime(now);
@@ -259,7 +259,7 @@ public class AuthService {
     List<InviteEntity> inviteList =
         inviteRepository
             .findByInviteStatusAndSenderUserEntityUserIdOrReceiverUserEntityUserId(
-                InviteStatus.REQUEST, user.getUserId(), user.getUserId());
+                InviteStatus.REQUEST, user.getId(), user.getId());
     inviteList.stream().forEach(
         invite -> {
           invite.setInviteStatus(InviteStatus.DELETE);
@@ -272,7 +272,7 @@ public class AuthService {
     List<FriendEntity> friendList =
         friendRepository
             .findByUserEntityUserIdOrFriendUserEntityUserIdAndStatusNotAndDeletedDateTimeNull(
-                user.getUserId(), user.getUserId(), FriendStatus.DELETE);
+                user.getId(), user.getId(), FriendStatus.DELETE);
     friendList.stream().forEach(friend -> {
       friend.setStatus(FriendStatus.DELETE);
       friend.setDeletedDateTime(now);

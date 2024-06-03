@@ -66,7 +66,7 @@ public class SignUpDto {
 
     public static UserEntity toEntity(Request request) {
       return UserEntity.builder()
-          .id(request.getId())
+          .loginId(request.getId())
           .password(request.getPassword())
           .email(request.getEmail())
           .name(request.getName())

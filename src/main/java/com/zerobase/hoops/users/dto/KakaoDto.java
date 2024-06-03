@@ -43,7 +43,7 @@ public class KakaoDto {
     public static UserEntity toEntity(Request request) {
       BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
       return UserEntity.builder()
-          .id(request.getId())
+          .loginId(request.getId())
           .password(encoder.encode("kakao"))
           .email(request.getEmail())
           .name(request.getName())

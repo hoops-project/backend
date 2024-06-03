@@ -79,7 +79,7 @@ public class InviteService {
         .findById(request.getReceiverUserId())
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-    validFriendUser(receiverUser.getUserId());
+    validFriendUser(receiverUser.getId());
 
     //해당 경기가 초대 불가능이면 막음
     if(!game.getInviteYn()) {
@@ -107,7 +107,7 @@ public class InviteService {
     boolean gameExistFlag = participantGameRepository
         .existsByStatusAndGameEntityGameIdAndUserEntityUserId
             (ParticipantGameStatus.ACCEPT, request.getGameId(),
-                user.getUserId());
+                user.getId());
 
     if(!gameExistFlag) {
       throw new CustomException(NOT_PARTICIPANT_GAME);
@@ -151,8 +151,8 @@ public class InviteService {
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
     // 본인이 경기 초대 요청한 것만 취소 가능
-    if(!Objects.equals(inviteEntity.getSenderUserEntity().getUserId(),
-        user.getUserId())) {
+    if(!Objects.equals(inviteEntity.getSenderUserEntity().getId(),
+        user.getId())) {
       throw new CustomException(NOT_SELF_REQUEST);
     }
 
@@ -180,11 +180,11 @@ public class InviteService {
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
-    validFriendUser(inviteEntity.getSenderUserEntity().getUserId());
+    validFriendUser(inviteEntity.getSenderUserEntity().getId());
 
     // 본인이 받은 초대 요청만 수락 가능
-    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getUserId(),
-        user.getUserId())) {
+    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getId(),
+        user.getId())) {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
 
@@ -201,8 +201,8 @@ public class InviteService {
     inviteRepository.save(result);
 
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
-    if(Objects.equals(inviteEntity.getGameEntity().getUserEntity().getUserId(),
-        inviteEntity.getSenderUserEntity().getUserId())) {
+    if(Objects.equals(inviteEntity.getGameEntity().getUserEntity().getId(),
+        inviteEntity.getSenderUserEntity().getId())) {
 
       ParticipantGameEntity gameCreatorInvite =
           ParticipantGameEntity.gameCreatorInvite(inviteEntity);
@@ -230,8 +230,8 @@ public class InviteService {
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
     // 본인이 받은 초대 요청만 거절 가능
-    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getUserId(),
-        user.getUserId())) {
+    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getId(),
+        user.getId())) {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
 
@@ -250,7 +250,7 @@ public class InviteService {
 
     List<InviteEntity> inviteEntityList =
         inviteRepository.findByInviteStatusAndReceiverUserEntityUserId
-        (InviteStatus.REQUEST, user.getUserId());
+        (InviteStatus.REQUEST, user.getId());
 
     List<InviteMyListResponse> result = inviteEntityList.stream()
         .map(InviteMyListResponse::toDto)
@@ -260,7 +260,7 @@ public class InviteService {
   }
 
   public void setUpUser() {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -271,7 +271,7 @@ public class InviteService {
     boolean existFriendFlag =
         friendRepository
             .existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
-                (user.getUserId(), receiverUserId, FriendStatus.ACCEPT);
+                (user.getId(), receiverUserId, FriendStatus.ACCEPT);
 
     if(!existFriendFlag) {
       throw new CustomException(NOT_FOUND_ACCEPT_FRIEND);

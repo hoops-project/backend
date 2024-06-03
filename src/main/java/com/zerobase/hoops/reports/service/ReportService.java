@@ -12,7 +12,6 @@ import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,7 +50,7 @@ public class ReportService {
   public void reportUser(ReportDto request) {
 
     UserEntity user = userRepository.findById(
-            jwtTokenExtract.currentUser().getUserId())
+            jwtTokenExtract.currentUser().getId())
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
@@ -70,7 +69,7 @@ public class ReportService {
 
   private void checkExist(ReportDto request, UserEntity user) {
     boolean existReported = reportRepository.existsByUser_UserIdAndReportedUser_UserId(
-        user.getUserId(), request.getReportedUserId());
+        user.getId(), request.getReportedUserId());
   }
 
   private UserEntity findManger() {

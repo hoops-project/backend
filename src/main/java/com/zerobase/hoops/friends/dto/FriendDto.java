@@ -336,7 +336,7 @@ public class FriendDto {
 
     public static ListResponse toDto(FriendEntity friendEntity) {
       return ListResponse.builder()
-          .userId(friendEntity.getFriendUserEntity().getUserId())
+          .userId(friendEntity.getFriendUserEntity().getId())
           .birthday(friendEntity.getFriendUserEntity().getBirthday())
           .gender(friendEntity.getFriendUserEntity().getGender())
           .nickName(friendEntity.getFriendUserEntity().getNickName())
@@ -397,7 +397,7 @@ public class FriendDto {
 
     public static RequestListResponse toDto(FriendEntity friendEntity) {
       return RequestListResponse.builder()
-          .userId(friendEntity.getUserEntity().getUserId())
+          .userId(friendEntity.getUserEntity().getId())
           .birthday(friendEntity.getUserEntity().getBirthday())
           .gender(friendEntity.getUserEntity().getGender())
           .nickName(friendEntity.getUserEntity().getNickName())

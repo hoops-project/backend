@@ -41,7 +41,7 @@ public class NotificationService {
    */
   public SseEmitter subscribe(UserEntity user, String lastEventId) {
 
-    String emitterId = user.getUserId() + "_" + System.currentTimeMillis();
+    String emitterId = user.getId() + "_" + System.currentTimeMillis();
 
     SseEmitter emitter = emitterRepository.save(emitterId,
         new SseEmitter(DEFAULT_TIMEOUT));
@@ -63,7 +63,7 @@ public class NotificationService {
     if (!lastEventId.isEmpty()) {
       Map<String, Object> events =
           emitterRepository.findAllEventCacheStartWithUserId(
-              String.valueOf(user.getUserId()));
+              String.valueOf(user.getId()));
       events.entrySet().stream()
           .filter(entry -> lastEventId.compareTo(entry.getKey()) < 0)
           .forEach(
@@ -93,7 +93,7 @@ public class NotificationService {
     notificationRepository.save(notificationEntity);
     Map<String, SseEmitter> sseEmitters =
         emitterRepository.findAllStartWithByUserId(
-            String.valueOf(receiver.getUserId())
+            String.valueOf(receiver.getId())
         );
     sseEmitters.forEach(
         (key, emitter) -> {
@@ -118,7 +118,7 @@ public class NotificationService {
   public List<NotificationDto> findAllById(UserEntity loginUser) {
     List<NotificationDto> responses =
         notificationRepository
-            .findAllByReceiverUserIdOrderByCreatedDateTimeDesc(loginUser.getUserId())
+            .findAllByReceiverUserIdOrderByCreatedDateTimeDesc(loginUser.getId())
             .stream().map(NotificationDto::entityToDto)
             .collect(Collectors.toList());
 

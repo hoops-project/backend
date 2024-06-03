@@ -47,10 +47,10 @@ public class UserEntity implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long userId;
+  private Long id;
 
   @Column(nullable = false)
-  private String id;
+  private String loginId;
 
   @Column(nullable = false)
   private String password;
@@ -161,12 +161,12 @@ public class UserEntity implements UserDetails {
       return false;
     }
     UserEntity that = (UserEntity) o;
-    return Objects.equals(id, that.id);
+    return Objects.equals(loginId, that.loginId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id);
+    return Objects.hash(loginId);
   }
 
   @Override

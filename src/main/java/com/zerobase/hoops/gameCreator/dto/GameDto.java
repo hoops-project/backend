@@ -215,7 +215,7 @@ public class GameDto {
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
           .nickName(gameEntity.getUserEntity().getNickName())
-          .userId(gameEntity.getUserEntity().getUserId())
+          .userId(gameEntity.getUserEntity().getId())
           .participantUserList(participantUserList)
           .build();
     }
@@ -464,7 +464,7 @@ public class GameDto {
           .status(entity.getStatus())
           .withdrewDateTime(entity.getWithdrewDateTime())
           .gameId(entity.getGameEntity().getGameId())
-          .userId(entity.getUserEntity().getUserId())
+          .userId(entity.getUserEntity().getId())
           .build();
     }
   }
@@ -489,7 +489,7 @@ public class GameDto {
 
     public static ParticipantUser toDto(ParticipantGameEntity entity) {
       return ParticipantUser.builder()
-          .userId(entity.getUserEntity().getUserId())
+          .userId(entity.getUserEntity().getId())
           .genderType(entity.getUserEntity().getGender())
           .nickName(entity.getUserEntity().getNickName())
           .playStyle(entity.getUserEntity().getPlayStyle())

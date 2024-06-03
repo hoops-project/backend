@@ -33,7 +33,7 @@ public class UserDto {
 
   public static UserDto fromEntity(UserEntity userEntity) {
     return UserDto.builder()
-        .userId(userEntity.getUserId())
+        .userId(userEntity.getId())
         .id(userEntity.getId())
         .password(userEntity.getPassword())
         .email(userEntity.getEmail())

@@ -21,7 +21,7 @@ public class MannerPointListResponse {
         .title(participantGame.getGameEntity().getTitle())
         .address(participantGame.getGameEntity().getAddress())
         .player(participantGame.getUserEntity().getNickName())
-        .playerId(participantGame.getUserEntity().getUserId())
+        .playerId(participantGame.getUserEntity().getId())
         .build();
   }
 }

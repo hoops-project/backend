@@ -81,6 +81,6 @@ public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigur
       return false;
     }
     return participantGameRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
-        gameIdNumber, user.getUserId(), ParticipantGameStatus.ACCEPT);
+        gameIdNumber, user.getId(), ParticipantGameStatus.ACCEPT);
   }
 }

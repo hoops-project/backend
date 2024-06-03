@@ -36,7 +36,7 @@ public class ManagerService {
   }
 
   public void saveBlackList(BlackListDto request) {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
     Long reportedId = request.getReportedId();
 
     startBlackListCheckFromReportEntity(request);

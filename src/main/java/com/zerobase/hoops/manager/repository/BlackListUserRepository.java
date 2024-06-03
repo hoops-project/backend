@@ -13,6 +13,4 @@ public interface BlackListUserRepository extends
   Optional<BlackListUserEntity> findByBlackUser_IdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
       String id, LocalDate currentDate);
 
-  Optional<BlackListUserEntity> findByBlackUser_EmailAndEndDateAfter(String email,
-      LocalDate currentDate);
 }

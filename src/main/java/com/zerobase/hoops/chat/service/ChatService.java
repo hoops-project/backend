@@ -100,7 +100,7 @@ public class ChatService {
         .collect(Collectors.toList());
 
     boolean isNewUser = messages.stream()
-        .noneMatch(m -> m.getUser().getUserId().equals(user.getUserId()));
+        .noneMatch(m -> m.getUser().getId().equals(user.getId()));
     if (isNewUser) {
       messagingTemplate.convertAndSend("/topic/" + gameId + "/newUser",
           messageDto);

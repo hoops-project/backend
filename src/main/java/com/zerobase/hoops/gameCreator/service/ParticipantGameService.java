@@ -201,7 +201,7 @@ public class ParticipantGameService {
 
 
   public void setUpUser() {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
 
     user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -220,7 +220,7 @@ public class ParticipantGameService {
   // 경기 개설자만 수락,거절,강퇴 가능
   public void validationCreatorCheck(UserEntity user, GameEntity game) {
 
-    if (!Objects.equals(user.getUserId(), game.getUserEntity().getUserId())) {
+    if (!Objects.equals(user.getId(), game.getUserEntity().getId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
   }
@@ -237,8 +237,8 @@ public class ParticipantGameService {
   // 경기 개설자는 ACCEPT 상태로 나둬야함
   public void validateIsNotCreator(UserEntity user) {
 
-    if (Objects.equals(user.getUserId(),
-        participantGameEntity.getUserEntity().getUserId())) {
+    if (Objects.equals(user.getId(),
+        participantGameEntity.getUserEntity().getId())) {
       throw new CustomException(NOT_UPDATE_CREATOR);
     }
   }

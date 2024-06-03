@@ -281,7 +281,7 @@ public class InviteDto {
           .inviteId(inviteEntity.getInviteId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
-          .senderUserId(inviteEntity.getSenderUserEntity().getUserId())
+          .senderUserId(inviteEntity.getSenderUserEntity().getId())
           .senderUserBirthday(inviteEntity.getSenderUserEntity().getBirthday())
           .senderUserGenderType(inviteEntity.getSenderUserEntity().getGender())
           .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())

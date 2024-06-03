@@ -48,7 +48,7 @@ public class GameUserService {
   @Transactional
   public void saveMannerPoint(MannerPointDto request) {
 
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
     Long receiverId = request.getReceiverId();
     Long gameId = request.getGameId();
 
@@ -88,10 +88,10 @@ public class GameUserService {
     List<ParticipantGameEntity> userList = checkMannerPointList(gameId);
     List<MannerPointListResponse> mannerPointUserList = new ArrayList<>();
 
-    Long currentUserId = jwtTokenExtract.currentUser().getUserId();
+    Long currentUserId = jwtTokenExtract.currentUser().getId();
     
     userList.stream()
-        .filter(user -> !user.getUserEntity().getUserId().equals(currentUserId))
+        .filter(user -> !user.getUserEntity().getId().equals(currentUserId))
         .forEach(user -> mannerPointUserList.add(MannerPointListResponse.of(user)));
 
     return mannerPointUserList;
@@ -99,7 +99,7 @@ public class GameUserService {
 
   private List<ParticipantGameEntity> checkMannerPointList(
       String gameId) {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
     userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
@@ -132,7 +132,7 @@ public class GameUserService {
             game -> game.getStartDateTime().isAfter(LocalDateTime.now()))
         .toList();
 
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
     return getPageGameSearchResponses(games, userId, page, size);
   }
 
@@ -145,7 +145,7 @@ public class GameUserService {
             game -> game.getStartDateTime().isBefore(LocalDateTime.now()))
         .toList();
 
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
 
     return getPageGameSearchResponses(games, userId, page, size);
   }
@@ -206,7 +206,7 @@ public class GameUserService {
 
   @Transactional
   public ParticipateGameDto participateInGame(Long gameId) {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
 
     UserEntity user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
@@ -229,7 +229,7 @@ public class GameUserService {
       UserEntity user) {
     if (gameCheckOutRepository.existsByGameEntity_GameIdAndUserEntity_UserId(
         gameId,
-        user.getUserId())) {
+        user.getId())) {
       throw new CustomException(ErrorCode.DUPLICATED_TRY_TO_JOIN_GAME);
     }
     if (gameCheckOutRepository.countByStatusAndGameEntityGameId(
@@ -275,14 +275,14 @@ public class GameUserService {
   }
 
   private List<ParticipantGameEntity> checkMyGameList() {
-    Long userId = jwtTokenExtract.currentUser().getUserId();
+    Long userId = jwtTokenExtract.currentUser().getId();
 
     UserEntity user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
     return gameCheckOutRepository.findByUserEntity_UserIdAndStatus(
-            user.getUserId(), ParticipantGameStatus.ACCEPT)
+            user.getId(), ParticipantGameStatus.ACCEPT)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
   }
 
