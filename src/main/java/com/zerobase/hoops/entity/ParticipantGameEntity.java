@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +34,7 @@ public class ParticipantGameEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long participantId;
+  private Long id;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -58,11 +57,11 @@ public class ParticipantGameEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "game_id", nullable = false)
+  @JoinColumn(nullable = false)
   private GameEntity gameEntity;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
+  @JoinColumn(nullable = false)
   private UserEntity userEntity;
 
   public static ParticipantGameEntity toGameCreatorEntity(
@@ -79,7 +78,7 @@ public class ParticipantGameEntity {
 
   public static ParticipantGameEntity setAccept(ParticipantGameEntity entity) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(LocalDateTime.now())
@@ -90,7 +89,7 @@ public class ParticipantGameEntity {
 
   public static ParticipantGameEntity setReject(ParticipantGameEntity entity) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.REJECT)
         .createdDateTime(entity.getCreatedDateTime())
         .rejectedDateTime(LocalDateTime.now())
@@ -101,7 +100,7 @@ public class ParticipantGameEntity {
 
   public static ParticipantGameEntity setKickout(ParticipantGameEntity entity) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.KICKOUT)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
@@ -113,7 +112,7 @@ public class ParticipantGameEntity {
 
   public static ParticipantGameEntity setWithdraw(ParticipantGameEntity entity) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.WITHDRAW)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())

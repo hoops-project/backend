@@ -36,7 +36,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     QFriendEntity friend = QFriendEntity.friendEntity;
 
     List<Long> excludedIds = jpaQueryFactory
-        .select(user.userId)
+        .select(user.id)
         .from(user)
         .where(
             user.roles.any().in("ROLE_OWNER")
@@ -52,13 +52,13 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .from(user)
         .leftJoin(friend)
         .on(
-            user.userId.eq(friend.friendUserEntity.userId)
-                .and(friend.userEntity.userId.eq(userId))
+            user.id.eq(friend.friendUserEntity.id)
+                .and(friend.userEntity.id.eq(userId))
                 .and(friend.status.ne(FriendStatus.DELETE))
         )
         .where(
             user.nickName.like("%" + nickName + "%")
-                .and(user.userId.notIn(excludedIds))
+                .and(user.id.notIn(excludedIds))
                 .and(user.deletedDateTime.isNull())
                 .and(
                     friend.status.isNull().or(friend.status.eq(FriendStatus.ACCEPT))
@@ -71,19 +71,20 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
 
     // 결과 쿼리 생성
     List<ListResponse> result = jpaQueryFactory
-        .select(Projections.constructor(ListResponse.class, user.userId, user.birthday,
+        .select(Projections.constructor(ListResponse.class, user.id,
+            user.birthday,
                 user.gender, user.nickName, user.playStyle, user.ability,
-                user.stringAverageRating, friend.friendId))
+                user.stringAverageRating, friend.id))
         .from(user)
         .leftJoin(friend)
         .on(
-            user.userId.eq(friend.friendUserEntity.userId)
-                .and(friend.userEntity.userId.eq(userId))
+            user.id.eq(friend.friendUserEntity.id)
+                .and(friend.userEntity.id.eq(userId))
                 .and(friend.status.ne(FriendStatus.DELETE))
         )
         .where(
             user.nickName.like("%" + nickName + "%")
-                .and(user.userId.notIn(excludedIds))
+                .and(user.id.notIn(excludedIds))
                 .and(user.deletedDateTime.isNull())
                 .and(
                     friend.status.isNull().or(friend.status.eq(FriendStatus.ACCEPT))
@@ -112,9 +113,9 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
 
 
     List<Long> excludedIds = jpaQueryFactory
-        .select(participantGameEntity.userEntity.userId)
+        .select(participantGameEntity.userEntity.id)
         .from(participantGameEntity)
-        .where(participantGameEntity.gameEntity.gameId.eq(gameId)
+        .where(participantGameEntity.gameEntity.id.eq(gameId)
             .and(participantGameEntity.status.in
                 (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY))))
         .fetch();
@@ -124,16 +125,16 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .select(user.count())
         .from(friend)
         .innerJoin(user)
-        .on(friend.friendUserEntity.userId.eq(user.userId)
-            .and(friend.userEntity.userId.eq(userId))
+        .on(friend.friendUserEntity.id.eq(user.id)
+            .and(friend.userEntity.id.eq(userId))
             .and(user.deletedDateTime.isNull())
             .and(friend.status.eq(FriendStatus.ACCEPT))
-            .and(friend.friendUserEntity.userId.notIn(excludedIds))
+            .and(friend.friendUserEntity.id.notIn(excludedIds))
         )
         .leftJoin(invite)
-        .on(friend.friendUserEntity.userId.eq(invite.receiverUserEntity.userId)
+        .on(friend.friendUserEntity.id.eq(invite.receiverUserEntity.id)
             .and(invite.inviteStatus.eq(InviteStatus.REQUEST))
-            .and(invite.gameEntity.gameId.eq(gameId))
+            .and(invite.gameEntity.id.eq(gameId))
         );
 
     // Pageable에서 페이지 번호와 페이지 크기 가져오기
@@ -142,21 +143,21 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
 
     // 결과 쿼리 생성
     List<InviteListResponse> result = jpaQueryFactory
-        .select(Projections.constructor(InviteListResponse.class, user.userId, user.birthday,
+        .select(Projections.constructor(InviteListResponse.class, user.id, user.birthday,
             user.gender, user.nickName, user.playStyle, user.ability,
             user.stringAverageRating, invite.inviteStatus))
         .from(friend)
         .innerJoin(user)
-        .on(friend.friendUserEntity.userId.eq(user.userId)
-            .and(friend.userEntity.userId.eq(userId))
+        .on(friend.friendUserEntity.id.eq(user.id)
+            .and(friend.userEntity.id.eq(userId))
             .and(user.deletedDateTime.isNull())
             .and(friend.status.eq(FriendStatus.ACCEPT))
-            .and(friend.friendUserEntity.userId.notIn(excludedIds))
+            .and(friend.friendUserEntity.id.notIn(excludedIds))
         )
         .leftJoin(invite)
-        .on(friend.friendUserEntity.userId.eq(invite.receiverUserEntity.userId)
+        .on(friend.friendUserEntity.id.eq(invite.receiverUserEntity.id)
             .and(invite.inviteStatus.eq(InviteStatus.REQUEST))
-            .and(invite.gameEntity.gameId.eq(gameId))
+            .and(invite.gameEntity.id.eq(gameId))
         )
         .orderBy(user.nickName.asc())
         .offset((long) pageNumber * pageSize)

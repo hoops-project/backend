@@ -71,7 +71,7 @@ public class InviteService {
   public CreateResponse requestInviteGame(CreateRequest request) {
     setUpUser();
 
-    GameEntity game = gameRepository.findByGameIdAndDeletedDateTimeNull
+    GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull
             (request.getGameId()).orElseThrow
         (() -> new CustomException(GAME_NOT_FOUND));
 
@@ -95,7 +95,7 @@ public class InviteService {
 
     // 해당 경기에 이미 초대 요청 되어 있으면 막음
     boolean inviteRequestFlag =
-        inviteRepository.existsByInviteStatusAndGameEntityGameIdAndReceiverUserEntityUserId
+        inviteRepository.existsByInviteStatusAndGameEntityIdAndReceiverUserEntityId
         (InviteStatus.REQUEST, request.getGameId(),
             request.getReceiverUserId());
 
@@ -105,7 +105,7 @@ public class InviteService {
 
     // 해당 경기에 참가해 있지 않은 사람이 초대를 할경우 막음
     boolean gameExistFlag = participantGameRepository
-        .existsByStatusAndGameEntityGameIdAndUserEntityUserId
+        .existsByStatusAndGameEntityIdAndUserEntityId
             (ParticipantGameStatus.ACCEPT, request.getGameId(),
                 user.getId());
 
@@ -115,7 +115,7 @@ public class InviteService {
 
     // 해당 경기에 이미 참가 하거나 요청한 경우 막음
     boolean participantGameFlag = participantGameRepository
-        .existsByStatusInAndGameEntityGameIdAndUserEntityUserId
+        .existsByStatusInAndGameEntityIdAndUserEntityId
             (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY)
                 ,request.getGameId(), request.getReceiverUserId());
 
@@ -124,7 +124,7 @@ public class InviteService {
     }
 
     // 경기 인원이 다 차면 초대 막음
-    long headCount = participantGameRepository.countByStatusAndGameEntityGameId(
+    long headCount = participantGameRepository.countByStatusAndGameEntityId(
         ParticipantGameStatus.ACCEPT, request.getGameId());
 
     if(headCount >= game.getHeadCount()) {
@@ -146,7 +146,7 @@ public class InviteService {
     setUpUser();
 
     InviteEntity inviteEntity = inviteRepository
-        .findByInviteIdAndInviteStatus(request.getInviteId(),
+        .findByIdAndInviteStatus(request.getInviteId(),
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
@@ -157,7 +157,7 @@ public class InviteService {
     }
 
     // 다른 경기 초대 요청 인지 체크
-    if(!Objects.equals(inviteEntity.getGameEntity().getGameId(),
+    if(!Objects.equals(inviteEntity.getGameEntity().getId(),
         request.getGameId())) {
       throw new CustomException(NOT_INVITE_FOUND);
     }
@@ -176,7 +176,7 @@ public class InviteService {
     setUpUser();
 
     InviteEntity inviteEntity = inviteRepository
-        .findByInviteIdAndInviteStatus(request.getInviteId(),
+        .findByIdAndInviteStatus(request.getInviteId(),
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
@@ -190,8 +190,8 @@ public class InviteService {
 
     // 해당 경기에 인원이 다차면 수락 불가능
     long count = participantGameRepository
-        .countByStatusAndGameEntityGameId(ParticipantGameStatus.ACCEPT,
-            inviteEntity.getGameEntity().getGameId());
+        .countByStatusAndGameEntityId(ParticipantGameStatus.ACCEPT,
+            inviteEntity.getGameEntity().getId());
 
     if(count >= inviteEntity.getGameEntity().getHeadCount()) {
       throw new CustomException(FULL_PARTICIPANT);
@@ -225,7 +225,7 @@ public class InviteService {
     setUpUser();
 
     InviteEntity inviteEntity = inviteRepository
-        .findByInviteIdAndInviteStatus(request.getInviteId(),
+        .findByIdAndInviteStatus(request.getInviteId(),
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
@@ -249,7 +249,7 @@ public class InviteService {
     setUpUser();
 
     List<InviteEntity> inviteEntityList =
-        inviteRepository.findByInviteStatusAndReceiverUserEntityUserId
+        inviteRepository.findByInviteStatusAndReceiverUserEntityId
         (InviteStatus.REQUEST, user.getId());
 
     List<InviteMyListResponse> result = inviteEntityList.stream()
@@ -270,7 +270,7 @@ public class InviteService {
   private void validFriendUser(Long receiverUserId) {
     boolean existFriendFlag =
         friendRepository
-            .existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
+            .existsByUserEntityIdAndFriendUserEntityIdAndStatus
                 (user.getId(), receiverUserId, FriendStatus.ACCEPT);
 
     if(!existFriendFlag) {

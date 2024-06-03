@@ -73,7 +73,7 @@ public class FriendService {
 
     // 이미 친구 신청, 수락 상태이면 신청 불가
     boolean exist =
-        friendRepository.existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatusIn
+        friendRepository.existsByUserEntityIdAndFriendUserEntityIdAndStatusIn
             (user.getId(), request.getFriendUserId(),
             List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
 
@@ -83,7 +83,7 @@ public class FriendService {
 
     // 자신 친구 목록 최대 30명 체크
     int selfFriendCount = friendRepository
-        .countByUserEntityUserIdAndStatus
+        .countByUserEntityIdAndStatus
             (user.getId(), FriendStatus.ACCEPT);
 
     if(selfFriendCount >= 30) {
@@ -92,7 +92,7 @@ public class FriendService {
 
     // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .countByUserEntityUserIdAndStatus
+        .countByUserEntityIdAndStatus
             (request.getFriendUserId(), FriendStatus.ACCEPT);
 
     if(friendCount >= 30) {
@@ -118,7 +118,7 @@ public class FriendService {
     setUpUser();
 
     FriendEntity friendEntity =
-        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+        friendRepository.findByIdAndStatus(request.getFriendId(),
             FriendStatus.APPLY)
             .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
 
@@ -142,7 +142,7 @@ public class FriendService {
     setUpUser();
 
     FriendEntity friendEntity =
-        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+        friendRepository.findByIdAndStatus(request.getFriendId(),
                 FriendStatus.APPLY)
             .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
 
@@ -154,7 +154,7 @@ public class FriendService {
 
     // 자신의 친구 목록 최대 30개 체크
     int selfFriendCount = friendRepository
-        .countByUserEntityUserIdAndStatus
+        .countByUserEntityIdAndStatus
             (user.getId(), FriendStatus.ACCEPT);
 
     if(selfFriendCount >= 30) {
@@ -163,7 +163,7 @@ public class FriendService {
 
     // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .countByUserEntityUserIdAndStatus
+        .countByUserEntityIdAndStatus
             (friendEntity.getUserEntity().getId(), FriendStatus.ACCEPT);
 
     if(friendCount >= 30) {
@@ -193,7 +193,7 @@ public class FriendService {
     setUpUser();
 
     FriendEntity friendEntity =
-        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+        friendRepository.findByIdAndStatus(request.getFriendId(),
                 FriendStatus.APPLY)
             .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
 
@@ -217,7 +217,7 @@ public class FriendService {
     setUpUser();
 
     FriendEntity selfFriendEntity =
-        friendRepository.findByFriendIdAndStatus(request.getFriendId(),
+        friendRepository.findByIdAndStatus(request.getFriendId(),
                 FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
@@ -225,7 +225,7 @@ public class FriendService {
     Long friendUserId = selfFriendEntity.getFriendUserEntity().getId();
 
     FriendEntity otherFriendEntity =
-        friendRepository.findByFriendUserEntityUserIdAndUserEntityUserIdAndStatus
+        friendRepository.findByFriendUserEntityIdAndUserEntityIdAndStatus
                 (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
@@ -276,7 +276,7 @@ public class FriendService {
     setUpUser();
 
     Page<FriendEntity> friendEntityPage =
-        friendRepository.findByStatusAndUserEntityUserId
+        friendRepository.findByStatusAndUserEntityId
             (FriendStatus.ACCEPT, user.getId(), pageable);
 
     List<ListResponse> result = new ArrayList<>();
@@ -309,7 +309,7 @@ public class FriendService {
     setUpUser();
 
     List<FriendEntity> friendEntityList = friendRepository
-        .findByStatusAndFriendUserEntityUserId
+        .findByStatusAndFriendUserEntityId
             (FriendStatus.APPLY, user.getId());
 
     List<RequestListResponse> result = friendEntityList.stream()

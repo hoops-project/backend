@@ -34,7 +34,7 @@ public class FriendEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long friendId;
+  private Long id;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -53,7 +53,7 @@ public class FriendEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
+  @JoinColumn(nullable = false)
   private UserEntity userEntity;
 
   @ManyToOne

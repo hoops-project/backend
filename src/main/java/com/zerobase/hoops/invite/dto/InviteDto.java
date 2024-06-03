@@ -72,7 +72,7 @@ public class InviteDto {
 
     public static CreateResponse toDto(InviteEntity inviteEntity) {
       return CreateResponse.builder()
-          .inviteId(inviteEntity.getInviteId())
+          .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
@@ -121,7 +121,7 @@ public class InviteDto {
 
     public static CancelResponse toDto(InviteEntity inviteEntity) {
       return CancelResponse.builder()
-          .inviteId(inviteEntity.getInviteId())
+          .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .canceledDateTime(inviteEntity.getCanceledDateTime())
@@ -165,7 +165,7 @@ public class InviteDto {
 
     public static ReceiveAcceptResponse toDto(InviteEntity inviteEntity) {
       return ReceiveAcceptResponse.builder()
-          .inviteId(inviteEntity.getInviteId())
+          .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .acceptedDateTime(inviteEntity.getAcceptedDateTime())
@@ -209,7 +209,7 @@ public class InviteDto {
 
     public static ReceiveRejectResponse toDto(InviteEntity inviteEntity) {
       return ReceiveRejectResponse.builder()
-          .inviteId(inviteEntity.getInviteId())
+          .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .rejectedDateTime(inviteEntity.getRejectedDateTime())
@@ -278,7 +278,7 @@ public class InviteDto {
 
     public static InviteMyListResponse toDto(InviteEntity inviteEntity) {
       return InviteMyListResponse.builder()
-          .inviteId(inviteEntity.getInviteId())
+          .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .senderUserId(inviteEntity.getSenderUserEntity().getId())
@@ -289,7 +289,7 @@ public class InviteDto {
           .senderUserAbility(inviteEntity.getSenderUserEntity().getAbility())
           .mannerPoint(inviteEntity.getSenderUserEntity().getStringAverageRating())
           .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .gameId(inviteEntity.getGameEntity().getGameId())
+          .gameId(inviteEntity.getGameEntity().getId())
           .title(inviteEntity.getGameEntity().getTitle())
           .content(inviteEntity.getGameEntity().getContent())
           .headCount(inviteEntity.getGameEntity().getHeadCount())

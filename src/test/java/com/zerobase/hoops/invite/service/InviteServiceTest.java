@@ -93,8 +93,8 @@ class InviteServiceTest {
   @BeforeEach
   void setUp() {
     requestUser = UserEntity.builder()
-        .userId(1L)
-        .id("test")
+        .id(1L)
+        .loginId("test")
         .password("Testpass12!@")
         .email("test@example.com")
         .name("test")
@@ -108,8 +108,8 @@ class InviteServiceTest {
         .emailAuth(true)
         .build();
     receiverUser = UserEntity.builder()
-        .userId(2L)
-        .id("test2")
+        .id(2L)
+        .loginId("test2")
         .password("Testpass12!@")
         .email("test2@example.com")
         .name("test2")
@@ -123,8 +123,8 @@ class InviteServiceTest {
         .emailAuth(true)
         .build();
     otherUser = UserEntity.builder()
-        .userId(6L)
-        .id("test6")
+        .id(6L)
+        .loginId("test6")
         .password("Testpass12!@")
         .email("test6@example.com")
         .name("test6")
@@ -138,7 +138,7 @@ class InviteServiceTest {
         .emailAuth(true)
         .build();
     createdGameEntity = GameEntity.builder()
-        .gameId(1L)
+        .id(1L)
         .title("테스트제목")
         .content("테스트내용")
         .headCount(6L)
@@ -154,7 +154,7 @@ class InviteServiceTest {
         .userEntity(requestUser)
         .build();
     otherCreatedGameEntity = GameEntity.builder()
-        .gameId(2L)
+        .id(2L)
         .title("테스트제목2")
         .content("테스트내용2")
         .headCount(6L)
@@ -170,20 +170,20 @@ class InviteServiceTest {
         .userEntity(receiverUser)
         .build();
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
-        .participantId(1L)
+        .id(1L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .gameEntity(createdGameEntity)
         .userEntity(requestUser)
         .build();
     requestUserFriendEntity = FriendEntity.builder()
-        .friendId(1L)
+        .id(1L)
         .status(FriendStatus.ACCEPT)
         .userEntity(requestUser)
         .friendUserEntity(receiverUser)
         .build();
     receiverUserFriendEntity = FriendEntity.builder()
-        .friendId(1L)
+        .id(1L)
         .status(FriendStatus.ACCEPT)
         .userEntity(receiverUser)
         .friendUserEntity(requestUser)
@@ -212,11 +212,11 @@ class InviteServiceTest {
 
     getCurrentUser();
 
-    validFriendUser(requestUser.getUserId(), createRequest.getReceiverUserId());
+    validFriendUser(requestUser.getId(), createRequest.getReceiverUserId());
 
     // 경기
     when(gameRepository
-        .findByGameIdAndDeletedDateTimeNull(eq(1L)))
+        .findByIdAndDeletedDateTimeNull(eq(1L)))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     when(userRepository.findById(eq(2L)))
@@ -224,33 +224,33 @@ class InviteServiceTest {
 
     // 해당 경기에 이미 초대 요청 되어 있지 않다고 가정
     when(inviteRepository
-        .existsByInviteStatusAndGameEntityGameIdAndReceiverUserEntityUserId
+        .existsByInviteStatusAndGameEntityIdAndReceiverUserEntityId
             (eq(InviteStatus.REQUEST), eq(1L),
                 eq(2L)))
         .thenReturn(false);
 
     // 해당 경기에 참가해 잇는 사람이 초대할 경우를 가정
     when(participantGameRepository
-        .existsByStatusAndGameEntityGameIdAndUserEntityUserId
+        .existsByStatusAndGameEntityIdAndUserEntityId
             (eq(ParticipantGameStatus.ACCEPT), eq(1L), eq(1L)))
         .thenReturn(true);
 
     // 초대 받는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
     when(participantGameRepository
-        .existsByStatusInAndGameEntityGameIdAndUserEntityUserId
+        .existsByStatusInAndGameEntityIdAndUserEntityId
             (eq(List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY))
                 ,eq(1L), eq(2L)))
         .thenReturn(false);
 
     // 경기 인원이 경기개설자(1명 만) 있다고 가정
     when(participantGameRepository
-        .countByStatusAndGameEntityGameId
+        .countByStatusAndGameEntityId
             (eq(ParticipantGameStatus.ACCEPT), eq(1L)))
         .thenReturn(1L);
 
     when(inviteRepository.save(any(InviteEntity.class))).thenAnswer(invocation -> {
       InviteEntity savedInviteEntity = invocation.getArgument(0);
-      savedInviteEntity.setInviteId(1L); // inviteId 동적 할당
+      savedInviteEntity.setId(1L); // inviteId 동적 할당
       savedInviteEntity.setRequestedDateTime(LocalDateTime.now());
       return savedInviteEntity;
     });
@@ -284,7 +284,7 @@ class InviteServiceTest {
         .build();
 
     InviteEntity inviteEntity = InviteEntity.builder()
-        .inviteId(1L)
+        .id(1L)
         .inviteStatus(InviteStatus.CANCEL)
         .senderUserEntity(requestUser)
         .receiverUserEntity(receiverUser)
@@ -295,7 +295,7 @@ class InviteServiceTest {
 
     // 경기
     when(inviteRepository
-        .findByInviteIdAndInviteStatus(eq(1L), eq(InviteStatus.REQUEST)))
+        .findByIdAndInviteStatus(eq(1L), eq(InviteStatus.REQUEST)))
         .thenReturn(Optional.ofNullable(inviteEntity));
 
     when(inviteRepository.save(any(InviteEntity.class))).thenReturn(inviteEntity);
@@ -328,7 +328,7 @@ class InviteServiceTest {
         .build();
 
     InviteEntity inviteEntity = InviteEntity.builder()
-        .inviteId(1L)
+        .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .senderUserEntity(requestUser)
         .receiverUserEntity(receiverUser)
@@ -343,15 +343,15 @@ class InviteServiceTest {
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(receiverUser));
 
-    validFriendUser(receiverUser.getUserId(), requestUser.getUserId());
+    validFriendUser(receiverUser.getId(), requestUser.getId());
 
-    when(inviteRepository.findByInviteIdAndInviteStatus
+    when(inviteRepository.findByIdAndInviteStatus
         (eq(1L), eq(InviteStatus.REQUEST)))
         .thenReturn(Optional.of(inviteEntity));
 
     // 해당 경기에 인원이 1명 있다고 가정
     when(participantGameRepository
-        .countByStatusAndGameEntityGameId(eq(ParticipantGameStatus.ACCEPT),
+        .countByStatusAndGameEntityId(eq(ParticipantGameStatus.ACCEPT),
             eq(1L)))
         .thenReturn(0L);
 
@@ -388,7 +388,7 @@ class InviteServiceTest {
         .build();
 
     InviteEntity inviteEntity = InviteEntity.builder()
-        .inviteId(1L)
+        .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .senderUserEntity(requestUser)
         .receiverUserEntity(receiverUser)
@@ -396,7 +396,7 @@ class InviteServiceTest {
         .build();
 
     InviteEntity rejectEntity = InviteEntity.builder()
-        .inviteId(1L)
+        .id(1L)
         .inviteStatus(InviteStatus.REJECT)
         .senderUserEntity(requestUser)
         .receiverUserEntity(receiverUser)
@@ -408,7 +408,7 @@ class InviteServiceTest {
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(receiverUser));
 
-    when(inviteRepository.findByInviteIdAndInviteStatus
+    when(inviteRepository.findByIdAndInviteStatus
         (eq(1L), eq(InviteStatus.REQUEST)))
         .thenReturn(Optional.of(inviteEntity));
 
@@ -430,7 +430,7 @@ class InviteServiceTest {
   public void getInviteRequestList_success() {
     //Given
     InviteEntity inviteEntity1 = InviteEntity.builder()
-        .inviteId(1L)
+        .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .senderUserEntity(requestUser)
         .receiverUserEntity(otherUser)
@@ -438,7 +438,7 @@ class InviteServiceTest {
         .build();
 
     InviteEntity inviteEntity2 = InviteEntity.builder()
-        .inviteId(2L)
+        .id(2L)
         .inviteStatus(InviteStatus.REQUEST)
         .senderUserEntity(receiverUser)
         .receiverUserEntity(otherUser)
@@ -458,7 +458,7 @@ class InviteServiceTest {
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(otherUser));
 
-    when(inviteRepository.findByInviteStatusAndReceiverUserEntityUserId
+    when(inviteRepository.findByInviteStatusAndReceiverUserEntityId
         (eq(InviteStatus.REQUEST), anyLong()))
         .thenReturn(inviteEntityList);
 
@@ -487,7 +487,7 @@ class InviteServiceTest {
   }
 
   private void validFriendUser(Long senderUserId, Long receiverUserId) {
-    when(friendRepository.existsByUserEntityUserIdAndFriendUserEntityUserIdAndStatus
+    when(friendRepository.existsByUserEntityIdAndFriendUserEntityIdAndStatus
         (senderUserId, receiverUserId, FriendStatus.ACCEPT)).thenReturn(true);
   }
 

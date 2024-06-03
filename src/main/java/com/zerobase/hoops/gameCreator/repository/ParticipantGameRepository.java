@@ -12,43 +12,43 @@ import org.springframework.stereotype.Repository;
 public interface ParticipantGameRepository extends
     JpaRepository<ParticipantGameEntity, Long> {
 
-  long countByStatusAndGameEntityGameId(
+  long countByStatusAndGameEntityId(
       ParticipantGameStatus participantGameStatus, Long gameId);
 
-  List<ParticipantGameEntity> findByStatusInAndGameEntityGameId(
+  List<ParticipantGameEntity> findByStatusInAndGameEntityId(
       List<ParticipantGameStatus> accept, Long gameId);
 
-  boolean existsByStatusAndGameEntityGameIdAndUserEntityGender(
+  boolean existsByStatusAndGameEntityIdAndUserEntityGender(
       ParticipantGameStatus participantGameStatus, Long gameId,
       GenderType queryGender);
 
-  List<ParticipantGameEntity> findByStatusAndGameEntityGameId(
+  List<ParticipantGameEntity> findByStatusAndGameEntityId(
       ParticipantGameStatus participantGameStatus, Long gameId);
 
-  Optional<ParticipantGameEntity> findByParticipantIdAndStatus(
+  Optional<ParticipantGameEntity> findByIdAndStatus(
       Long participantId, ParticipantGameStatus participantGameStatus);
 
-  boolean existsByStatusInAndGameEntityGameIdAndUserEntityUserId(
+  boolean existsByStatusInAndGameEntityIdAndUserEntityId(
       List<ParticipantGameStatus> participantGameStatus,
       Long gameId, Long receiverUserId);
 
-  List<ParticipantGameEntity> findByGameEntityGameIdAndStatusNotAndDeletedDateTimeNull(
+  List<ParticipantGameEntity> findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(
       Long gameId, ParticipantGameStatus participantGameStatus);
 
-  List<ParticipantGameEntity> findByUserEntityUserIdAndStatusInAndWithdrewDateTimeNull(
+  List<ParticipantGameEntity> findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(
       Long userId, List<ParticipantGameStatus> participantGameStatus);
 
-  List<ParticipantGameEntity> findByGameEntityGameIdAndStatusAndDeletedDateTimeNull(
+  List<ParticipantGameEntity> findByGameEntityIdAndStatusAndDeletedDateTimeNull(
       Long gameId, ParticipantGameStatus participantGameStatus);
 
-  Optional<ParticipantGameEntity> findByStatusAndGameEntityGameIdAndUserEntityUserId(
+  Optional<ParticipantGameEntity> findByStatusAndGameEntityIdAndUserEntityId(
       ParticipantGameStatus participantGameStatus, Long gameId, Long userId);
 
-  boolean existsByStatusAndGameEntityGameIdAndUserEntityUserId(
+  boolean existsByStatusAndGameEntityIdAndUserEntityId(
       ParticipantGameStatus participantGameStatus, Long gameId,
       Long userId);
 
-  boolean existsByGameEntity_GameIdAndUserEntity_UserIdAndStatus(
+  boolean existsByGameEntity_IdAndUserEntity_IdAndStatus(
       Long gameId, Long userId, ParticipantGameStatus status);
 
 }

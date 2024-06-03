@@ -59,7 +59,7 @@ public class FriendDto {
 
     public static ApplyResponse toDto(FriendEntity friendEntity) {
       return ApplyResponse.builder()
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .nickName(friendEntity.getUserEntity().getNickName())
@@ -81,7 +81,7 @@ public class FriendDto {
 
     public static FriendEntity toEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
-          .friendId(friendEntity.getFriendId())
+          .id(friendEntity.getId())
           .status(FriendStatus.CANCEL)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .canceledDateTime(LocalDateTime.now())
@@ -112,7 +112,7 @@ public class FriendDto {
 
     public static CancelResponse toDto(FriendEntity friendEntity) {
       return CancelResponse.builder()
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .canceledDateTime(friendEntity.getCanceledDateTime())
@@ -135,7 +135,7 @@ public class FriendDto {
 
     public static FriendEntity toSelfEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
-          .friendId(friendEntity.getFriendId())
+          .id(friendEntity.getId())
           .status(FriendStatus.ACCEPT)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(LocalDateTime.now())
@@ -176,7 +176,7 @@ public class FriendDto {
 
     public static AcceptResponse toDto(FriendEntity friendEntity) {
       return AcceptResponse.builder()
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(friendEntity.getAcceptedDateTime())
@@ -199,7 +199,7 @@ public class FriendDto {
 
     public static FriendEntity toEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
-          .friendId(friendEntity.getFriendId())
+          .id(friendEntity.getId())
           .status(FriendStatus.REJECT)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .rejectedDateTime(LocalDateTime.now())
@@ -230,7 +230,7 @@ public class FriendDto {
 
     public static RejectResponse toDto(FriendEntity friendEntity) {
       return RejectResponse.builder()
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .rejectedDateTime(friendEntity.getRejectedDateTime())
@@ -253,7 +253,7 @@ public class FriendDto {
 
     public static FriendEntity toSelfEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
-          .friendId(friendEntity.getFriendId())
+          .id(friendEntity.getId())
           .status(FriendStatus.DELETE)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(friendEntity.getAcceptedDateTime())
@@ -266,7 +266,7 @@ public class FriendDto {
     public static FriendEntity toOtherEntity(FriendEntity selfFriendEntity,
         FriendEntity otherFriendEntity) {
       return FriendEntity.builder()
-          .friendId(otherFriendEntity.getFriendId())
+          .id(otherFriendEntity.getId())
           .status(FriendStatus.DELETE)
           .createdDateTime(otherFriendEntity.getCreatedDateTime())
           .acceptedDateTime(otherFriendEntity.getAcceptedDateTime())
@@ -300,7 +300,7 @@ public class FriendDto {
 
     public static DeleteResponse toDto(FriendEntity friendEntity) {
       return DeleteResponse.builder()
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .status(friendEntity.getStatus())
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(friendEntity.getAcceptedDateTime())
@@ -343,7 +343,7 @@ public class FriendDto {
           .playStyle(friendEntity.getFriendUserEntity().getPlayStyle())
           .ability(friendEntity.getFriendUserEntity().getAbility())
           .mannerPoint(friendEntity.getFriendUserEntity().getStringAverageRating())
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .build();
     }
   }
@@ -404,7 +404,7 @@ public class FriendDto {
           .playStyle(friendEntity.getUserEntity().getPlayStyle())
           .ability(friendEntity.getUserEntity().getAbility())
           .mannerPoint(friendEntity.getUserEntity().getStringAverageRating())
-          .friendId(friendEntity.getFriendId())
+          .friendId(friendEntity.getId())
           .build();
     }
 

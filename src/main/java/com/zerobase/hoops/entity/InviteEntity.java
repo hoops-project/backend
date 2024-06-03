@@ -33,7 +33,7 @@ public class InviteEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long inviteId;
+  private Long id;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -51,7 +51,6 @@ public class InviteEntity {
 
   private LocalDateTime deletedDateTime;
 
-
   @ManyToOne
   @JoinColumn(name = "sender_user_id", nullable = false)
   private UserEntity senderUserEntity;
@@ -61,12 +60,12 @@ public class InviteEntity {
   private UserEntity receiverUserEntity;
 
   @ManyToOne
-  @JoinColumn(name = "game_id", nullable = false)
+  @JoinColumn(nullable = false)
   private GameEntity gameEntity;
 
   public static InviteEntity toCancelEntity(InviteEntity inviteEntity) {
     return InviteEntity.builder()
-        .inviteId(inviteEntity.getInviteId())
+        .id(inviteEntity.getId())
         .inviteStatus(InviteStatus.CANCEL)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .canceledDateTime(LocalDateTime.now())
@@ -78,7 +77,7 @@ public class InviteEntity {
 
   public static InviteEntity toAcceptEntity(InviteEntity inviteEntity) {
     return InviteEntity.builder()
-        .inviteId(inviteEntity.getInviteId())
+        .id(inviteEntity.getId())
         .inviteStatus(InviteStatus.ACCEPT)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .acceptedDateTime(LocalDateTime.now())
@@ -90,7 +89,7 @@ public class InviteEntity {
 
   public static InviteEntity toRejectEntity(InviteEntity inviteEntity) {
     return InviteEntity.builder()
-        .inviteId(inviteEntity.getInviteId())
+        .id(inviteEntity.getId())
         .inviteStatus(InviteStatus.REJECT)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .rejectedDateTime(LocalDateTime.now())

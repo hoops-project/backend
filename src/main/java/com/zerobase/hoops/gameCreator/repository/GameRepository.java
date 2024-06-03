@@ -11,15 +11,15 @@ import org.springframework.stereotype.Repository;
 public interface GameRepository extends
     JpaRepository<GameEntity, Long> {
 
-  Optional<GameEntity> findByGameIdAndDeletedDateTimeNull(Long gameId);
+  Optional<GameEntity> findByIdAndDeletedDateTimeNull(Long gameId);
 
-  List<GameEntity> findByUserEntityUserIdAndDeletedDateTimeNull(Long userId);
+  List<GameEntity> findByUserEntityIdAndDeletedDateTimeNull(Long userId);
 
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(
       LocalDateTime beforeDatetime,
       LocalDateTime afterDateTime, String address);
 
-  boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot(
+  boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot(
       LocalDateTime beforeDatetime, LocalDateTime afterDateTime, String address, Long gameId);
 }
 

@@ -63,13 +63,13 @@ public class ParticipantGameService {
     setUpUser();
 
     GameEntity game =
-        gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+        gameRepository.findByIdAndDeletedDateTimeNull(gameId)
             .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     validationCreatorCheck(user, game);
 
     List<ParticipantGameEntity> list = participantGameRepository
-        .findByStatusAndGameEntityGameId(APPLY, gameId);
+        .findByStatusAndGameEntityId(APPLY, gameId);
 
     List<DetailResponse> detailResponseList = list.stream()
         .map(DetailResponse::toDto)
@@ -87,11 +87,11 @@ public class ParticipantGameService {
     setUpUser();
 
     GameEntity game =
-        gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+        gameRepository.findByIdAndDeletedDateTimeNull(gameId)
             .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     List<ParticipantGameEntity> list = participantGameRepository
-        .findByStatusAndGameEntityGameId(ACCEPT, gameId);
+        .findByStatusAndGameEntityId(ACCEPT, gameId);
 
     List<DetailResponse> detailResponseList = list.stream()
         .map(DetailResponse::toDto)
@@ -116,8 +116,8 @@ public class ParticipantGameService {
 
     validateIsNotCreator(user);
 
-    long count = participantGameRepository.countByStatusAndGameEntityGameId
-        (ACCEPT, gameEntity.getGameId());
+    long count = participantGameRepository.countByStatusAndGameEntityId
+        (ACCEPT, gameEntity.getId());
 
     // 경기에 참가자가 다 찼을때 수락 못함
     if (gameEntity.getHeadCount() <= count) {
@@ -173,11 +173,11 @@ public class ParticipantGameService {
     setUpUser();
 
     participantGameEntity = participantGameRepository
-        .findByParticipantIdAndStatus(request.getParticipantId(), ACCEPT)
+        .findByIdAndStatus(request.getParticipantId(), ACCEPT)
         .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
-    gameEntity = gameRepository.findByGameIdAndDeletedDateTimeNull
-            (participantGameEntity.getGameEntity().getGameId())
+    gameEntity = gameRepository.findByIdAndDeletedDateTimeNull
+            (participantGameEntity.getGameEntity().getId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     validationCreatorCheck(user, gameEntity);
@@ -209,11 +209,11 @@ public class ParticipantGameService {
 
   public void setUpParticipant(Long participantId) {
     participantGameEntity = participantGameRepository
-        .findByParticipantIdAndStatus(participantId, APPLY)
+        .findByIdAndStatus(participantId, APPLY)
         .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
-    gameEntity = gameRepository.findByGameIdAndDeletedDateTimeNull
-            (participantGameEntity.getGameEntity().getGameId())
+    gameEntity = gameRepository.findByIdAndDeletedDateTimeNull
+            (participantGameEntity.getGameEntity().getId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 

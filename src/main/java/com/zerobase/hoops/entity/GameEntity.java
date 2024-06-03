@@ -37,7 +37,7 @@ public class GameEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long gameId;
+  private Long id;
 
   @Column(nullable = false)
   private String title;
@@ -89,6 +89,6 @@ public class GameEntity {
   private MatchFormat matchFormat;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
+  @JoinColumn(nullable = false)
   private UserEntity userEntity;
 }

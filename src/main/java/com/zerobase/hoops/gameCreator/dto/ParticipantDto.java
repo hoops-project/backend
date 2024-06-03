@@ -44,7 +44,7 @@ public class ParticipantDto {
     public static ParticipantDto.DetailResponse toDto(
         ParticipantGameEntity participantGameEntity){
       return DetailResponse.builder()
-          .participantId(participantGameEntity.getParticipantId())
+          .participantId(participantGameEntity.getId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .gender(participantGameEntity.getUserEntity().getGender())
@@ -104,7 +104,7 @@ public class ParticipantDto {
     public static ParticipantDto.AcceptResponse toDto(
         ParticipantGameEntity participantGameEntity) {
       return AcceptResponse.builder()
-          .participantId(participantGameEntity.getParticipantId())
+          .participantId(participantGameEntity.getId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
@@ -143,7 +143,7 @@ public class ParticipantDto {
     public static ParticipantDto.RejectResponse toDto(
         ParticipantGameEntity participantGameEntity) {
       return RejectResponse.builder()
-          .participantId(participantGameEntity.getParticipantId())
+          .participantId(participantGameEntity.getId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .rejectedDateTime(participantGameEntity.getRejectedDateTime())
@@ -184,7 +184,7 @@ public class ParticipantDto {
     public static ParticipantDto.KickoutResponse toDto(
         ParticipantGameEntity participantGameEntity) {
       return KickoutResponse.builder()
-          .participantId(participantGameEntity.getParticipantId())
+          .participantId(participantGameEntity.getId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())

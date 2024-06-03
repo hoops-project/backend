@@ -130,12 +130,12 @@ public class GameService {
    * 경기 상세 조회
    */
   public DetailResponse getGameDetail(Long gameId) {
-    GameEntity game = gameRepository.findByGameIdAndDeletedDateTimeNull(gameId)
+    GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull(gameId)
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     List<ParticipantGameEntity> participantGameEntityList =
         participantGameRepository
-            .findByGameEntityGameIdAndStatusAndDeletedDateTimeNull
+            .findByGameEntityIdAndStatusAndDeletedDateTimeNull
                 (gameId, ACCEPT);
 
     List<ParticipantUser> participantUserList =
@@ -157,7 +157,7 @@ public class GameService {
 
     // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
     GameEntity game =
-        gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+        gameRepository.findByIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     validationUpdateGame(request, user, game);
@@ -186,7 +186,7 @@ public class GameService {
     LocalDateTime nowDateTime = LocalDateTime.now();
 
     boolean gameExists = gameRepository
-        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndGameIdNot
+        .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
             (beforeDatetime, afterDateTime, request.getAddress(),
                 request.getGameId());
 
@@ -200,7 +200,7 @@ public class GameService {
      *     이 경우 Exception 발생
      */
     long headCount =
-        participantGameRepository.countByStatusAndGameEntityGameId
+        participantGameRepository.countByStatusAndGameEntityId
             (ACCEPT, request.getGameId());
 
     if (request.getHeadCount() < headCount) {
@@ -213,7 +213,7 @@ public class GameService {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
       boolean genderExist = participantGameRepository
-          .existsByStatusAndGameEntityGameIdAndUserEntityGender
+          .existsByStatusAndGameEntityIdAndUserEntityGender
               (ACCEPT, request.getGameId(), queryGender);
 
       /**
@@ -273,7 +273,7 @@ public class GameService {
         .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
     // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    GameEntity game = gameRepository.findByGameIdAndDeletedDateTimeNull(request.getGameId())
+    GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     if(Objects.equals(user.getId(), game.getUserEntity().getId())) {
@@ -299,8 +299,8 @@ public class GameService {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
     List<ParticipantGameEntity> participantGameEntityList =
-        participantGameRepository.findByStatusInAndGameEntityGameId
-            (List.of(ACCEPT, APPLY), game.getGameId());
+        participantGameRepository.findByStatusInAndGameEntityId
+            (List.of(ACCEPT, APPLY), game.getId());
 
     participantGameEntityList.forEach(participantGame -> {
       participantGame.setStatus(DELETE);
@@ -310,8 +310,8 @@ public class GameService {
 
     // 해당 경기에 초대 신청된 것들 다 DELETE
     List<InviteEntity> inviteEntityList = inviteRepository
-        .findByInviteStatusAndGameEntityGameId
-            (InviteStatus.REQUEST, game.getGameId());
+        .findByInviteStatusAndGameEntityId
+            (InviteStatus.REQUEST, game.getId());
 
     inviteEntityList.forEach(invite -> {
       invite.setInviteStatus(InviteStatus.DELETE);
@@ -332,8 +332,8 @@ public class GameService {
   private WithDrawGameResponse withdrewGame(GameEntity game) {
 
     ParticipantGameEntity participantGameEntity =
-        participantGameRepository.findByStatusAndGameEntityGameIdAndUserEntityUserId
-            (ACCEPT, game.getGameId(), user.getId())
+        participantGameRepository.findByStatusAndGameEntityIdAndUserEntityId
+            (ACCEPT, game.getId(), user.getId())
             .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
     ParticipantGameEntity result =

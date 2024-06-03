@@ -132,7 +132,7 @@ public class GameDto {
 
     public static CreateResponse toDto(GameEntity gameEntity) {
       return CreateResponse.builder()
-          .gameId(gameEntity.getGameId())
+          .gameId(gameEntity.getId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -198,7 +198,7 @@ public class GameDto {
     public static DetailResponse toDto(GameEntity gameEntity,
         List<ParticipantUser> participantUserList) {
       return DetailResponse.builder()
-          .gameId(gameEntity.getGameId())
+          .gameId(gameEntity.getId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -273,7 +273,7 @@ public class GameDto {
 
     public static GameEntity toEntity(UpdateRequest request, GameEntity game) {
       return GameEntity.builder()
-          .gameId(request.getGameId())
+          .id(request.getGameId())
           .title(request.getTitle())
           .content(request.getContent())
           .headCount(request.getHeadCount())
@@ -331,7 +331,7 @@ public class GameDto {
 
     public static UpdateResponse toDto(GameEntity gameEntity) {
       return UpdateResponse.builder()
-          .gameId(gameEntity.getGameId())
+          .gameId(gameEntity.getId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -362,7 +362,7 @@ public class GameDto {
 
     public static GameEntity toEntity(GameEntity game) {
       return GameEntity.builder()
-          .gameId(game.getGameId())
+          .id(game.getId())
           .title(game.getTitle())
           .content(game.getContent())
           .headCount(game.getHeadCount())
@@ -424,7 +424,7 @@ public class GameDto {
 
     public static DeleteGameResponse toDto(GameEntity gameEntity) {
       return DeleteGameResponse.builder()
-          .gameId(gameEntity.getGameId())
+          .gameId(gameEntity.getId())
           .title(gameEntity.getTitle())
           .content(gameEntity.getContent())
           .headCount(gameEntity.getHeadCount())
@@ -463,7 +463,7 @@ public class GameDto {
       return WithDrawGameResponse.builder()
           .status(entity.getStatus())
           .withdrewDateTime(entity.getWithdrewDateTime())
-          .gameId(entity.getGameEntity().getGameId())
+          .gameId(entity.getGameEntity().getId())
           .userId(entity.getUserEntity().getId())
           .build();
     }
