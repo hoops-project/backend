@@ -87,7 +87,7 @@ public class SignUpDto {
   public static class Response {
 
     private Long id;
-    private String LoginId;
+    private String loginId;
     private String email;
     private String name;
     private LocalDate birthday;
@@ -101,7 +101,7 @@ public class SignUpDto {
     public static Response fromDto(UserDto userDto) {
       return Response.builder()
           .id(userDto.getId())
-          .LoginId(userDto.getLoginId())
+          .loginId(userDto.getLoginId())
           .email(userDto.getEmail())
           .name(userDto.getName())
           .birthday(userDto.getBirthday())

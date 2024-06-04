@@ -49,37 +49,37 @@ public class TokenProvider {
   /**
    * AccessToken 생성
    */
-  public String createAccessToken(String LoginId, String email,
+  public String createAccessToken(String loginId, String email,
       List<String> role) {
-    return generateAccessToken(LoginId, email, role, ACCESS_TOKEN_EXPIRE_TIME);
+    return generateAccessToken(loginId, email, role, ACCESS_TOKEN_EXPIRE_TIME);
   }
 
   /**
    * RefreshToken 생성
    */
-  public String createRefreshToken(String LoginId) {
+  public String createRefreshToken(String loginId) {
 
     String refreshToken =
-        generateRefreshToken(LoginId, REFRESH_TOKEN_EXPIRE_TIME);
+        generateRefreshToken(loginId, REFRESH_TOKEN_EXPIRE_TIME);
 
     authRepository.saveRefreshToken(
-        LoginId, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
+        loginId, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
     return refreshToken;
   }
 
-  public String generateAccessToken(String LoginId, String email,
+  public String generateAccessToken(String loginId, String email,
       List<String> roles, Long expireTime) {
 
-    Claims claims = Jwts.claims().setSubject(LoginId);
+    Claims claims = Jwts.claims().setSubject(loginId);
     claims.put("email", email);
     claims.put("roles", roles);
 
     return returnToken(claims, expireTime);
   }
 
-  public String generateRefreshToken(String LoginId, Long expireTime) {
+  public String generateRefreshToken(String loginId, Long expireTime) {
 
-    Claims claims = Jwts.claims().setSubject(LoginId);
+    Claims claims = Jwts.claims().setSubject(loginId);
 
     return returnToken(claims, expireTime);
   }
