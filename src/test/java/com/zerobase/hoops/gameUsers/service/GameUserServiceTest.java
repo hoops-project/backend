@@ -97,7 +97,7 @@ class GameUserServiceTest {
         .headCount(10L)
         .gender(Gender.MALEONLY)
         .startDateTime(LocalDateTime.now().plusHours(1))
-        .userEntity(user)
+        .user(user)
         .build();
 
     gameForManner = GameEntity.builder()
@@ -105,7 +105,7 @@ class GameUserServiceTest {
         .headCount(10L)
         .gender(Gender.MALEONLY)
         .startDateTime(LocalDateTime.of(2023, 5, 8, 10, 0))
-        .userEntity(user)
+        .user(user)
         .build();
 
     participateGame = ParticipantGameEntity.builder()
@@ -294,7 +294,7 @@ class GameUserServiceTest {
     List<ParticipantGameEntity> userGameList = new ArrayList<>();
     GameEntity futureGame = new GameEntity();
     futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
-    futureGame.setUserEntity(user);
+    futureGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
     participantGameEntity.setGameEntity(futureGame);
     userGameList.add(participantGameEntity);
@@ -334,7 +334,7 @@ class GameUserServiceTest {
     List<ParticipantGameEntity> userGameList = new ArrayList<>();
     GameEntity futureGame = new GameEntity();
     futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
-    futureGame.setUserEntity(user);
+    futureGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
     participantGameEntity.setGameEntity(futureGame);
     userGameList.add(participantGameEntity);
@@ -368,7 +368,7 @@ class GameUserServiceTest {
     List<ParticipantGameEntity> userGameList = new ArrayList<>();
     GameEntity pastGame = new GameEntity();
     pastGame.setStartDateTime(LocalDateTime.now().minusDays(1));
-    pastGame.setUserEntity(user);
+    pastGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
     participantGameEntity.setGameEntity(pastGame);
     userGameList.add(participantGameEntity);
@@ -443,9 +443,9 @@ class GameUserServiceTest {
     userEntity.setId(1L);
 
     GameEntity gameEntity1 = new GameEntity();
-    gameEntity1.setUserEntity(userEntity);
+    gameEntity1.setUser(userEntity);
     GameEntity gameEntity2 = new GameEntity();
-    gameEntity2.setUserEntity(userEntity);
+    gameEntity2.setUser(userEntity);
 
     List<GameEntity> gameEntities = Arrays.asList(gameEntity1,
         gameEntity2);
@@ -478,9 +478,9 @@ class GameUserServiceTest {
     userEntity.setId(1L);
 
     GameEntity gameEntity1 = new GameEntity();
-    gameEntity1.setUserEntity(userEntity);
+    gameEntity1.setUser(userEntity);
     GameEntity gameEntity2 = new GameEntity();
-    gameEntity2.setUserEntity(userEntity);
+    gameEntity2.setUser(userEntity);
 
     List<GameEntity> gameEntities = Arrays.asList(gameEntity1,
         gameEntity2);
@@ -507,14 +507,14 @@ class GameUserServiceTest {
     userEntity.setId(1L);
 
     GameEntity gameEntity1 = GameEntity.builder()
-        .userEntity(userEntity)
+        .user(userEntity)
         .id(1L)
         .address(address)
         .startDateTime(LocalDateTime.now().plusHours(1))
         .build();
 
     GameEntity gameEntity2 = GameEntity.builder()
-        .userEntity(userEntity)
+        .user(userEntity)
         .id(2L)
         .address(address)
         .startDateTime(LocalDateTime.now().plusDays(2))

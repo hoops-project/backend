@@ -42,7 +42,7 @@ public class GameEntity {
   @Column(nullable = false)
   private String title;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
   @Column(nullable = false)
@@ -90,5 +90,5 @@ public class GameEntity {
 
   @ManyToOne
   @JoinColumn(nullable = false)
-  private UserEntity userEntity;
+  private UserEntity user;
 }

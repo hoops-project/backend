@@ -54,7 +54,7 @@ public class QGameEntity extends EntityPathBase<GameEntity> {
 
     public final StringPath title = createString("title");
 
-    public final QUserEntity userEntity;
+    public final QUserEntity user;
 
     public QGameEntity(String variable) {
         this(GameEntity.class, forVariable(variable), INITS);
@@ -74,7 +74,7 @@ public class QGameEntity extends EntityPathBase<GameEntity> {
 
     public QGameEntity(Class<? extends GameEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.userEntity = inits.isInitialized("userEntity") ? new QUserEntity(forProperty("userEntity")) : null;
+        this.user = inits.isInitialized("user") ? new QUserEntity(forProperty("user")) : null;
     }
 
 }

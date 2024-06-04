@@ -224,7 +224,7 @@ class GameUserControllerTest {
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
     userEntity.setId(1L);
-    gameEntity.setUserEntity(userEntity);
+    gameEntity.setUser(userEntity);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getId()));
@@ -279,7 +279,7 @@ class GameUserControllerTest {
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
     userEntity.setId(1L);
-    gameEntity.setUserEntity(userEntity);
+    gameEntity.setUser(userEntity);
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
@@ -345,7 +345,7 @@ class GameUserControllerTest {
     UserEntity userEntity = new UserEntity();
     userEntity.setId(1L);
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setUserEntity(userEntity);
+    gameEntity.setUser(userEntity);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getId()));
@@ -402,7 +402,7 @@ class GameUserControllerTest {
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
     userEntity.setId(1L);
-    gameEntity.setUserEntity(userEntity);
+    gameEntity.setUser(userEntity);
     List<GameSearchResponse> expectedGames = Arrays.asList(
         GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(expectedGames);

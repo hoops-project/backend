@@ -135,7 +135,7 @@ class ParticipantGameServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
         .cityName(CityName.SEOUL)
-        .userEntity(createdUser)
+        .user(createdUser)
         .build();
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
         .id(1L)
@@ -244,7 +244,7 @@ class ParticipantGameServiceTest {
     createdGameEntity = GameEntity.builder()
         .id(1L)
         .startDateTime(LocalDateTime.now().minusHours(1))
-        .userEntity(createdUser)
+        .user(createdUser)
         .build();
 
     ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
@@ -385,7 +385,7 @@ class ParticipantGameServiceTest {
     createdGameEntity = GameEntity.builder()
         .id(1L)
         .startDateTime(LocalDateTime.now().minusHours(1))
-        .userEntity(createdUser)
+        .user(createdUser)
         .build();
 
     ParticipantGameEntity acceptPartEntity = ParticipantGameEntity.builder()

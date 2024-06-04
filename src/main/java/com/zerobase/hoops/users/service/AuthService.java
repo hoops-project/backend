@@ -212,7 +212,7 @@ public class AuthService {
     // 내가 생성한 경기 삭제
     List<GameEntity> gameList =
         gameRepository
-            .findByUserEntityIdAndDeletedDateTimeNull(user.getId());
+            .findByUserIdAndDeletedDateTimeNull(user.getId());
     gameList.stream().forEach(game -> {
       game.setDeletedDateTime(now);
       gameRepository.save(game);

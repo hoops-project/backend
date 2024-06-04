@@ -220,7 +220,7 @@ public class ParticipantGameService {
   // 경기 개설자만 수락,거절,강퇴 가능
   public void validationCreatorCheck(UserEntity user, GameEntity game) {
 
-    if (!Objects.equals(user.getId(), game.getUserEntity().getId())) {
+    if (!Objects.equals(user.getId(), game.getUser().getId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
   }

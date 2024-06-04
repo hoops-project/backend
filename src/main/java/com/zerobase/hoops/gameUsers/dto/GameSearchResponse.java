@@ -34,7 +34,7 @@ public class GameSearchResponse {
   public static GameSearchResponse of(GameEntity gameEntity, Long userId) {
     return GameSearchResponse.builder()
         .gameId(gameEntity.getId())
-        .gameOwnerId(gameEntity.getUserEntity().getId())
+        .gameOwnerId(gameEntity.getUser().getId())
         .myId(userId)
         .title(gameEntity.getTitle())
         .content(gameEntity.getContent())

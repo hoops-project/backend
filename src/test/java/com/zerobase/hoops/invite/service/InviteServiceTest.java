@@ -151,7 +151,7 @@ class InviteServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.THREEONTHREE)
         .cityName(CityName.SEOUL)
-        .userEntity(requestUser)
+        .user(requestUser)
         .build();
     otherCreatedGameEntity = GameEntity.builder()
         .id(2L)
@@ -167,7 +167,7 @@ class InviteServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.THREEONTHREE)
         .cityName(CityName.SEOUL)
-        .userEntity(receiverUser)
+        .user(receiverUser)
         .build();
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
         .id(1L)

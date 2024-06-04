@@ -463,7 +463,7 @@ class AuthServiceTest {
     when(request.getHeader("refreshToken")).thenReturn(refreshToken);
     when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
-    lenient().when(gameRepository.findByUserEntityIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
+    lenient().when(gameRepository.findByUserIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
     lenient().when(participantGameRepository.findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
     lenient().when(participantGameRepository.findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
     lenient().when(inviteRepository.findByInviteStatusAndGameEntityId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());

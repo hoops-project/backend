@@ -137,7 +137,7 @@ class GameServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
         .cityName(CityName.SEOUL)
-        .userEntity(requestUser)
+        .user(requestUser)
         .build();
     updatedGameEntity = GameEntity.builder()
         .id(1L)
@@ -154,7 +154,7 @@ class GameServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
         .cityName(CityName.SEOUL)
-        .userEntity(requestUser)
+        .user(requestUser)
         .build();
     deletedGameEntity = GameEntity.builder()
         .id(1L)
@@ -172,7 +172,7 @@ class GameServiceTest {
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
         .cityName(CityName.SEOUL)
-        .userEntity(requestUser)
+        .user(requestUser)
         .build();
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
         .id(1L)
@@ -315,9 +315,9 @@ class GameServiceTest {
     assertEquals(detailResponse.getCityName(), createdGameEntity.getCityName());
     assertEquals(detailResponse.getMatchFormat(), createdGameEntity.getMatchFormat());
     assertEquals(detailResponse.getNickName(),
-        createdGameEntity.getUserEntity().getNickName());
+        createdGameEntity.getUser().getNickName());
     assertEquals(detailResponse.getUserId(),
-        createdGameEntity.getUserEntity().getId());
+        createdGameEntity.getUser().getId());
   }
 
   @Test
@@ -706,7 +706,7 @@ class GameServiceTest {
         .startDateTime(LocalDateTime.now().plusMinutes(15))
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
-        .userEntity(requestUser)
+        .user(requestUser)
         .build();
 
     getCurrentUser();

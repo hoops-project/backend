@@ -201,7 +201,7 @@ public class InviteService {
     inviteRepository.save(result);
 
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
-    if(Objects.equals(inviteEntity.getGameEntity().getUserEntity().getId(),
+    if(Objects.equals(inviteEntity.getGameEntity().getUser().getId(),
         inviteEntity.getSenderUserEntity().getId())) {
 
       ParticipantGameEntity gameCreatorInvite =

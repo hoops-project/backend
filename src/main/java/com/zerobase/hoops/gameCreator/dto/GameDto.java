@@ -88,7 +88,7 @@ public class GameDto {
           .longitude(request.getLongitude())
           .cityName(CityName.getCityName(request.getAddress()))
           .matchFormat(request.getMatchFormat())
-          .userEntity(user)
+          .user(user)
           .build();
     }
   }
@@ -214,8 +214,8 @@ public class GameDto {
           .longitude(gameEntity.getLongitude())
           .cityName(gameEntity.getCityName())
           .matchFormat(gameEntity.getMatchFormat())
-          .nickName(gameEntity.getUserEntity().getNickName())
-          .userId(gameEntity.getUserEntity().getId())
+          .nickName(gameEntity.getUser().getNickName())
+          .userId(gameEntity.getUser().getId())
           .participantUserList(participantUserList)
           .build();
     }
@@ -288,7 +288,7 @@ public class GameDto {
           .longitude(request.getLongitude())
           .cityName(CityName.getCityName(request.getAddress()))
           .matchFormat(request.getMatchFormat())
-          .userEntity(game.getUserEntity())
+          .user(game.getUser())
           .build();
     }
   }
@@ -378,7 +378,7 @@ public class GameDto {
           .longitude(game.getLongitude())
           .cityName(game.getCityName())
           .matchFormat(game.getMatchFormat())
-          .userEntity(game.getUserEntity())
+          .user(game.getUser())
           .build();
     }
   }

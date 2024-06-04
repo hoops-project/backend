@@ -176,7 +176,7 @@ public class GameService {
    */
   private void validationUpdateGame(UpdateRequest request, UserEntity user, GameEntity game) {
     //자신이 경기 개최자가 아니면 수정 못하게
-    if(!Objects.equals(user.getId(), game.getUserEntity().getId())) {
+    if(!Objects.equals(user.getId(), game.getUser().getId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
 
@@ -276,7 +276,7 @@ public class GameService {
     GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull(request.getGameId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
-    if(Objects.equals(user.getId(), game.getUserEntity().getId())) {
+    if(Objects.equals(user.getId(), game.getUser().getId())) {
       return deleteGame(game);
     } else { // 자신이 경기 개최자가 아닌 팀원 이라면
       return withdrewGame(game);
