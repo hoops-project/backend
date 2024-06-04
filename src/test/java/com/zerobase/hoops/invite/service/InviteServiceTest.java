@@ -179,14 +179,14 @@ class InviteServiceTest {
     requestUserFriendEntity = FriendEntity.builder()
         .id(1L)
         .status(FriendStatus.ACCEPT)
-        .userEntity(requestUser)
-        .friendUserEntity(receiverUser)
+        .user(requestUser)
+        .friendUser(receiverUser)
         .build();
     receiverUserFriendEntity = FriendEntity.builder()
         .id(1L)
         .status(FriendStatus.ACCEPT)
-        .userEntity(receiverUser)
-        .friendUserEntity(requestUser)
+        .user(receiverUser)
+        .friendUser(requestUser)
         .build();
   }
 
@@ -487,7 +487,7 @@ class InviteServiceTest {
   }
 
   private void validFriendUser(Long senderUserId, Long receiverUserId) {
-    when(friendRepository.existsByUserEntityIdAndFriendUserEntityIdAndStatus
+    when(friendRepository.existsByUserIdAndFriendUserIdAndStatus
         (senderUserId, receiverUserId, FriendStatus.ACCEPT)).thenReturn(true);
   }
 

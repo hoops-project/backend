@@ -54,10 +54,10 @@ public class FriendEntity {
 
   @ManyToOne
   @JoinColumn(nullable = false)
-  private UserEntity userEntity;
+  private UserEntity user;
 
   @ManyToOne
-  @JoinColumn(name = "friend_user_id", nullable = false)
-  private UserEntity friendUserEntity;
+  @JoinColumn(nullable = false)
+  private UserEntity friendUser;
 
 }

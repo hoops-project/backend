@@ -15,22 +15,22 @@ public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
   Optional<FriendEntity> findByIdAndStatus(
       Long friendId, FriendStatus friendStatus);
 
-  int countByUserEntityIdAndStatus(Long userId, FriendStatus friendStatus);
+  int countByUserIdAndStatus(Long userId, FriendStatus friendStatus);
 
-  Optional<FriendEntity> findByFriendUserEntityIdAndUserEntityIdAndStatus(
+  Optional<FriendEntity> findByFriendUserIdAndUserIdAndStatus(
       Long friendUserId, Long userId, FriendStatus friendStatus);
 
-  Page<FriendEntity> findByStatusAndUserEntityId(FriendStatus friendStatus,
+  Page<FriendEntity> findByStatusAndUserId(FriendStatus friendStatus,
       Long userId, Pageable pageable);
 
-  boolean existsByUserEntityIdAndFriendUserEntityIdAndStatus(
+  boolean existsByUserIdAndFriendUserIdAndStatus(
       Long userId, Long receiverUserId, FriendStatus friendStatus);
 
-  List<FriendEntity> findByUserEntityIdOrFriendUserEntityIdAndStatusNotAndDeletedDateTimeNull(
+  List<FriendEntity> findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
       Long userId, Long friendUserId, FriendStatus friendStatus);
 
-  List<FriendEntity> findByStatusAndFriendUserEntityId(FriendStatus friendStatus, Long userId);
+  List<FriendEntity> findByStatusAndFriendUserId(FriendStatus friendStatus, Long userId);
 
-  boolean existsByUserEntityIdAndFriendUserEntityIdAndStatusIn(Long userId,
+  boolean existsByUserIdAndFriendUserIdAndStatusIn(Long userId,
       Long friendUserId, List<FriendStatus> apply);
 }

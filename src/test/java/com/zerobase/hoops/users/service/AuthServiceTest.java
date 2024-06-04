@@ -469,7 +469,7 @@ class AuthServiceTest {
     lenient().when(inviteRepository.findByInviteStatusAndGameEntityId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
     when(inviteRepository.findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
         InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());
-    lenient().when(friendRepository.findByUserEntityIdOrFriendUserEntityIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
+    lenient().when(friendRepository.findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
     lenient().when(userRepository.findByLoginIdAndDeletedDateTimeNull(anyString())).thenReturn(Optional.of(user));
 
     authService.deactivateUser(request, user);

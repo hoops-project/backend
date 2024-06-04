@@ -30,7 +30,7 @@ public class QFriendEntity extends EntityPathBase<FriendEntity> {
 
     public final DateTimePath<java.time.LocalDateTime> deletedDateTime = createDateTime("deletedDateTime", java.time.LocalDateTime.class);
 
-    public final QUserEntity friendUserEntity;
+    public final QUserEntity friendUser;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -38,7 +38,7 @@ public class QFriendEntity extends EntityPathBase<FriendEntity> {
 
     public final EnumPath<com.zerobase.hoops.friends.type.FriendStatus> status = createEnum("status", com.zerobase.hoops.friends.type.FriendStatus.class);
 
-    public final QUserEntity userEntity;
+    public final QUserEntity user;
 
     public QFriendEntity(String variable) {
         this(FriendEntity.class, forVariable(variable), INITS);
@@ -58,8 +58,8 @@ public class QFriendEntity extends EntityPathBase<FriendEntity> {
 
     public QFriendEntity(Class<? extends FriendEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.friendUserEntity = inits.isInitialized("friendUserEntity") ? new QUserEntity(forProperty("friendUserEntity")) : null;
-        this.userEntity = inits.isInitialized("userEntity") ? new QUserEntity(forProperty("userEntity")) : null;
+        this.friendUser = inits.isInitialized("friendUser") ? new QUserEntity(forProperty("friendUser")) : null;
+        this.user = inits.isInitialized("user") ? new QUserEntity(forProperty("user")) : null;
     }
 
 }

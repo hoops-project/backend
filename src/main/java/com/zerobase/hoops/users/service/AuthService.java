@@ -271,7 +271,7 @@ public class AuthService {
     // 친구 목록에 있는 사람들 서로 삭제
     List<FriendEntity> friendList =
         friendRepository
-            .findByUserEntityIdOrFriendUserEntityIdAndStatusNotAndDeletedDateTimeNull(
+            .findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
                 user.getId(), user.getId(), FriendStatus.DELETE);
     friendList.stream().forEach(friend -> {
       friend.setStatus(FriendStatus.DELETE);

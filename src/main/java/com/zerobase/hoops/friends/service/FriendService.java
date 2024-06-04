@@ -73,7 +73,7 @@ public class FriendService {
 
     // 이미 친구 신청, 수락 상태이면 신청 불가
     boolean exist =
-        friendRepository.existsByUserEntityIdAndFriendUserEntityIdAndStatusIn
+        friendRepository.existsByUserIdAndFriendUserIdAndStatusIn
             (user.getId(), request.getFriendUserId(),
             List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
 
@@ -83,7 +83,7 @@ public class FriendService {
 
     // 자신 친구 목록 최대 30명 체크
     int selfFriendCount = friendRepository
-        .countByUserEntityIdAndStatus
+        .countByUserIdAndStatus
             (user.getId(), FriendStatus.ACCEPT);
 
     if(selfFriendCount >= 30) {
@@ -92,7 +92,7 @@ public class FriendService {
 
     // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .countByUserEntityIdAndStatus
+        .countByUserIdAndStatus
             (request.getFriendUserId(), FriendStatus.ACCEPT);
 
     if(friendCount >= 30) {
@@ -124,7 +124,7 @@ public class FriendService {
 
     // 자기 자신이 한 친구 신청만 취소 가능
     if(!Objects.equals(user.getId(),
-        friendEntity.getUserEntity().getId())) {
+        friendEntity.getUser().getId())) {
       throw new CustomException(NOT_SELF_APPLY);
     }
 
@@ -148,13 +148,13 @@ public class FriendService {
 
     // 자신이 받은 친구 신청만 수락 가능
     if(!Objects.equals(user.getId(),
-        friendEntity.getFriendUserEntity().getId())) {
+        friendEntity.getFriendUser().getId())) {
       throw new CustomException(NOT_SELF_RECEIVE);
     }
 
     // 자신의 친구 목록 최대 30개 체크
     int selfFriendCount = friendRepository
-        .countByUserEntityIdAndStatus
+        .countByUserIdAndStatus
             (user.getId(), FriendStatus.ACCEPT);
 
     if(selfFriendCount >= 30) {
@@ -163,8 +163,8 @@ public class FriendService {
 
     // 상대방 친구 목록 최대 30명 체크
     int friendCount = friendRepository
-        .countByUserEntityIdAndStatus
-            (friendEntity.getUserEntity().getId(), FriendStatus.ACCEPT);
+        .countByUserIdAndStatus
+            (friendEntity.getUser().getId(), FriendStatus.ACCEPT);
 
     if(friendCount >= 30) {
       throw new CustomException(OTHER_FRIEND_FULL);
@@ -199,7 +199,7 @@ public class FriendService {
 
     // 자신이 받은 친구 신청만 거절 가능
     if(!Objects.equals(user.getId(),
-        friendEntity.getFriendUserEntity().getId())) {
+        friendEntity.getFriendUser().getId())) {
       throw new CustomException(NOT_SELF_RECEIVE);
     }
 
@@ -222,16 +222,16 @@ public class FriendService {
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
     Long userId = user.getId();
-    Long friendUserId = selfFriendEntity.getFriendUserEntity().getId();
+    Long friendUserId = selfFriendEntity.getFriendUser().getId();
 
     FriendEntity otherFriendEntity =
-        friendRepository.findByFriendUserEntityIdAndUserEntityIdAndStatus
+        friendRepository.findByFriendUserIdAndUserIdAndStatus
                 (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
     // 자신이 받은 친구만 삭제 가능
     if(!Objects.equals(user.getId(),
-        selfFriendEntity.getUserEntity().getId())) {
+        selfFriendEntity.getUser().getId())) {
       throw new CustomException(NOT_SELF_ACCEPT);
     }
     
@@ -276,7 +276,7 @@ public class FriendService {
     setUpUser();
 
     Page<FriendEntity> friendEntityPage =
-        friendRepository.findByStatusAndUserEntityId
+        friendRepository.findByStatusAndUserId
             (FriendStatus.ACCEPT, user.getId(), pageable);
 
     List<ListResponse> result = new ArrayList<>();
@@ -309,7 +309,7 @@ public class FriendService {
     setUpUser();
 
     List<FriendEntity> friendEntityList = friendRepository
-        .findByStatusAndFriendUserEntityId
+        .findByStatusAndFriendUserId
             (FriendStatus.APPLY, user.getId());
 
     List<RequestListResponse> result = friendEntityList.stream()

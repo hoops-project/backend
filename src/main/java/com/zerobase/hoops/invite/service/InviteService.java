@@ -270,7 +270,7 @@ public class InviteService {
   private void validFriendUser(Long receiverUserId) {
     boolean existFriendFlag =
         friendRepository
-            .existsByUserEntityIdAndFriendUserEntityIdAndStatus
+            .existsByUserIdAndFriendUserIdAndStatus
                 (user.getId(), receiverUserId, FriendStatus.ACCEPT);
 
     if(!existFriendFlag) {
