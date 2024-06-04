@@ -155,7 +155,7 @@ class GameUserServiceTest {
 
   }
 
-  @DisplayName("매너점수 평가 리스트 갖고 오기")
+  @DisplayName("매너점수 평가 리스트 갖고 오기 - 본인제외")
   @Test
   void testGetMannerPoint_Success() {
     // Give

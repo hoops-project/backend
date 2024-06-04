@@ -155,12 +155,14 @@ class ManagerServiceTest {
     blackListUserEntity.getBlackUser().setEmail(blackUserId);
 
     // When
-    //when(blackListUserRepository.findByBlackUser_EmailAndEndDateAfter(
-    //    blackUserId, LocalDate.now()))
-    //    .thenReturn(Optional.of(blackListUserEntity));
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            blackUserId, LocalDate.now()))
+        .thenReturn(Optional.of(blackListUserEntity));
 
     // Then
-    assertDoesNotThrow(() -> managerService.checkBlackList(blackUserId));
+    assertThrows(CustomException.class,
+        () -> managerService.checkBlackList(blackUserId));
   }
 
   @Test
@@ -170,12 +172,14 @@ class ManagerServiceTest {
     String blackUserId = "testUser";
 
     //// When
-    //when(blackListUserRepository.findByBlackUser_EmailAndEndDateAfter(
-    //    blackUserId, LocalDate.now()))
-    //    .thenReturn(Optional.empty());
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            blackUserId, LocalDate.now()))
+        .thenReturn(Optional.empty());
+    managerService.checkBlackList(blackUserId);
 
     // Then
-    managerService.checkBlackList(blackUserId);
+    assertDoesNotThrow(() -> managerService.checkBlackList(blackUserId));
   }
 
   @Test
