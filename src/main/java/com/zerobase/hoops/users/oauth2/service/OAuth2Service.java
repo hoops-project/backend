@@ -108,10 +108,10 @@ public class OAuth2Service {
     return getUserInfo(userInfoResponse);
   }
 
-  private KakaoDto.Request kakaoUserDto(String id, String email,
+  private KakaoDto.Request kakaoUserDto(String loginId, String email,
       String nickName, String gender) {
     return KakaoDto.Request.builder()
-        .id(id)
+        .loginId(loginId)
         .email(email)
         .name(nickName)
         .nickName(nickName)
@@ -169,7 +169,7 @@ public class OAuth2Service {
   public LogInDto.Request kakaoUserLogin(String id) {
     managerService.checkBlackList(id);
     return LogInDto.Request.builder()
-        .id(id)
+        .loginId(id)
         .password("kakao")
         .build();
   }

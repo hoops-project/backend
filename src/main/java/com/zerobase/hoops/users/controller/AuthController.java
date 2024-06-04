@@ -47,7 +47,7 @@ public class AuthController {
   public ResponseEntity<Response> logIn(
       @RequestBody @Validated LogInDto.Request request
   ) {
-    managerService.checkBlackList(request.getId());
+    managerService.checkBlackList(request.getLoginId());
     UserDto userDto = authService.logInUser(request);
     TokenDto tokenDto = authService.getToken(userDto);
 
@@ -69,7 +69,7 @@ public class AuthController {
       @AuthenticationPrincipal UserEntity userEntity
   ) {
     TokenDto tokenDto = authService.refreshToken(request, userEntity);
-    UserDto userDto = userService.getUserInfo(tokenDto.getId());
+    UserDto userDto = userService.getUserInfo(tokenDto.getLoginId());
 
     HttpHeaders responseAccessToken = new HttpHeaders();
     responseAccessToken.set("Authorization", tokenDto.getAccessToken());

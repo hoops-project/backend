@@ -60,7 +60,7 @@ public class AuthService {
   public UserDto logInUser(LogInDto.Request request) {
 
     UserEntity user =
-        userRepository.findByLoginIdAndDeletedDateTimeNull(request.getId())
+        userRepository.findByLoginIdAndDeletedDateTimeNull(request.getLoginId())
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String password = request.getPassword();
@@ -79,12 +79,12 @@ public class AuthService {
 
   public TokenDto getToken(UserDto userDto) {
     String accessToken =
-        tokenProvider.createAccessToken(userDto.getId(),
+        tokenProvider.createAccessToken(userDto.getLoginId(),
             userDto.getEmail(), userDto.getRoles());
     String refreshToken =
-        tokenProvider.createRefreshToken(userDto.getId());
+        tokenProvider.createRefreshToken(userDto.getLoginId());
 
-    return new TokenDto(userDto.getId(), accessToken, refreshToken);
+    return new TokenDto(userDto.getLoginId(), accessToken, refreshToken);
   }
 
   @Transactional
@@ -94,25 +94,25 @@ public class AuthService {
     String refreshToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(refreshToken);
-    String id = claims.get("sub", String.class);
+    String loginId = claims.get("sub", String.class);
 
-    if (!userEntity.getId().equals(id)) {
+    if (!userEntity.getLoginId().equals(loginId)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
     try {
-      authRepository.findById(id);
+      authRepository.findByLoginId(loginId);
     } catch (Exception e) {
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
 
-    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(id)
+    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String responseAccessToken =
-        tokenProvider.createAccessToken(id, user.getEmail(), user.getRoles());
+        tokenProvider.createAccessToken(loginId, user.getEmail(), user.getRoles());
 
-    return new TokenDto(id, responseAccessToken, refreshToken);
+    return new TokenDto(loginId, responseAccessToken, refreshToken);
   }
 
   private String validateAccessTokenExistHeader(HttpServletRequest request) {
@@ -139,19 +139,19 @@ public class AuthService {
     String refreshToken = validateRefreshTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(accessToken);
-    String id = claims.get("sub", String.class);
+    String loginId = claims.get("sub", String.class);
 
     if (tokenUserMatch(accessToken, refreshToken) &&
-        id.equals(userEntity.getId())) {
-      authRepository.deleteById(id);
+        loginId.equals(userEntity.getLoginId())) {
+      authRepository.deleteByLoginId(loginId);
     } else {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
     emitterRepository.deleteAllStartWithUserId(
-        String.valueOf(userEntity.getId()));
+        String.valueOf(userEntity.getLoginId()));
     emitterRepository.deleteAllEventCacheStartWithUserId(
-        String.valueOf(userEntity.getId()));
+        String.valueOf(userEntity.getLoginId()));
 
     tokenProvider.addToLogOutList(accessToken);
   }
@@ -166,13 +166,13 @@ public class AuthService {
   }
 
   public UserDto getUserInfo(HttpServletRequest request, UserEntity user) {
-    isSameId(request, user);
+    isSameLoginId(request, user);
     return UserDto.fromEntity(user);
   }
 
   public UserDto editUserInfo(HttpServletRequest request,
       EditDto.Request editDto, UserEntity user) {
-    isSameId(request, user);
+    isSameLoginId(request, user);
     validateAccessTokenExistHeader(request);
 
     if (editDto.getPassword() != null) {
@@ -186,20 +186,20 @@ public class AuthService {
     return UserDto.fromEntity(user);
   }
 
-  private void isSameId(HttpServletRequest request, UserEntity user) {
+  private void isSameLoginId(HttpServletRequest request, UserEntity user) {
     String accessToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(accessToken);
-    String id = claims.get("sub", String.class);
+    String loginId = claims.get("sub", String.class);
 
-    if (!user.getId().equals(id)) {
+    if (!user.getLoginId().equals(loginId)) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
   }
 
   @Transactional
   public void deactivateUser(HttpServletRequest request, UserEntity user) {
-    isSameId(request, user);
+    isSameLoginId(request, user);
     String accessToken = validateAccessTokenExistHeader(request);
     String refreshToken = validateRefreshTokenExistHeader(request);
 

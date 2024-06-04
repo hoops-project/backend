@@ -30,7 +30,7 @@ public class SignUpDto {
   public static class Request {
 
     @NotBlank(message = "아이디를 입력하세요.")
-    private String id;
+    private String loginId;
 
     @NotBlank(message = "비밀번호를 입력하세요.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~!@#$%^&*()])"
@@ -66,7 +66,7 @@ public class SignUpDto {
 
     public static UserEntity toEntity(Request request) {
       return UserEntity.builder()
-          .loginId(request.getId())
+          .loginId(request.getLoginId())
           .password(request.getPassword())
           .email(request.getEmail())
           .name(request.getName())
@@ -86,8 +86,8 @@ public class SignUpDto {
   @Builder
   public static class Response {
 
-    private Long userId;
-    private String id;
+    private Long id;
+    private String LoginId;
     private String email;
     private String name;
     private LocalDate birthday;
@@ -100,8 +100,8 @@ public class SignUpDto {
 
     public static Response fromDto(UserDto userDto) {
       return Response.builder()
-          .userId(userDto.getUserId())
           .id(userDto.getId())
+          .LoginId(userDto.getLoginId())
           .email(userDto.getEmail())
           .name(userDto.getName())
           .birthday(userDto.getBirthday())

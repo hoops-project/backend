@@ -12,16 +12,16 @@ public class AuthRepository {
   private final StringRedisTemplate redisTemplate;
 
   public void saveRefreshToken(
-      String id, String refreshToken, Duration duration
+      String loginId, String refreshToken, Duration duration
   ) {
-    redisTemplate.opsForValue().set(id, refreshToken, duration);
+    redisTemplate.opsForValue().set(loginId, refreshToken, duration);
   }
 
-  public void findById(String id) {
-    redisTemplate.opsForValue().get(id);
+  public void findByLoginId(String loginId) {
+    redisTemplate.opsForValue().get(loginId);
   }
 
-  public void deleteById(String id) {
-    redisTemplate.delete(id);
+  public void deleteByLoginId(String loginId) {
+    redisTemplate.delete(loginId);
   }
 }

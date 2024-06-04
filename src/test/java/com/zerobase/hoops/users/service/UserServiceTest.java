@@ -76,7 +76,7 @@ class UserServiceTest {
   void signUpUserTest() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("signUpTest")
+        .loginId("signUpTest")
         .password("Hoops!@#456")
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
@@ -101,7 +101,7 @@ class UserServiceTest {
     UserDto sinUpUser = userService.signUpUser(request);
 
     // then
-    assertEquals(sinUpUser.getId(), "signUpTest");
+    assertEquals(sinUpUser.getLoginId(), "signUpTest");
     assertEquals(sinUpUser.getEmail(), "sign@hoops.com");
     assertEquals(sinUpUser.getName(), "성공");
     assertEquals(sinUpUser.getBirthday(), LocalDate.parse(
@@ -121,7 +121,7 @@ class UserServiceTest {
   void signUpUserTest_PasswordMismatch() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("signUpTest")
+        .loginId("signUpTest")
         .password("Hoops!@#456")
         .passwordCheck("MismatchPassword")
         .email("sign@hoops.com")
@@ -147,7 +147,7 @@ class UserServiceTest {
   void signUpUserTest_DuplicatedId() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("test")
+        .loginId("test")
         .password("Hoops!@#456")
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
@@ -162,7 +162,7 @@ class UserServiceTest {
 
     // when
     when(userRepository.existsByLoginIdAndDeletedDateTimeNull(
-        request.getId())).thenReturn(true);
+        request.getLoginId())).thenReturn(true);
     Throwable exception = assertThrows(CustomException.class,
         () -> userService.signUpUser(request));
 
@@ -175,7 +175,7 @@ class UserServiceTest {
   void signUpUserTest_DuplicatedEmail() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("signUpTest")
+        .loginId("signUpTest")
         .password("Hoops!@#456")
         .passwordCheck("Hoops!@#456")
         .email("test@hoops.com") // already existing email
@@ -203,7 +203,7 @@ class UserServiceTest {
   void signUpUserTest_DuplicatedNickName() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("signUpTest")
+        .loginId("signUpTest")
         .password("Hoops!@#456")
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
@@ -231,7 +231,7 @@ class UserServiceTest {
   void signUpUserTest_EmailSendFail() {
     // given
     SignUpDto.Request request = SignUpDto.Request.builder()
-        .id("signUpTest")
+        .loginId("signUpTest")
         .password("Hoops!@#456")
         .passwordCheck("Hoops!@#456")
         .email("sign@hoops.com")
@@ -255,13 +255,13 @@ class UserServiceTest {
   @DisplayName("User_IdCheck_Success")
   void idCheckTest() {
     // given
-    String id = "id";
+    String loginId = "id";
 
     // when
-    when(userRepository.existsByLoginIdAndDeletedDateTimeNull(id)).thenReturn(false);
+    when(userRepository.existsByLoginIdAndDeletedDateTimeNull(loginId)).thenReturn(false);
 
     // then
-    assertTrue(userService.idCheck(id));
+    assertTrue(userService.idCheck(loginId));
   }
 
   @Test
@@ -354,7 +354,7 @@ class UserServiceTest {
   @DisplayName("User_ConfirmEmail_Success")
   void confirmEmailTest_Success() {
     // given
-    String id = user.getLoginId();
+    String loginId = user.getLoginId();
     String email = user.getEmail();
     String certificationNumber = "certificationNumber";
 
@@ -362,13 +362,13 @@ class UserServiceTest {
     when(emailRepository.hasKey(anyString())).thenReturn(true);
     when(emailRepository.getCertificationNumber(anyString())).thenReturn(
         certificationNumber);
-    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)).thenReturn(
         Optional.of(user));
 
     // then
-    userService.confirmEmail(id, email, certificationNumber);
+    userService.confirmEmail(loginId, email, certificationNumber);
     assertTrue(user.isEmailAuth());
-    assertThrows(CustomException.class, () -> userService.confirmEmail(id,
+    assertThrows(CustomException.class, () -> userService.confirmEmail(loginId,
         email, "wrongCertificationNumber"));
   }
 
@@ -394,7 +394,7 @@ class UserServiceTest {
   @DisplayName("User_ConfirmEmail_Fail_InvalidCertificationNumber")
   void confirmEmailTest_InvalidCertificationNumber() {
     // given
-    String id = "id";
+    String loginId = "id";
     String email = "email@test.com";
     String certificationNumber = "certificationNumber";
     String invalidCertificationNumber = "invalidCertificationNumber";
@@ -405,7 +405,7 @@ class UserServiceTest {
         certificationNumber);
 
     Throwable exception = assertThrows(CustomException.class,
-        () -> userService.confirmEmail(id, email, invalidCertificationNumber));
+        () -> userService.confirmEmail(loginId, email, invalidCertificationNumber));
 
     // then
     assertEquals("인증번호가 일치하지 않습니다.", exception.getMessage());
@@ -428,9 +428,9 @@ class UserServiceTest {
         nonExistingEmail)).thenReturn(Optional.empty());
 
     // then
-    assertEquals(expectedId, userService.findId(existingEmail));
+    assertEquals(expectedId, userService.findLoginId(existingEmail));
     assertThrows(CustomException.class,
-        () -> userService.findId(nonExistingEmail));
+        () -> userService.findLoginId(nonExistingEmail));
   }
 
   @Test
@@ -443,7 +443,7 @@ class UserServiceTest {
     when(userRepository.findByEmailAndDeletedDateTimeNull(
         nonExistingEmail)).thenReturn(Optional.empty());
     Throwable exception = assertThrows(CustomException.class,
-        () -> userService.findId(nonExistingEmail));
+        () -> userService.findLoginId(nonExistingEmail));
 
     // then
     assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());

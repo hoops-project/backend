@@ -49,8 +49,8 @@ public class EditDto {
   @Builder
   public static class Response {
 
-    private Long userId;
-    private String id;
+    private Long id;
+    private String loginId;
     private String email;
     private String name;
     private LocalDate birthday;
@@ -64,8 +64,8 @@ public class EditDto {
 
     public static Response fromDto(UserDto userDto, String refreshToken) {
       return Response.builder()
-          .userId(userDto.getUserId())
           .id(userDto.getId())
+          .loginId(userDto.getLoginId())
           .email(userDto.getEmail())
           .name(userDto.getName())
           .birthday(userDto.getBirthday())

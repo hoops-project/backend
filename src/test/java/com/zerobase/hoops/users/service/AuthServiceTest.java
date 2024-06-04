@@ -143,7 +143,7 @@ class AuthServiceTest {
     UserDto result = authService.logInUser(request);
 
     // then
-    assertEquals(id, result.getId());
+    assertEquals(id, result.getLoginId());
     assertTrue(passwordEncoder.matches(password, result.getPassword()));
   }
 
@@ -207,9 +207,10 @@ class AuthServiceTest {
     String refreshToken = "refreshToken";
 
     // when
-    when(tokenProvider.createAccessToken(userDto.getId(), userDto.getEmail(),
+    when(tokenProvider.createAccessToken(userDto.getLoginId(),
+        userDto.getEmail(),
         userDto.getRoles())).thenReturn(accessToken);
-    when(tokenProvider.createRefreshToken(userDto.getId())).thenReturn(refreshToken);
+    when(tokenProvider.createRefreshToken(userDto.getLoginId())).thenReturn(refreshToken);
 
     TokenDto result = authService.getToken(userDto);
 
@@ -288,7 +289,7 @@ class AuthServiceTest {
 
     // when
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
-    doThrow(new CustomException(ErrorCode.NOT_FOUND_TOKEN)).when(authRepository).findById(user.getLoginId());
+    doThrow(new CustomException(ErrorCode.NOT_FOUND_TOKEN)).when(authRepository).findByLoginId(user.getLoginId());
 
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
@@ -332,28 +333,26 @@ class AuthServiceTest {
     when(request.getHeader("refreshToken")).thenReturn(refreshToken);
 
     Claims accessClaims = Jwts.claims().setSubject(user.getLoginId());
-    accessClaims.put("id", user.getId());
     Claims refreshClaims = Jwts.claims().setSubject(user.getLoginId());
-    refreshClaims.put("id", user.getId());
 
     when(tokenProvider.parseClaims(accessToken)).thenReturn(accessClaims);
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(refreshClaims);
 
-    doNothing().when(authRepository).deleteById(user.getLoginId());
+    doNothing().when(authRepository).deleteByLoginId(user.getLoginId());
     doNothing().when(emitterRepository).deleteAllStartWithUserId(
-        String.valueOf(user.getId()));
+        String.valueOf(user.getLoginId()));
     doNothing().when(emitterRepository).deleteAllEventCacheStartWithUserId(
-        String.valueOf(user.getId()));
+        String.valueOf(user.getLoginId()));
     doNothing().when(tokenProvider).addToLogOutList(accessToken);
 
     authService.logOutUser(request, user);
 
     // then
-    verify(authRepository, times(1)).deleteById(user.getLoginId());
+    verify(authRepository, times(1)).deleteByLoginId(user.getLoginId());
     verify(emitterRepository, times(1)).deleteAllStartWithUserId(
-        String.valueOf(user.getId()));
+        String.valueOf(user.getLoginId()));
     verify(emitterRepository, times(1)).deleteAllEventCacheStartWithUserId(
-        String.valueOf(user.getId()));
+        String.valueOf(user.getLoginId()));
     verify(tokenProvider, times(1)).addToLogOutList(accessToken);
   }
 
@@ -402,7 +401,7 @@ class AuthServiceTest {
     UserDto result = authService.getUserInfo(request, user);
 
     // then
-    assertEquals(user.getId(), result.getId());
+    assertEquals(user.getLoginId(), result.getLoginId());
     verify(request, times(1)).getHeader(HttpHeaders.AUTHORIZATION);
     verify(tokenProvider, times(1)).parseClaims(anyString());
   }
@@ -446,7 +445,7 @@ class AuthServiceTest {
     UserDto result = authService.editUserInfo(request, editDto, user);
 
     // then
-    assertEquals(user.getId(), result.getId());
+    assertEquals(user.getLoginId(), result.getLoginId());
     assertEquals(user.getNickName(), result.getNickName());
     assertNotEquals(password, result.getPassword());
   }

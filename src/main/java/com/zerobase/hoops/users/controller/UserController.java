@@ -82,11 +82,11 @@ public class UserController {
   @Operation(summary = "이메일 인증")
   @GetMapping("/signup/confirm")
   public ResponseEntity<String> confirmCertificationNumber(
-      @RequestParam(name = "id") String id,
+      @RequestParam(name = "loginId") String loginId,
       @RequestParam(name = "email") String email,
       @RequestParam(name = "certificationNumber") String certificationNumber
   ) {
-    userService.confirmEmail(id, email, certificationNumber);
+    userService.confirmEmail(loginId, email, certificationNumber);
 
     return ResponseEntity.ok("인증이 성공적으로 완료되었습니다.");
   }
@@ -96,12 +96,12 @@ public class UserController {
    */
   @Operation(summary = "아이디 찾기")
   @GetMapping("/find/id")
-  public ResponseEntity<String> findId(
+  public ResponseEntity<String> findLoginId(
       @RequestParam(name = "email") String email
   ) {
-    String id = userService.findId(email);
+    String loginId = userService.findLoginId(email);
 
-    return ResponseEntity.ok(id);
+    return ResponseEntity.ok(loginId);
   }
 
   /**
@@ -110,9 +110,9 @@ public class UserController {
   @Operation(summary = "비밀번호 찾기")
   @GetMapping("/find/password")
   public ResponseEntity<Boolean> findPassword(
-      @RequestParam(name = "id") String id
+      @RequestParam(name = "loginId") String loginId
   ) throws NoSuchAlgorithmException {
-    boolean success = userService.findPassword(id);
+    boolean success = userService.findPassword(loginId);
 
     return ResponseEntity.ok(success);
   }

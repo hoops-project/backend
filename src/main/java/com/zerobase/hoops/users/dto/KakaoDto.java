@@ -25,7 +25,7 @@ public class KakaoDto {
   public static class Request {
 
     @NotBlank(message = "아이디를 입력하세요.")
-    private String id;
+    private String loginId;
 
     @NotBlank(message = "이메일을 입력하세요.")
     @Email(message = "이메일 형식에 맞게 입력하세요.")
@@ -43,7 +43,7 @@ public class KakaoDto {
     public static UserEntity toEntity(Request request) {
       BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
       return UserEntity.builder()
-          .loginId(request.getId())
+          .loginId(request.getLoginId())
           .password(encoder.encode("kakao"))
           .email(request.getEmail())
           .name(request.getName())
@@ -62,8 +62,8 @@ public class KakaoDto {
   @Builder
   public static class Response {
 
-    private Long userId;
-    private String id;
+    private Long id;
+    private String loginId;
     private String email;
     private String name;
     private LocalDate birthday;
@@ -77,8 +77,8 @@ public class KakaoDto {
 
     public static Response fromDto(UserDto userDto, String refreshToken) {
       return Response.builder()
-          .userId(userDto.getUserId())
           .id(userDto.getId())
+          .loginId(userDto.getLoginId())
           .email(userDto.getEmail())
           .name(userDto.getName())
           .birthday(userDto.getBirthday())
