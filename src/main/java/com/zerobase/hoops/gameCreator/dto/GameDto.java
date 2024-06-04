@@ -4,6 +4,7 @@ package com.zerobase.hoops.gameCreator.dto;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -18,6 +19,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -497,6 +499,21 @@ public class GameDto {
           .mannerPoint(entity.getUser().getStringAverageRating())
           .build();
     }
+
+    // 테스트 코드용 List 간 equals
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GameDto.ParticipantUser that = (GameDto.ParticipantUser) o;
+      return Objects.equals(userId, that.userId) &&
+          Objects.equals(genderType, that.genderType) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint);
+    }
+
   }
 
 }

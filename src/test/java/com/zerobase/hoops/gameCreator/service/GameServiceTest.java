@@ -1,6 +1,7 @@
 package com.zerobase.hoops.gameCreator.service;
 
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -25,6 +26,7 @@ import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteGameResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
+import com.zerobase.hoops.gameCreator.dto.GameDto.ParticipantUser;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
 import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.WithDrawGameResponse;
@@ -129,7 +131,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
@@ -146,7 +148,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
@@ -163,8 +165,8 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .deletedDateTime(LocalDateTime.of(2024, 7, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
+        .deletedDateTime(LocalDateTime.now().minusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
@@ -177,7 +179,7 @@ class GameServiceTest {
     creatorParticipantGameEntity = ParticipantGameEntity.builder()
         .id(1L)
         .status(ACCEPT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .createdDateTime(LocalDateTime.now())
         .game(createdGameEntity)
         .user(requestUser)
         .build();
@@ -193,7 +195,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
@@ -202,10 +204,15 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
+    LocalDateTime startDatetime = request.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     getCurrentUser();
 
     // aroundGameCount를 0으로 설정하여 이미 예정된 게임이 없는 상황을 가정합니다.
-    when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(any(), any(), anyString()))
+    when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
+        (eq(beforeDatetime), eq(afterDateTime), eq(request.getAddress())))
         .thenReturn(false);
 
     when(gameRepository.save(any())).thenReturn(createdGameEntity);
@@ -221,7 +228,6 @@ class GameServiceTest {
     assertEquals(result.getHeadCount(), createdGameEntity.getHeadCount());
     assertEquals(result.getFieldStatus(), createdGameEntity.getFieldStatus());
     assertEquals(result.getGender(), createdGameEntity.getGender());
-    assertEquals(result.getStartDateTime(), createdGameEntity.getStartDateTime());
     assertEquals(result.getInviteYn(), createdGameEntity.getInviteYn());
     assertEquals(result.getAddress(), createdGameEntity.getAddress());
     assertEquals(result.getPlaceName(), createdGameEntity.getPlaceName());
@@ -240,11 +246,15 @@ class GameServiceTest {
         .address("테스트 주소")
         .build();
 
+    LocalDateTime startDatetime = request.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     getCurrentUser();
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
-        (any(LocalDateTime.class), any(LocalDateTime.class), eq("테스트 주소")))
+        (eq(beforeDatetime), eq(afterDateTime), eq("테스트 주소")))
         .thenReturn(false);
 
     // when
@@ -265,10 +275,14 @@ class GameServiceTest {
         .address("테스트 주소")
         .build();
 
+    LocalDateTime startDatetime = request.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     getCurrentUser();
 
     when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
-        (any(LocalDateTime.class), any(LocalDateTime.class), eq("테스트 주소")))
+        (eq(beforeDatetime), eq(afterDateTime), eq("테스트 주소")))
         .thenReturn(true);
 
     // when
@@ -289,12 +303,15 @@ class GameServiceTest {
     List<ParticipantGameEntity> participantGameEntityList =
         List.of(creatorParticipantGameEntity);
 
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    List<ParticipantUser> participantUserList =
+        participantGameEntityList.stream().map(ParticipantUser::toDto).toList();
+
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.of(createdGameEntity));
 
     // 게임에 참가한 사람이 게임 개설자 밖에 없다고 가정
     when(participantGameRepository
-        .findByGameIdAndStatusAndDeletedDateTimeNull(anyLong(),
+        .findByGameIdAndStatusAndDeletedDateTimeNull(eq(gameId),
             eq(ACCEPT))).thenReturn(participantGameEntityList);
 
     // when
@@ -318,12 +335,15 @@ class GameServiceTest {
         createdGameEntity.getUser().getNickName());
     assertEquals(detailResponse.getUserId(),
         createdGameEntity.getUser().getId());
+    assertEquals(detailResponse.getParticipantUserList(), participantUserList);
   }
 
   @Test
   @DisplayName("경기 수정 성공")
   void updateGame_success() {
     // Given
+
+
     UpdateRequest updateRequest = UpdateRequest.builder()
         .gameId(1L)
         .title("수정테스트제목")
@@ -331,7 +351,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .placeName("서울 농구장")
@@ -340,29 +360,35 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(updateRequest.getGameId())))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(false);
 
     // 현재 경기에 수락된 인원수가 개설자 한명만 있다고 가정
     when(participantGameRepository.countByStatusAndGameId
-        (eq(ACCEPT), anyLong()))
+        (eq(ACCEPT), eq(gameId)))
         .thenReturn(1L);
 
     // 경기 수정
     when(gameRepository.save(any())).thenReturn(updatedGameEntity);
-
 
     // when
     UpdateResponse result = gameService.updateGame(updateRequest);
@@ -374,7 +400,6 @@ class GameServiceTest {
     assertEquals(result.getHeadCount(), this.updatedGameEntity.getHeadCount());
     assertEquals(result.getFieldStatus(), this.updatedGameEntity.getFieldStatus());
     assertEquals(result.getGender(), this.updatedGameEntity.getGender());
-    assertEquals(result.getStartDateTime(), this.updatedGameEntity.getStartDateTime());
     assertEquals(result.getInviteYn(), this.updatedGameEntity.getInviteYn());
     assertEquals(result.getAddress(), this.updatedGameEntity.getAddress());
     assertEquals(result.getLatitude(), this.updatedGameEntity.getLatitude());
@@ -393,19 +418,26 @@ class GameServiceTest {
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(updateRequest.getGameId())))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(false);
 
     // when
@@ -428,19 +460,25 @@ class GameServiceTest {
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 있음.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(true);
 
     // when
@@ -463,23 +501,29 @@ class GameServiceTest {
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(false);
 
     when(participantGameRepository
-        .countByStatusAndGameId(eq(ACCEPT), anyLong()))
+        .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
         .thenReturn(8L);
 
     // when
@@ -503,28 +547,34 @@ class GameServiceTest {
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(false);
 
     when(participantGameRepository
-        .countByStatusAndGameId(eq(ACCEPT), anyLong()))
+        .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
         .thenReturn(8L);
 
     when(participantGameRepository
         .existsByStatusAndGameIdAndUserGender
-            (eq(ACCEPT), anyLong(), eq(GenderType.MALE)))
+            (eq(ACCEPT), eq(gameId), eq(GenderType.MALE)))
         .thenReturn(true);
 
     // when
@@ -549,28 +599,34 @@ class GameServiceTest {
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .build();
 
+    Long gameId = updateRequest.getGameId();
+    String address = updateRequest.getAddress();
+    LocalDateTime startDatetime = updateRequest.getStartDateTime();
+    LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
+    LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
+
     GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
         createdGameEntity);
 
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository
         .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot
-            (any(), any(), anyString(), anyLong()))
+            (eq(beforeDatetime), eq(afterDateTime), eq(address), eq(gameId)))
         .thenReturn(false);
 
     when(participantGameRepository
-        .countByStatusAndGameId(eq(ACCEPT), anyLong()))
+        .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
         .thenReturn(8L);
 
     when(participantGameRepository
         .existsByStatusAndGameIdAndUserGender
-            (eq(ACCEPT), anyLong(), eq(GenderType.FEMALE)))
+            (eq(ACCEPT), eq(gameId), eq(GenderType.FEMALE)))
         .thenReturn(true);
 
     // when
@@ -599,6 +655,9 @@ class GameServiceTest {
         .receiverUser(receiveUser)
         .build();
 
+    Long gameId = deleteRequest.getGameId();
+
+
     List<ParticipantGameEntity> groupList = new ArrayList<>();
     groupList.add(creatorParticipantGameEntity);
 
@@ -610,16 +669,16 @@ class GameServiceTest {
     getCurrentUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(updatedGameEntity));
 
-    // 경기 삭제 전에 기존에 경기에 ACCEPT 멤버가 자기 자신만 있다고 가정
+    // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버가 자기 자신만 있다고 가정
     when(participantGameRepository.findByStatusInAndGameId
-        (anyList(), anyLong())).thenReturn(groupList);
+        (eq(List.of(ACCEPT, APPLY)), eq(gameId))).thenReturn(groupList);
 
     // 해당 경기에 초대 신청된 것들 다 CANCEL
     when(inviteRepository.findByInviteStatusAndGameId
-        (eq(InviteStatus.REQUEST), anyLong()))
+        (eq(InviteStatus.REQUEST), eq(gameId)))
         .thenReturn(inviteEntityList);
 
     when(gameRepository.save(any())).thenReturn(deletedGameEntity);
@@ -656,11 +715,13 @@ class GameServiceTest {
     ParticipantGameEntity receivePartEntity = ParticipantGameEntity.builder()
         .id(2L)
         .status(ACCEPT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .acceptedDateTime(LocalDateTime.of(2025, 10, 10, 12, 0, 0))
+        .createdDateTime(LocalDateTime.now())
+        .acceptedDateTime(LocalDateTime.now().plusHours(1))
         .game(createdGameEntity)
         .user(receiveUser)
         .build();
+
+    Long gameId = deleteRequest.getGameId();
 
     ParticipantGameEntity deletedPartEntity =
         ParticipantGameEntity.setWithdraw(receivePartEntity);
@@ -671,13 +732,13 @@ class GameServiceTest {
     getReceiveUser();
 
     // 경기
-    when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
+    when(gameRepository.findByIdAndDeletedDateTimeNull(eq(gameId)))
         .thenReturn(Optional.ofNullable(updatedGameEntity));
 
     // 자기 자신 CANCEL로 업데이트
     when(participantGameRepository
         .findByStatusAndGameIdAndUserId
-        (eq(ACCEPT), anyLong(), anyLong()))
+        (eq(ACCEPT), eq(gameId), eq(receiveUser.getId())))
         .thenReturn(Optional.ofNullable(receivePartEntity));
 
     when(participantGameRepository.save(any())).thenReturn(deletedPartEntity);
