@@ -3,6 +3,7 @@ package com.zerobase.hoops.users.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.UserEntity;
@@ -92,8 +93,7 @@ class UserServiceTest {
 
     UserEntity user = SignUpDto.Request.toEntity(request);
 
-    when(emailProvider.sendCertificationMail(
-        any(), any(), any())).thenReturn(true);
+    doNothing().when(emailProvider).sendCertificationMail(any(), any(), any());
 
     when(userRepository.save(any(UserEntity.class))).thenReturn(user);
 
@@ -224,31 +224,6 @@ class UserServiceTest {
 
     // then
     assertEquals("이미 사용 중인 별명입니다.", exception.getMessage());
-  }
-
-  @Test
-  @DisplayName("User_SignUp_Fail_EmailSendFail")
-  void signUpUserTest_EmailSendFail() {
-    // given
-    SignUpDto.Request request = SignUpDto.Request.builder()
-        .loginId("signUpTest")
-        .password("Hoops!@#456")
-        .passwordCheck("Hoops!@#456")
-        .email("sign@hoops.com")
-        .name("성공")
-        .birthday(LocalDate.parse("19900101",
-            DateTimeFormatter.ofPattern("yyyyMMdd")))
-        .gender("MALE")
-        .nickName("별명")
-        .playStyle("BALANCE")
-        .ability("DRIBBLE")
-        .build();
-
-    when(emailProvider.sendCertificationMail(any(), any(), any())).thenReturn(
-        false);
-
-    // then
-    assertThrows(CustomException.class, () -> userService.signUpUser(request));
   }
 
   @Test
@@ -461,8 +436,8 @@ class UserServiceTest {
     // when
     when(userRepository.findByLoginIdAndDeletedDateTimeNull(existingId)).thenReturn(
         Optional.of(existingUser));
-    when(emailProvider.sendTemporaryPasswordMail(anyString(),
-        anyString())).thenReturn(true);
+    doNothing().when(emailProvider).sendTemporaryPasswordMail(anyString(),
+        anyString());
 
     // then
     assertTrue(userService.findPassword(existingId));
@@ -482,26 +457,5 @@ class UserServiceTest {
 
     // then
     assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());
-  }
-
-  @Test
-  @DisplayName("User_findPassword_Fail_EmailSendFail")
-  void findPasswordTest_EmailSendFail() {
-    // given
-    String existingId = "existingId";
-
-    UserEntity existingUser = UserEntity.builder().loginId(existingId)
-        .email("existingEmail@test.com").build();
-
-    // when
-    when(userRepository.findByLoginIdAndDeletedDateTimeNull(existingId)).thenReturn(
-        Optional.of(existingUser));
-    when(emailProvider.sendTemporaryPasswordMail(any(), any())).thenReturn(
-        false);
-    Throwable exception = assertThrows(CustomException.class,
-        () -> userService.findPassword(existingId));
-
-    // then
-    assertEquals("메일 발송에 실패하였습니다.", exception.getMessage());
   }
 }

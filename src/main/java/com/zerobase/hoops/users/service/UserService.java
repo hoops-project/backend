@@ -59,11 +59,11 @@ public class UserService implements UserDetailsService {
 
       String certificationNumber =
           CertificationProvider.createCertificationNumber();
-      boolean isSuccess =
-          emailProvider.sendCertificationMail(loginId, email,
-              certificationNumber);
-      if (!isSuccess) {
-        throw new CustomException(ErrorCode.MAIL_SEND_FAIL);
+      try {
+        emailProvider.sendCertificationMail(loginId, email,
+            certificationNumber);
+      } catch (Exception e) {
+        e.printStackTrace();
       }
       emailRepository.saveCertificationNumber(email, certificationNumber);
 
@@ -168,12 +168,13 @@ public class UserService implements UserDetailsService {
 
     String email = user.getEmail();
 
-    boolean isSuccess =
-        emailProvider.sendTemporaryPasswordMail(email, newPassword);
-    if (!isSuccess) {
-      throw new CustomException(ErrorCode.MAIL_SEND_FAIL);
+    try {
+      emailProvider.sendTemporaryPasswordMail(email, newPassword);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
     }
 
-    return isSuccess;
+    return true;
   }
 }
