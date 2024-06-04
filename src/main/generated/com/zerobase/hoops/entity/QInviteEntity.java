@@ -28,19 +28,19 @@ public class QInviteEntity extends EntityPathBase<InviteEntity> {
 
     public final DateTimePath<java.time.LocalDateTime> deletedDateTime = createDateTime("deletedDateTime", java.time.LocalDateTime.class);
 
-    public final QGameEntity gameEntity;
+    public final QGameEntity game;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final EnumPath<com.zerobase.hoops.invite.type.InviteStatus> inviteStatus = createEnum("inviteStatus", com.zerobase.hoops.invite.type.InviteStatus.class);
 
-    public final QUserEntity receiverUserEntity;
+    public final QUserEntity receiverUser;
 
     public final DateTimePath<java.time.LocalDateTime> rejectedDateTime = createDateTime("rejectedDateTime", java.time.LocalDateTime.class);
 
     public final DateTimePath<java.time.LocalDateTime> requestedDateTime = createDateTime("requestedDateTime", java.time.LocalDateTime.class);
 
-    public final QUserEntity senderUserEntity;
+    public final QUserEntity senderUser;
 
     public QInviteEntity(String variable) {
         this(InviteEntity.class, forVariable(variable), INITS);
@@ -60,9 +60,9 @@ public class QInviteEntity extends EntityPathBase<InviteEntity> {
 
     public QInviteEntity(Class<? extends InviteEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.gameEntity = inits.isInitialized("gameEntity") ? new QGameEntity(forProperty("gameEntity"), inits.get("gameEntity")) : null;
-        this.receiverUserEntity = inits.isInitialized("receiverUserEntity") ? new QUserEntity(forProperty("receiverUserEntity")) : null;
-        this.senderUserEntity = inits.isInitialized("senderUserEntity") ? new QUserEntity(forProperty("senderUserEntity")) : null;
+        this.game = inits.isInitialized("game") ? new QGameEntity(forProperty("game"), inits.get("game")) : null;
+        this.receiverUser = inits.isInitialized("receiverUser") ? new QUserEntity(forProperty("receiverUser")) : null;
+        this.senderUser = inits.isInitialized("senderUser") ? new QUserEntity(forProperty("senderUser")) : null;
     }
 
 }

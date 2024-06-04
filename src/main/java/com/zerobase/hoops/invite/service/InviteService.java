@@ -95,7 +95,7 @@ public class InviteService {
 
     // 해당 경기에 이미 초대 요청 되어 있으면 막음
     boolean inviteRequestFlag =
-        inviteRepository.existsByInviteStatusAndGameEntityIdAndReceiverUserEntityId
+        inviteRepository.existsByInviteStatusAndGameIdAndReceiverUserId
         (InviteStatus.REQUEST, request.getGameId(),
             request.getReceiverUserId());
 
@@ -151,13 +151,13 @@ public class InviteService {
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
     // 본인이 경기 초대 요청한 것만 취소 가능
-    if(!Objects.equals(inviteEntity.getSenderUserEntity().getId(),
+    if(!Objects.equals(inviteEntity.getSenderUser().getId(),
         user.getId())) {
       throw new CustomException(NOT_SELF_REQUEST);
     }
 
     // 다른 경기 초대 요청 인지 체크
-    if(!Objects.equals(inviteEntity.getGameEntity().getId(),
+    if(!Objects.equals(inviteEntity.getGame().getId(),
         request.getGameId())) {
       throw new CustomException(NOT_INVITE_FOUND);
     }
@@ -180,10 +180,10 @@ public class InviteService {
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
-    validFriendUser(inviteEntity.getSenderUserEntity().getId());
+    validFriendUser(inviteEntity.getSenderUser().getId());
 
     // 본인이 받은 초대 요청만 수락 가능
-    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getId(),
+    if(!Objects.equals(inviteEntity.getReceiverUser().getId(),
         user.getId())) {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
@@ -191,9 +191,9 @@ public class InviteService {
     // 해당 경기에 인원이 다차면 수락 불가능
     long count = participantGameRepository
         .countByStatusAndGameId(ParticipantGameStatus.ACCEPT,
-            inviteEntity.getGameEntity().getId());
+            inviteEntity.getGame().getId());
 
-    if(count >= inviteEntity.getGameEntity().getHeadCount()) {
+    if(count >= inviteEntity.getGame().getHeadCount()) {
       throw new CustomException(FULL_PARTICIPANT);
     }
 
@@ -201,8 +201,8 @@ public class InviteService {
     inviteRepository.save(result);
 
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
-    if(Objects.equals(inviteEntity.getGameEntity().getUser().getId(),
-        inviteEntity.getSenderUserEntity().getId())) {
+    if(Objects.equals(inviteEntity.getGame().getUser().getId(),
+        inviteEntity.getSenderUser().getId())) {
 
       ParticipantGameEntity gameCreatorInvite =
           ParticipantGameEntity.gameCreatorInvite(inviteEntity);
@@ -230,7 +230,7 @@ public class InviteService {
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
     // 본인이 받은 초대 요청만 거절 가능
-    if(!Objects.equals(inviteEntity.getReceiverUserEntity().getId(),
+    if(!Objects.equals(inviteEntity.getReceiverUser().getId(),
         user.getId())) {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
@@ -249,7 +249,7 @@ public class InviteService {
     setUpUser();
 
     List<InviteEntity> inviteEntityList =
-        inviteRepository.findByInviteStatusAndReceiverUserEntityId
+        inviteRepository.findByInviteStatusAndReceiverUserId
         (InviteStatus.REQUEST, user.getId());
 
     List<InviteMyListResponse> result = inviteEntityList.stream()

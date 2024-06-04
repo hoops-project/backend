@@ -224,7 +224,7 @@ class InviteServiceTest {
 
     // 해당 경기에 이미 초대 요청 되어 있지 않다고 가정
     when(inviteRepository
-        .existsByInviteStatusAndGameEntityIdAndReceiverUserEntityId
+        .existsByInviteStatusAndGameIdAndReceiverUserId
             (eq(InviteStatus.REQUEST), eq(1L),
                 eq(2L)))
         .thenReturn(false);
@@ -286,9 +286,9 @@ class InviteServiceTest {
     InviteEntity inviteEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.CANCEL)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(receiverUser)
-        .gameEntity(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(receiverUser)
+        .game(createdGameEntity)
         .build();
 
     getCurrentUser();
@@ -330,9 +330,9 @@ class InviteServiceTest {
     InviteEntity inviteEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(receiverUser)
-        .gameEntity(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(receiverUser)
+        .game(createdGameEntity)
         .build();
 
     ParticipantGameEntity gameCreatorInvite =
@@ -390,17 +390,17 @@ class InviteServiceTest {
     InviteEntity inviteEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(receiverUser)
-        .gameEntity(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(receiverUser)
+        .game(createdGameEntity)
         .build();
 
     InviteEntity rejectEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.REJECT)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(receiverUser)
-        .gameEntity(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(receiverUser)
+        .game(createdGameEntity)
         .build();
 
     when(jwtTokenExtract.currentUser()).thenReturn(receiverUser);
@@ -432,17 +432,17 @@ class InviteServiceTest {
     InviteEntity inviteEntity1 = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(otherUser)
-        .gameEntity(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(otherUser)
+        .game(createdGameEntity)
         .build();
 
     InviteEntity inviteEntity2 = InviteEntity.builder()
         .id(2L)
         .inviteStatus(InviteStatus.REQUEST)
-        .senderUserEntity(receiverUser)
-        .receiverUserEntity(otherUser)
-        .gameEntity(otherCreatedGameEntity)
+        .senderUser(receiverUser)
+        .receiverUser(otherUser)
+        .game(otherCreatedGameEntity)
         .build();
 
     List<InviteEntity> inviteEntityList = new ArrayList<>();
@@ -458,7 +458,7 @@ class InviteServiceTest {
     when(userRepository.findById(anyLong())).thenReturn(
         Optional.ofNullable(otherUser));
 
-    when(inviteRepository.findByInviteStatusAndReceiverUserEntityId
+    when(inviteRepository.findByInviteStatusAndReceiverUserId
         (eq(InviteStatus.REQUEST), anyLong()))
         .thenReturn(inviteEntityList);
 

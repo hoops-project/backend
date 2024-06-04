@@ -44,9 +44,9 @@ public class InviteDto {
         GameEntity game) {
       return InviteEntity.builder()
           .inviteStatus(InviteStatus.REQUEST)
-          .senderUserEntity(user)
-          .receiverUserEntity(receiverUser)
-          .gameEntity(game)
+          .senderUser(user)
+          .receiverUser(receiverUser)
+          .game(game)
           .build();
     }
   }
@@ -75,9 +75,9 @@ public class InviteDto {
           .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
-          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
-          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .title(inviteEntity.getGameEntity().getTitle())
+          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
+          .title(inviteEntity.getGame().getTitle())
           .build();
     }
   }
@@ -125,9 +125,9 @@ public class InviteDto {
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .canceledDateTime(inviteEntity.getCanceledDateTime())
-          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
-          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .title(inviteEntity.getGameEntity().getTitle())
+          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
+          .title(inviteEntity.getGame().getTitle())
           .build();
     }
   }
@@ -169,9 +169,9 @@ public class InviteDto {
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .acceptedDateTime(inviteEntity.getAcceptedDateTime())
-          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
-          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .title(inviteEntity.getGameEntity().getTitle())
+          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
+          .title(inviteEntity.getGame().getTitle())
           .build();
     }
   }
@@ -213,9 +213,9 @@ public class InviteDto {
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
           .rejectedDateTime(inviteEntity.getRejectedDateTime())
-          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
-          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .title(inviteEntity.getGameEntity().getTitle())
+          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
+          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
+          .title(inviteEntity.getGame().getTitle())
           .build();
     }
   }
@@ -281,27 +281,27 @@ public class InviteDto {
           .inviteId(inviteEntity.getId())
           .inviteStatus(inviteEntity.getInviteStatus())
           .requestedDateTime(inviteEntity.getRequestedDateTime())
-          .senderUserId(inviteEntity.getSenderUserEntity().getId())
-          .senderUserBirthday(inviteEntity.getSenderUserEntity().getBirthday())
-          .senderUserGenderType(inviteEntity.getSenderUserEntity().getGender())
-          .senderUserNickName(inviteEntity.getSenderUserEntity().getNickName())
-          .senderUserPlayStyle(inviteEntity.getSenderUserEntity().getPlayStyle())
-          .senderUserAbility(inviteEntity.getSenderUserEntity().getAbility())
-          .mannerPoint(inviteEntity.getSenderUserEntity().getStringAverageRating())
-          .receiverUserNickName(inviteEntity.getReceiverUserEntity().getNickName())
-          .gameId(inviteEntity.getGameEntity().getId())
-          .title(inviteEntity.getGameEntity().getTitle())
-          .content(inviteEntity.getGameEntity().getContent())
-          .headCount(inviteEntity.getGameEntity().getHeadCount())
-          .fieldStatus(inviteEntity.getGameEntity().getFieldStatus())
-          .gender(inviteEntity.getGameEntity().getGender())
-          .startDateTime(inviteEntity.getGameEntity().getStartDateTime())
-          .inviteYn(inviteEntity.getGameEntity().getInviteYn())
-          .address(inviteEntity.getGameEntity().getAddress())
-          .latitude(inviteEntity.getGameEntity().getLatitude())
-          .longitude(inviteEntity.getGameEntity().getLongitude())
-          .cityName(inviteEntity.getGameEntity().getCityName())
-          .matchFormat(inviteEntity.getGameEntity().getMatchFormat())
+          .senderUserId(inviteEntity.getSenderUser().getId())
+          .senderUserBirthday(inviteEntity.getSenderUser().getBirthday())
+          .senderUserGenderType(inviteEntity.getSenderUser().getGender())
+          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
+          .senderUserPlayStyle(inviteEntity.getSenderUser().getPlayStyle())
+          .senderUserAbility(inviteEntity.getSenderUser().getAbility())
+          .mannerPoint(inviteEntity.getSenderUser().getStringAverageRating())
+          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
+          .gameId(inviteEntity.getGame().getId())
+          .title(inviteEntity.getGame().getTitle())
+          .content(inviteEntity.getGame().getContent())
+          .headCount(inviteEntity.getGame().getHeadCount())
+          .fieldStatus(inviteEntity.getGame().getFieldStatus())
+          .gender(inviteEntity.getGame().getGender())
+          .startDateTime(inviteEntity.getGame().getStartDateTime())
+          .inviteYn(inviteEntity.getGame().getInviteYn())
+          .address(inviteEntity.getGame().getAddress())
+          .latitude(inviteEntity.getGame().getLatitude())
+          .longitude(inviteEntity.getGame().getLongitude())
+          .cityName(inviteEntity.getGame().getCityName())
+          .matchFormat(inviteEntity.getGame().getMatchFormat())
           .build();
     }
   }

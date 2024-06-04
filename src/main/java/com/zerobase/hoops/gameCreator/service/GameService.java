@@ -310,7 +310,7 @@ public class GameService {
 
     // 해당 경기에 초대 신청된 것들 다 DELETE
     List<InviteEntity> inviteEntityList = inviteRepository
-        .findByInviteStatusAndGameEntityId
+        .findByInviteStatusAndGameId
             (InviteStatus.REQUEST, game.getId());
 
     inviteEntityList.forEach(invite -> {

@@ -52,16 +52,16 @@ public class InviteEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "sender_user_id", nullable = false)
-  private UserEntity senderUserEntity;
-
-  @ManyToOne
-  @JoinColumn(name = "receiver_user_id", nullable = false)
-  private UserEntity receiverUserEntity;
+  @JoinColumn(nullable = false)
+  private UserEntity senderUser;
 
   @ManyToOne
   @JoinColumn(nullable = false)
-  private GameEntity gameEntity;
+  private UserEntity receiverUser;
+
+  @ManyToOne
+  @JoinColumn(nullable = false)
+  private GameEntity game;
 
   public static InviteEntity toCancelEntity(InviteEntity inviteEntity) {
     return InviteEntity.builder()
@@ -69,9 +69,9 @@ public class InviteEntity {
         .inviteStatus(InviteStatus.CANCEL)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .canceledDateTime(LocalDateTime.now())
-        .senderUserEntity(inviteEntity.getSenderUserEntity())
-        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
-        .gameEntity(inviteEntity.getGameEntity())
+        .senderUser(inviteEntity.getSenderUser())
+        .receiverUser(inviteEntity.getReceiverUser())
+        .game(inviteEntity.getGame())
         .build();
   }
 
@@ -81,9 +81,9 @@ public class InviteEntity {
         .inviteStatus(InviteStatus.ACCEPT)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .acceptedDateTime(LocalDateTime.now())
-        .senderUserEntity(inviteEntity.getSenderUserEntity())
-        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
-        .gameEntity(inviteEntity.getGameEntity())
+        .senderUser(inviteEntity.getSenderUser())
+        .receiverUser(inviteEntity.getReceiverUser())
+        .game(inviteEntity.getGame())
         .build();
   }
 
@@ -93,9 +93,9 @@ public class InviteEntity {
         .inviteStatus(InviteStatus.REJECT)
         .requestedDateTime(inviteEntity.getRequestedDateTime())
         .rejectedDateTime(LocalDateTime.now())
-        .senderUserEntity(inviteEntity.getSenderUserEntity())
-        .receiverUserEntity(inviteEntity.getReceiverUserEntity())
-        .gameEntity(inviteEntity.getGameEntity())
+        .senderUser(inviteEntity.getSenderUser())
+        .receiverUser(inviteEntity.getReceiverUser())
+        .game(inviteEntity.getGame())
         .build();
   }
 

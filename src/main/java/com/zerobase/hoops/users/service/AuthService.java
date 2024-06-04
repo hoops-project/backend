@@ -231,7 +231,7 @@ public class AuthService {
 
       // 내가 생성한 경기의 초대 테이블 삭제
       List<InviteEntity> inviteList = inviteRepository
-          .findByInviteStatusAndGameEntityId(
+          .findByInviteStatusAndGameId(
               InviteStatus.REQUEST, game.getId());
       inviteList.stream().forEach(
           invite -> {
@@ -258,7 +258,7 @@ public class AuthService {
     // 내가 참가한 방의 초대에서 삭제
     List<InviteEntity> inviteList =
         inviteRepository
-            .findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
+            .findByInviteStatusAndSenderUserIdOrReceiverUserId(
                 InviteStatus.REQUEST, user.getId(), user.getId());
     inviteList.stream().forEach(
         invite -> {

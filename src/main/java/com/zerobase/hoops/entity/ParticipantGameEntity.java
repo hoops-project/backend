@@ -130,16 +130,16 @@ public class ParticipantGameEntity {
             .status(ParticipantGameStatus.ACCEPT)
             .createdDateTime(nowDateTime)
             .acceptedDateTime(nowDateTime)
-            .game(inviteEntity.getGameEntity())
-            .user(inviteEntity.getReceiverUserEntity())
+            .game(inviteEntity.getGame())
+            .user(inviteEntity.getReceiverUser())
             .build();
   }
 
   public static ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.APPLY)
-        .game(inviteEntity.getGameEntity())
-        .user(inviteEntity.getReceiverUserEntity())
+        .game(inviteEntity.getGame())
+        .user(inviteEntity.getReceiverUser())
         .build();
   }
 

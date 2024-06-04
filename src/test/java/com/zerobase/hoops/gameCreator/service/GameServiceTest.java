@@ -594,9 +594,9 @@ class GameServiceTest {
         .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .requestedDateTime(LocalDateTime.now())
-        .gameEntity(createdGameEntity)
-        .senderUserEntity(requestUser)
-        .receiverUserEntity(receiveUser)
+        .game(createdGameEntity)
+        .senderUser(requestUser)
+        .receiverUser(receiveUser)
         .build();
 
     List<ParticipantGameEntity> groupList = new ArrayList<>();
@@ -618,7 +618,7 @@ class GameServiceTest {
         (anyList(), anyLong())).thenReturn(groupList);
 
     // 해당 경기에 초대 신청된 것들 다 CANCEL
-    when(inviteRepository.findByInviteStatusAndGameEntityId
+    when(inviteRepository.findByInviteStatusAndGameId
         (eq(InviteStatus.REQUEST), anyLong()))
         .thenReturn(inviteEntityList);
 

@@ -10,14 +10,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InviteRepository extends JpaRepository<InviteEntity, Long> {
 
-  boolean existsByInviteStatusAndGameEntityIdAndReceiverUserEntityId(
+  boolean existsByInviteStatusAndGameIdAndReceiverUserId(
       InviteStatus inviteStatus, Long gameId, Long receiverUserId);
 
   Optional<InviteEntity> findByIdAndInviteStatus(Long inviteId, InviteStatus inviteStatus);
 
-  List<InviteEntity> findByInviteStatusAndGameEntityId(InviteStatus inviteStatus, Long gameId);
-  List<InviteEntity> findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(InviteStatus inviteStatus,
+  List<InviteEntity> findByInviteStatusAndGameId(InviteStatus inviteStatus, Long gameId);
+  List<InviteEntity> findByInviteStatusAndSenderUserIdOrReceiverUserId(InviteStatus inviteStatus,
       Long SenderUserId, Long receiverUserId);
 
-  List<InviteEntity> findByInviteStatusAndReceiverUserEntityId(InviteStatus inviteStatus, Long userId);
+  List<InviteEntity> findByInviteStatusAndReceiverUserId(InviteStatus inviteStatus, Long userId);
 }

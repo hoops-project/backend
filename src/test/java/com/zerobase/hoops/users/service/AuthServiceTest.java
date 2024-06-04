@@ -466,8 +466,8 @@ class AuthServiceTest {
     lenient().when(gameRepository.findByUserIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
     lenient().when(participantGameRepository.findByGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
     lenient().when(participantGameRepository.findByUserIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
-    lenient().when(inviteRepository.findByInviteStatusAndGameEntityId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
-    when(inviteRepository.findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
+    lenient().when(inviteRepository.findByInviteStatusAndGameId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
+    when(inviteRepository.findByInviteStatusAndSenderUserIdOrReceiverUserId(
         InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());
     lenient().when(friendRepository.findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
     lenient().when(userRepository.findByLoginIdAndDeletedDateTimeNull(anyString())).thenReturn(Optional.of(user));
