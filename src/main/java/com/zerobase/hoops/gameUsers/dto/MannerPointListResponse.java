@@ -17,11 +17,11 @@ public class MannerPointListResponse {
   public static MannerPointListResponse of(
       ParticipantGameEntity participantGame) {
     return MannerPointListResponse.builder()
-        .gameId(participantGame.getGameEntity().getId())
-        .title(participantGame.getGameEntity().getTitle())
-        .address(participantGame.getGameEntity().getAddress())
-        .player(participantGame.getUserEntity().getNickName())
-        .playerId(participantGame.getUserEntity().getId())
+        .gameId(participantGame.getGame().getId())
+        .title(participantGame.getGame().getTitle())
+        .address(participantGame.getGame().getAddress())
+        .player(participantGame.getUser().getNickName())
+        .playerId(participantGame.getUser().getId())
         .build();
   }
 }

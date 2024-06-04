@@ -135,7 +135,7 @@ public class GameService {
 
     List<ParticipantGameEntity> participantGameEntityList =
         participantGameRepository
-            .findByGameEntityIdAndStatusAndDeletedDateTimeNull
+            .findByGameIdAndStatusAndDeletedDateTimeNull
                 (gameId, ACCEPT);
 
     List<ParticipantUser> participantUserList =
@@ -200,7 +200,7 @@ public class GameService {
      *     이 경우 Exception 발생
      */
     long headCount =
-        participantGameRepository.countByStatusAndGameEntityId
+        participantGameRepository.countByStatusAndGameId
             (ACCEPT, request.getGameId());
 
     if (request.getHeadCount() < headCount) {
@@ -213,7 +213,7 @@ public class GameService {
       GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
 
       boolean genderExist = participantGameRepository
-          .existsByStatusAndGameEntityIdAndUserEntityGender
+          .existsByStatusAndGameIdAndUserGender
               (ACCEPT, request.getGameId(), queryGender);
 
       /**
@@ -299,7 +299,7 @@ public class GameService {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 다 DELETE
     List<ParticipantGameEntity> participantGameEntityList =
-        participantGameRepository.findByStatusInAndGameEntityId
+        participantGameRepository.findByStatusInAndGameId
             (List.of(ACCEPT, APPLY), game.getId());
 
     participantGameEntityList.forEach(participantGame -> {
@@ -332,7 +332,7 @@ public class GameService {
   private WithDrawGameResponse withdrewGame(GameEntity game) {
 
     ParticipantGameEntity participantGameEntity =
-        participantGameRepository.findByStatusAndGameEntityIdAndUserEntityId
+        participantGameRepository.findByStatusAndGameIdAndUserId
             (ACCEPT, game.getId(), user.getId())
             .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 

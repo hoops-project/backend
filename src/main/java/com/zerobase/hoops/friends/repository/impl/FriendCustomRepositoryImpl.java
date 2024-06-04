@@ -113,9 +113,9 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
 
 
     List<Long> excludedIds = jpaQueryFactory
-        .select(participantGameEntity.userEntity.id)
+        .select(participantGameEntity.user.id)
         .from(participantGameEntity)
-        .where(participantGameEntity.gameEntity.id.eq(gameId)
+        .where(participantGameEntity.game.id.eq(gameId)
             .and(participantGameEntity.status.in
                 (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY))))
         .fetch();

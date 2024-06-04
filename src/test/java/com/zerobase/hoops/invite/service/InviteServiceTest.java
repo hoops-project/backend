@@ -173,8 +173,8 @@ class InviteServiceTest {
         .id(1L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(requestUser)
+        .game(createdGameEntity)
+        .user(requestUser)
         .build();
     requestUserFriendEntity = FriendEntity.builder()
         .id(1L)
@@ -231,20 +231,20 @@ class InviteServiceTest {
 
     // 해당 경기에 참가해 잇는 사람이 초대할 경우를 가정
     when(participantGameRepository
-        .existsByStatusAndGameEntityIdAndUserEntityId
+        .existsByStatusAndGameIdAndUserId
             (eq(ParticipantGameStatus.ACCEPT), eq(1L), eq(1L)))
         .thenReturn(true);
 
     // 초대 받는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
     when(participantGameRepository
-        .existsByStatusInAndGameEntityIdAndUserEntityId
+        .existsByStatusInAndGameIdAndUserId
             (eq(List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY))
                 ,eq(1L), eq(2L)))
         .thenReturn(false);
 
     // 경기 인원이 경기개설자(1명 만) 있다고 가정
     when(participantGameRepository
-        .countByStatusAndGameEntityId
+        .countByStatusAndGameId
             (eq(ParticipantGameStatus.ACCEPT), eq(1L)))
         .thenReturn(1L);
 
@@ -351,7 +351,7 @@ class InviteServiceTest {
 
     // 해당 경기에 인원이 1명 있다고 가정
     when(participantGameRepository
-        .countByStatusAndGameEntityId(eq(ParticipantGameStatus.ACCEPT),
+        .countByStatusAndGameId(eq(ParticipantGameStatus.ACCEPT),
             eq(1L)))
         .thenReturn(0L);
 

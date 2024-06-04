@@ -30,7 +30,7 @@ public class QParticipantGameEntity extends EntityPathBase<ParticipantGameEntity
 
     public final DateTimePath<java.time.LocalDateTime> deletedDateTime = createDateTime("deletedDateTime", java.time.LocalDateTime.class);
 
-    public final QGameEntity gameEntity;
+    public final QGameEntity game;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -40,7 +40,7 @@ public class QParticipantGameEntity extends EntityPathBase<ParticipantGameEntity
 
     public final EnumPath<com.zerobase.hoops.gameCreator.type.ParticipantGameStatus> status = createEnum("status", com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.class);
 
-    public final QUserEntity userEntity;
+    public final QUserEntity user;
 
     public final DateTimePath<java.time.LocalDateTime> withdrewDateTime = createDateTime("withdrewDateTime", java.time.LocalDateTime.class);
 
@@ -62,8 +62,8 @@ public class QParticipantGameEntity extends EntityPathBase<ParticipantGameEntity
 
     public QParticipantGameEntity(Class<? extends ParticipantGameEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.gameEntity = inits.isInitialized("gameEntity") ? new QGameEntity(forProperty("gameEntity"), inits.get("gameEntity")) : null;
-        this.userEntity = inits.isInitialized("userEntity") ? new QUserEntity(forProperty("userEntity")) : null;
+        this.game = inits.isInitialized("game") ? new QGameEntity(forProperty("game"), inits.get("game")) : null;
+        this.user = inits.isInitialized("user") ? new QUserEntity(forProperty("user")) : null;
     }
 
 }

@@ -105,7 +105,7 @@ public class InviteService {
 
     // 해당 경기에 참가해 있지 않은 사람이 초대를 할경우 막음
     boolean gameExistFlag = participantGameRepository
-        .existsByStatusAndGameEntityIdAndUserEntityId
+        .existsByStatusAndGameIdAndUserId
             (ParticipantGameStatus.ACCEPT, request.getGameId(),
                 user.getId());
 
@@ -115,7 +115,7 @@ public class InviteService {
 
     // 해당 경기에 이미 참가 하거나 요청한 경우 막음
     boolean participantGameFlag = participantGameRepository
-        .existsByStatusInAndGameEntityIdAndUserEntityId
+        .existsByStatusInAndGameIdAndUserId
             (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY)
                 ,request.getGameId(), request.getReceiverUserId());
 
@@ -124,7 +124,7 @@ public class InviteService {
     }
 
     // 경기 인원이 다 차면 초대 막음
-    long headCount = participantGameRepository.countByStatusAndGameEntityId(
+    long headCount = participantGameRepository.countByStatusAndGameId(
         ParticipantGameStatus.ACCEPT, request.getGameId());
 
     if(headCount >= game.getHeadCount()) {
@@ -190,7 +190,7 @@ public class InviteService {
 
     // 해당 경기에 인원이 다차면 수락 불가능
     long count = participantGameRepository
-        .countByStatusAndGameEntityId(ParticipantGameStatus.ACCEPT,
+        .countByStatusAndGameId(ParticipantGameStatus.ACCEPT,
             inviteEntity.getGameEntity().getId());
 
     if(count >= inviteEntity.getGameEntity().getHeadCount()) {

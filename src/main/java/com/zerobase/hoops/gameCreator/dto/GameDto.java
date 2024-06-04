@@ -463,8 +463,8 @@ public class GameDto {
       return WithDrawGameResponse.builder()
           .status(entity.getStatus())
           .withdrewDateTime(entity.getWithdrewDateTime())
-          .gameId(entity.getGameEntity().getId())
-          .userId(entity.getUserEntity().getId())
+          .gameId(entity.getGame().getId())
+          .userId(entity.getUser().getId())
           .build();
     }
   }
@@ -489,12 +489,12 @@ public class GameDto {
 
     public static ParticipantUser toDto(ParticipantGameEntity entity) {
       return ParticipantUser.builder()
-          .userId(entity.getUserEntity().getId())
-          .genderType(entity.getUserEntity().getGender())
-          .nickName(entity.getUserEntity().getNickName())
-          .playStyle(entity.getUserEntity().getPlayStyle())
-          .ability(entity.getUserEntity().getAbility())
-          .mannerPoint(entity.getUserEntity().getStringAverageRating())
+          .userId(entity.getUser().getId())
+          .genderType(entity.getUser().getGender())
+          .nickName(entity.getUser().getNickName())
+          .playStyle(entity.getUser().getPlayStyle())
+          .ability(entity.getUser().getAbility())
+          .mannerPoint(entity.getUser().getStringAverageRating())
           .build();
     }
   }

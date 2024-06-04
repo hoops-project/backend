@@ -109,15 +109,15 @@ class GameUserServiceTest {
         .build();
 
     participateGame = ParticipantGameEntity.builder()
-        .gameEntity(game)
-        .userEntity(user)
+        .game(game)
+        .user(user)
         .status(ParticipantGameStatus.ACCEPT)
         .id(1L)
         .build();
 
     participateGame2 = ParticipantGameEntity.builder()
-        .gameEntity(game)
-        .userEntity(receiverUser)
+        .game(game)
+        .user(receiverUser)
         .status(ParticipantGameStatus.ACCEPT)
         .id(2L)
         .build();
@@ -173,11 +173,11 @@ class GameUserServiceTest {
             Collections.singletonList(participateGame)));
 
     when(
-        gameCheckOutRepository.existsByGameEntity_IdAndUserEntity_IdAndStatus(
+        gameCheckOutRepository.existsByGame_IdAndUser_IdAndStatus(
             eq(Long.valueOf(gameId)), eq(user.getId()),
             eq(ParticipantGameStatus.ACCEPT)))
         .thenReturn(true);
-    when(gameCheckOutRepository.findByStatusAndGameEntity_Id(
+    when(gameCheckOutRepository.findByStatusAndGame_Id(
         eq(ParticipantGameStatus.ACCEPT),
         eq(Long.valueOf(gameId))))
         .thenAnswer(invocation -> Optional.of(
@@ -296,14 +296,14 @@ class GameUserServiceTest {
     futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
     futureGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGameEntity(futureGame);
+    participantGameEntity.setGame(futureGame);
     userGameList.add(participantGameEntity);
 
     // When
     when(jwtTokenExtract.currentUser()).thenReturn(user);
     when(userRepository.findById(user.getId())).thenReturn(
         java.util.Optional.of(user));
-    when(gameCheckOutRepository.findByUserEntity_IdAndStatus(
+    when(gameCheckOutRepository.findByUser_IdAndStatus(
         user.getId(), ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
     Page<GameSearchResponse> result = gameUserService.myCurrentGameList(
@@ -336,14 +336,14 @@ class GameUserServiceTest {
     futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
     futureGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGameEntity(futureGame);
+    participantGameEntity.setGame(futureGame);
     userGameList.add(participantGameEntity);
 
     // When
     when(jwtTokenExtractMock.currentUser()).thenReturn(user);
     when(userRepositoryMock.findById(user.getId())).thenReturn(
         Optional.of(user));
-    when(gameCheckOutRepositoryMock.findByUserEntity_IdAndStatus(
+    when(gameCheckOutRepositoryMock.findByUser_IdAndStatus(
         user.getId(), ParticipantGameStatus.ACCEPT))
         .thenReturn(Optional.of(userGameList));
 
@@ -370,14 +370,14 @@ class GameUserServiceTest {
     pastGame.setStartDateTime(LocalDateTime.now().minusDays(1));
     pastGame.setUser(user);
     ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGameEntity(pastGame);
+    participantGameEntity.setGame(pastGame);
     userGameList.add(participantGameEntity);
 
     // When
     when(jwtTokenExtract.currentUser()).thenReturn(user);
     when(userRepository.findById(user.getId())).thenReturn(
         java.util.Optional.of(user));
-    when(gameCheckOutRepository.findByUserEntity_IdAndStatus(
+    when(gameCheckOutRepository.findByUser_IdAndStatus(
         user.getId(),
         ParticipantGameStatus.ACCEPT))
         .thenReturn(java.util.Optional.of(userGameList));
@@ -395,8 +395,8 @@ class GameUserServiceTest {
     ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
         .id(1L)
         .status(ParticipantGameStatus.APPLY)
-        .gameEntity(game)
-        .userEntity(user)
+        .game(game)
+        .user(user)
         .build();
 
     // When
@@ -405,7 +405,7 @@ class GameUserServiceTest {
         Optional.of(user));
     when(gameUserRepository.findById(game.getId())).thenReturn(
         Optional.of(game));
-    when(gameCheckOutRepository.countByStatusAndGameEntityId(
+    when(gameCheckOutRepository.countByStatusAndGameId(
         ParticipantGameStatus.ACCEPT, game.getId())).thenReturn(0);
     when(gameCheckOutRepository.save(
         any(ParticipantGameEntity.class))).thenReturn(

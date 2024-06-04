@@ -69,7 +69,7 @@ public class ParticipantGameService {
     validationCreatorCheck(user, game);
 
     List<ParticipantGameEntity> list = participantGameRepository
-        .findByStatusAndGameEntityId(APPLY, gameId);
+        .findByStatusAndGameId(APPLY, gameId);
 
     List<DetailResponse> detailResponseList = list.stream()
         .map(DetailResponse::toDto)
@@ -91,7 +91,7 @@ public class ParticipantGameService {
             .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     List<ParticipantGameEntity> list = participantGameRepository
-        .findByStatusAndGameEntityId(ACCEPT, gameId);
+        .findByStatusAndGameId(ACCEPT, gameId);
 
     List<DetailResponse> detailResponseList = list.stream()
         .map(DetailResponse::toDto)
@@ -116,7 +116,7 @@ public class ParticipantGameService {
 
     validateIsNotCreator(user);
 
-    long count = participantGameRepository.countByStatusAndGameEntityId
+    long count = participantGameRepository.countByStatusAndGameId
         (ACCEPT, gameEntity.getId());
 
     // 경기에 참가자가 다 찼을때 수락 못함
@@ -128,8 +128,8 @@ public class ParticipantGameService {
         ParticipantGameEntity.setAccept(participantGameEntity);
 
     notificationService.send(NotificationType.ACCEPTED_GAME,
-        result.getUserEntity()
-        , result.getGameEntity().getTitle() +
+        result.getUser()
+        , result.getGame().getTitle() +
         "에 참가가 수락되었습니다.");
     participantGameRepository.save(result);
 
@@ -155,8 +155,8 @@ public class ParticipantGameService {
         ParticipantGameEntity.setReject(participantGameEntity);
 
     notificationService.send(NotificationType.REJECTED_GAME,
-        result.getUserEntity()
-        , result.getGameEntity().getTitle() +
+        result.getUser()
+        , result.getGame().getTitle() +
         "에 참가가 거절되었습니다.");
     participantGameRepository.save(result);
 
@@ -177,7 +177,7 @@ public class ParticipantGameService {
         .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
     gameEntity = gameRepository.findByIdAndDeletedDateTimeNull
-            (participantGameEntity.getGameEntity().getId())
+            (participantGameEntity.getGame().getId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
     validationCreatorCheck(user, gameEntity);
@@ -191,8 +191,8 @@ public class ParticipantGameService {
 
     participantGameRepository.save(result);
     notificationService.send(NotificationType.KICKED_OUT,
-        result.getUserEntity()
-        , result.getGameEntity().getTitle() +
+        result.getUser()
+        , result.getGame().getTitle() +
         "에서 강퇴당하였습니다.");
 
     log.info("kickoutParticipant end");
@@ -213,7 +213,7 @@ public class ParticipantGameService {
         .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
     gameEntity = gameRepository.findByIdAndDeletedDateTimeNull
-            (participantGameEntity.getGameEntity().getId())
+            (participantGameEntity.getGame().getId())
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 
@@ -238,7 +238,7 @@ public class ParticipantGameService {
   public void validateIsNotCreator(UserEntity user) {
 
     if (Objects.equals(user.getId(),
-        participantGameEntity.getUserEntity().getId())) {
+        participantGameEntity.getUser().getId())) {
       throw new CustomException(NOT_UPDATE_CREATOR);
     }
   }

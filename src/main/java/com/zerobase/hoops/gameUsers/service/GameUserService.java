@@ -91,7 +91,7 @@ public class GameUserService {
     Long currentUserId = jwtTokenExtract.currentUser().getId();
     
     userList.stream()
-        .filter(user -> !user.getUserEntity().getId().equals(currentUserId))
+        .filter(user -> !user.getUser().getId().equals(currentUserId))
         .forEach(user -> mannerPointUserList.add(MannerPointListResponse.of(user)));
 
     return mannerPointUserList;
@@ -110,13 +110,13 @@ public class GameUserService {
             gameLongId, LocalDateTime.now())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
-    boolean finalCheck = gameCheckOutRepository.existsByGameEntity_IdAndUserEntity_IdAndStatus(
+    boolean finalCheck = gameCheckOutRepository.existsByGame_IdAndUser_IdAndStatus(
         gameLongId, userId, ParticipantGameStatus.ACCEPT);
 
     if (!finalCheck) {
       throw new CustomException(ErrorCode.GAME_NOT_FOUND);
     }
-    return gameCheckOutRepository.findByStatusAndGameEntity_Id(
+    return gameCheckOutRepository.findByStatusAndGame_Id(
             ParticipantGameStatus.ACCEPT, gameLongId)
         .orElseThrow(
             () -> new CustomException(ErrorCode.GAME_NOT_FOUND));
@@ -127,7 +127,7 @@ public class GameUserService {
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
-        .map(ParticipantGameEntity::getGameEntity)
+        .map(ParticipantGameEntity::getGame)
         .filter(
             game -> game.getStartDateTime().isAfter(LocalDateTime.now()))
         .toList();
@@ -140,7 +140,7 @@ public class GameUserService {
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
-        .map(ParticipantGameEntity::getGameEntity)
+        .map(ParticipantGameEntity::getGame)
         .filter(
             game -> game.getStartDateTime().isBefore(LocalDateTime.now()))
         .toList();
@@ -220,19 +220,19 @@ public class GameUserService {
     return ParticipateGameDto.fromEntity(gameCheckOutRepository.save(
         ParticipantGameEntity.builder()
             .status(ParticipantGameStatus.APPLY)
-            .gameEntity(game)
-            .userEntity(user)
+            .game(game)
+            .user(user)
             .build()));
   }
 
   private void checkValidated(Long gameId, GameEntity game,
       UserEntity user) {
-    if (gameCheckOutRepository.existsByGameEntity_IdAndUserEntity_Id(
+    if (gameCheckOutRepository.existsByGame_IdAndUser_Id(
         gameId,
         user.getId())) {
       throw new CustomException(ErrorCode.DUPLICATED_TRY_TO_JOIN_GAME);
     }
-    if (gameCheckOutRepository.countByStatusAndGameEntityId(
+    if (gameCheckOutRepository.countByStatusAndGameId(
         ParticipantGameStatus.ACCEPT, gameId) >= game.getHeadCount()) {
       throw new CustomException(ErrorCode.FULL_PEOPLE_GAME);
     }
@@ -281,7 +281,7 @@ public class GameUserService {
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    return gameCheckOutRepository.findByUserEntity_IdAndStatus(
+    return gameCheckOutRepository.findByUser_IdAndStatus(
             user.getId(), ParticipantGameStatus.ACCEPT)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
   }

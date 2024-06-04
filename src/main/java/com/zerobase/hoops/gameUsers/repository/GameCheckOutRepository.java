@@ -11,19 +11,19 @@ import org.springframework.stereotype.Repository;
 public interface GameCheckOutRepository extends
     JpaRepository<ParticipantGameEntity, Long> {
 
-  int countByStatusAndGameEntityId(
+  int countByStatusAndGameId(
       ParticipantGameStatus participantGameStatus, Long id);
 
-  Optional<List<ParticipantGameEntity>> findByUserEntity_IdAndStatus(Long userId,
+  Optional<List<ParticipantGameEntity>> findByUser_IdAndStatus(Long userId,
       ParticipantGameStatus status);
 
-  boolean existsByGameEntity_IdAndUserEntity_Id(Long gameId,
+  boolean existsByGame_IdAndUser_Id(Long gameId,
       Long userId);
 
-  Optional<List<ParticipantGameEntity>> findByStatusAndGameEntity_Id(
+  Optional<List<ParticipantGameEntity>> findByStatusAndGame_Id(
       ParticipantGameStatus status, Long gameId);
 
-  boolean existsByGameEntity_IdAndUserEntity_IdAndStatus(
+  boolean existsByGame_IdAndUser_IdAndStatus(
       Long gameId, Long userId, ParticipantGameStatus status);
 
 

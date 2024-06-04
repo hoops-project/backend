@@ -58,11 +58,11 @@ public class ParticipantGameEntity {
 
   @ManyToOne
   @JoinColumn(nullable = false)
-  private GameEntity gameEntity;
+  private GameEntity game;
 
   @ManyToOne
   @JoinColumn(nullable = false)
-  private UserEntity userEntity;
+  private UserEntity user;
 
   public static ParticipantGameEntity toGameCreatorEntity(
       GameEntity gameEntity,
@@ -71,8 +71,8 @@ public class ParticipantGameEntity {
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(gameEntity.getCreatedDateTime())
         .acceptedDateTime(gameEntity.getCreatedDateTime())
-        .gameEntity(gameEntity)
-        .userEntity(userEntity)
+        .game(gameEntity)
+        .user(userEntity)
         .build();
   }
 
@@ -82,8 +82,8 @@ public class ParticipantGameEntity {
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
@@ -93,8 +93,8 @@ public class ParticipantGameEntity {
         .status(ParticipantGameStatus.REJECT)
         .createdDateTime(entity.getCreatedDateTime())
         .rejectedDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
@@ -105,8 +105,8 @@ public class ParticipantGameEntity {
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
         .kickoutDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
@@ -117,8 +117,8 @@ public class ParticipantGameEntity {
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
         .withdrewDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
@@ -130,16 +130,16 @@ public class ParticipantGameEntity {
             .status(ParticipantGameStatus.ACCEPT)
             .createdDateTime(nowDateTime)
             .acceptedDateTime(nowDateTime)
-            .gameEntity(inviteEntity.getGameEntity())
-            .userEntity(inviteEntity.getReceiverUserEntity())
+            .game(inviteEntity.getGameEntity())
+            .user(inviteEntity.getReceiverUserEntity())
             .build();
   }
 
   public static ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.APPLY)
-        .gameEntity(inviteEntity.getGameEntity())
-        .userEntity(inviteEntity.getReceiverUserEntity())
+        .game(inviteEntity.getGameEntity())
+        .user(inviteEntity.getReceiverUserEntity())
         .build();
   }
 

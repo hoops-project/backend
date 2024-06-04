@@ -47,12 +47,12 @@ public class ParticipantDto {
           .participantId(participantGameEntity.getId())
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
-          .gender(participantGameEntity.getUserEntity().getGender())
-          .nickName(participantGameEntity.getUserEntity().getNickName())
-          .playStyle(participantGameEntity.getUserEntity().getPlayStyle())
-          .ability(participantGameEntity.getUserEntity().getAbility())
-          .mannerPoint(participantGameEntity.getUserEntity().getStringAverageRating())
-          .userId(participantGameEntity.getUserEntity().getId())
+          .gender(participantGameEntity.getUser().getGender())
+          .nickName(participantGameEntity.getUser().getNickName())
+          .playStyle(participantGameEntity.getUser().getPlayStyle())
+          .ability(participantGameEntity.getUser().getAbility())
+          .mannerPoint(participantGameEntity.getUser().getStringAverageRating())
+          .userId(participantGameEntity.getUser().getId())
           .build();
     }
 
@@ -108,7 +108,7 @@ public class ParticipantDto {
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
-          .userId(participantGameEntity.getUserEntity().getId()).build();
+          .userId(participantGameEntity.getUser().getId()).build();
     }
   }
 
@@ -147,7 +147,7 @@ public class ParticipantDto {
           .status(participantGameEntity.getStatus())
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .rejectedDateTime(participantGameEntity.getRejectedDateTime())
-          .userId(participantGameEntity.getUserEntity().getId()).build();
+          .userId(participantGameEntity.getUser().getId()).build();
     }
   }
 
@@ -189,7 +189,7 @@ public class ParticipantDto {
           .createdDateTime(participantGameEntity.getCreatedDateTime())
           .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
           .kickoutDateTime(participantGameEntity.getKickoutDateTime())
-          .userId(participantGameEntity.getUserEntity().getId()).build();
+          .userId(participantGameEntity.getUser().getId()).build();
     }
   }
 

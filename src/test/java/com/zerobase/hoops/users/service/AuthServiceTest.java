@@ -464,8 +464,8 @@ class AuthServiceTest {
     when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
     lenient().when(gameRepository.findByUserIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
-    lenient().when(participantGameRepository.findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
-    lenient().when(participantGameRepository.findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByUserIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
     lenient().when(inviteRepository.findByInviteStatusAndGameEntityId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
     when(inviteRepository.findByInviteStatusAndSenderUserEntityIdOrReceiverUserEntityId(
         InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());

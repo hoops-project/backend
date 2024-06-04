@@ -141,8 +141,8 @@ class ParticipantGameServiceTest {
         .id(1L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(createdUser)
+        .game(createdGameEntity)
+        .user(createdUser)
         .build();
     notificationEntity = NotificationEntity.builder()
         .receiver(applyedUser)
@@ -168,7 +168,7 @@ class ParticipantGameServiceTest {
     when(gameRepository.findByIdAndDeletedDateTimeNull(anyLong()))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
-    when(participantGameRepository.findByStatusAndGameEntityId
+    when(participantGameRepository.findByStatusAndGameId
         (eq(APPLY), eq(gameId))).thenReturn(participantList);
 
     // when
@@ -191,8 +191,8 @@ class ParticipantGameServiceTest {
         .id(2L)
         .status(APPLY)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     ParticipantGameEntity acceptPartEntity = ParticipantGameEntity.builder()
@@ -200,8 +200,8 @@ class ParticipantGameServiceTest {
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     getCurrentUser();
@@ -212,11 +212,11 @@ class ParticipantGameServiceTest {
 
     assert applyPartEntity != null;
     when(gameRepository.findByIdAndDeletedDateTimeNull
-        (eq(applyPartEntity.getGameEntity().getId())))
+        (eq(applyPartEntity.getGame().getId())))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // 경기에 참가자가 1명만 있다고 가정
-    when(participantGameRepository.countByStatusAndGameEntityId
+    when(participantGameRepository.countByStatusAndGameId
         (eq(ACCEPT), eq(createdGameEntity.getId()))).thenReturn(1L);
 
     when(participantGameRepository.save(any()))
@@ -229,7 +229,7 @@ class ParticipantGameServiceTest {
     assertEquals(acceptPartEntity.getId(),
         response.getParticipantId());
     assertEquals(acceptPartEntity.getStatus(), response.getStatus());
-    assertEquals(acceptPartEntity.getUserEntity().getId(),
+    assertEquals(acceptPartEntity.getUser().getId(),
         response.getUserId());
   }
 
@@ -251,8 +251,8 @@ class ParticipantGameServiceTest {
         .id(2L)
         .status(APPLY)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     getCurrentUser();
@@ -263,7 +263,7 @@ class ParticipantGameServiceTest {
 
     assert applyPartEntity != null;
     when(gameRepository.findByIdAndDeletedDateTimeNull
-        (eq(applyPartEntity.getGameEntity().getId())))
+        (eq(applyPartEntity.getGame().getId())))
         .thenReturn(Optional.ofNullable(createdGameEntity));
 
     // when
@@ -287,8 +287,8 @@ class ParticipantGameServiceTest {
         .id(2L)
         .status(APPLY)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     ParticipantGameEntity rejectPartEntity = ParticipantGameEntity.builder()
@@ -296,8 +296,8 @@ class ParticipantGameServiceTest {
         .status(REJECT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .rejectedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     getCurrentUser();
@@ -318,7 +318,7 @@ class ParticipantGameServiceTest {
     assertEquals(rejectPartEntity.getId(),
         response.getParticipantId());
     assertEquals(rejectPartEntity.getStatus(), response.getStatus());
-    assertEquals(rejectPartEntity.getUserEntity().getId(),
+    assertEquals(rejectPartEntity.getUser().getId(),
         response.getUserId());
   }
 
@@ -336,8 +336,8 @@ class ParticipantGameServiceTest {
         .id(2L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     ParticipantGameEntity kickoutPartEntity = ParticipantGameEntity.builder()
@@ -346,8 +346,8 @@ class ParticipantGameServiceTest {
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
         .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
         .kickoutDateTime(LocalDateTime.of(2024, 10, 10, 12, 40, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     getCurrentUser();
@@ -369,7 +369,7 @@ class ParticipantGameServiceTest {
     assertEquals(kickoutPartEntity.getId(),
         response.getParticipantId());
     assertEquals(kickoutPartEntity.getStatus(), response.getStatus());
-    assertEquals(kickoutPartEntity.getUserEntity().getId(),
+    assertEquals(kickoutPartEntity.getUser().getId(),
         response.getUserId());
   }
 
@@ -392,8 +392,8 @@ class ParticipantGameServiceTest {
         .id(2L)
         .status(ACCEPT)
         .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .game(createdGameEntity)
+        .user(applyedUser)
         .build();
 
     getCurrentUser();

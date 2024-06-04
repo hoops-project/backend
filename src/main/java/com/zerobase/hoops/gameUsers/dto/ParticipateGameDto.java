@@ -43,8 +43,8 @@ public class ParticipateGameDto {
         .withdrewDateTime(participantGameEntity.getWithdrewDateTime())
         .kickoutDateTime(participantGameEntity.getKickoutDateTime())
         .deletedDateTime(participantGameEntity.getDeletedDateTime())
-        .gameEntity(participantGameEntity.getGameEntity())
-        .userEntity(participantGameEntity.getUserEntity())
+        .gameEntity(participantGameEntity.getGame())
+        .userEntity(participantGameEntity.getUser())
         .build();
   }
 

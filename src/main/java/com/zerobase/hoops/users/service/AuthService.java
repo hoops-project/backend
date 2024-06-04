@@ -220,7 +220,7 @@ public class AuthService {
       // 내가 생성한 경기의 참가 테이블 삭제
       List<ParticipantGameEntity> participantList =
           participantGameRepository
-              .findByGameEntityIdAndStatusNotAndDeletedDateTimeNull(
+              .findByGameIdAndStatusNotAndDeletedDateTimeNull(
                   game.getId(), WITHDRAW);
       participantList.stream().forEach(
           participantGame -> {
@@ -246,7 +246,7 @@ public class AuthService {
     // 내가 참가한 방의 참가 테이블에서 탈퇴 처리
     List<ParticipantGameEntity> participantList =
         participantGameRepository
-            .findByUserEntityIdAndStatusInAndWithdrewDateTimeNull(
+            .findByUserIdAndStatusInAndWithdrewDateTimeNull(
                 user.getId(), List.of(APPLY, ACCEPT));
     participantList.stream().forEach(
         participantGame -> {
