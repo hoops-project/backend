@@ -14,11 +14,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Entity(name = "Message")
+@Entity(name = "message")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,8 +27,7 @@ public class MessageEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "message_id", nullable = false)
-  private Long messageId;
+  private Long id;
 
   @Builder.Default
   @Column(nullable = false)
@@ -43,11 +41,9 @@ public class MessageEntity {
   private LocalDateTime sendDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
   private UserEntity user;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "room_id")
   private ChatRoomEntity chatRoomEntity;
 
 

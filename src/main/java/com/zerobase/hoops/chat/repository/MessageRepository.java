@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface MessageRepository extends
     JpaRepository<MessageEntity, Long> {
 
-  Optional<List<MessageEntity>> findByChatRoomEntity_RoomIdAndSessionId(
-      Long roomId, Long sessionId);
-
+  Optional<List<MessageEntity>> findByChatRoomEntity_IdAndSessionId(
+      Long id, Long sessionId);
 }

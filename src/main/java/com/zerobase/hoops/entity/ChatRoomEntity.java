@@ -3,7 +3,7 @@ package com.zerobase.hoops.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity(name = "chatting_room")
+@Entity(name = "chat_room")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -12,15 +12,13 @@ public class ChatRoomEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "room_id")
-  private Long roomId;
+  private Long id;
 
   @Builder.Default
   @Column(nullable = false)
   private Long sessionId = 0L;
 
   @OneToOne
-  @JoinColumn(name = "game_id")
   private GameEntity gameEntity;
 
   public void saveGameInfo(GameEntity game){

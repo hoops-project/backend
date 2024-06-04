@@ -90,8 +90,8 @@ public class ChatService {
       throw new CustomException(ErrorCode.NOT_EXIST_CHATROOM_SESSION);
     }
 
-    List<MessageEntity> messages = messageRepository.findByChatRoomEntity_RoomIdAndSessionId(
-            chatRoom.getRoomId(), sessionId)
+    List<MessageEntity> messages = messageRepository.findByChatRoomEntity_IdAndSessionId(
+            chatRoom.getId(), sessionId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.NOT_EXIST_MESSAGE_FOR_CHATROOM));
 
@@ -112,7 +112,7 @@ public class ChatService {
   private MessageConvertDto convertToChatMessage(
       MessageEntity messageEntity) {
     return MessageConvertDto.builder()
-        .id(messageEntity.getMessageId())
+        .id(messageEntity.getId())
         .sender(messageEntity.getUser().getNickName())
         .content(messageEntity.getContent())
         .sessionId(messageEntity.getSessionId())

@@ -24,7 +24,7 @@ public class QChatRoomEntity extends EntityPathBase<ChatRoomEntity> {
 
     public final QGameEntity gameEntity;
 
-    public final NumberPath<Long> roomId = createNumber("roomId", Long.class);
+    public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final NumberPath<Long> sessionId = createNumber("sessionId", Long.class);
 
