@@ -54,7 +54,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .on(
             user.id.eq(friend.friendUser.id)
                 .and(friend.user.id.eq(userId))
-                .and(friend.status.ne(FriendStatus.DELETE))
+                .and(friend.status.notIn(List.of(FriendStatus.CANCEL,
+                    FriendStatus.REJECT, FriendStatus.DELETE)))
         )
         .where(
             user.nickName.like("%" + nickName + "%")
@@ -80,7 +81,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
         .on(
             user.id.eq(friend.friendUser.id)
                 .and(friend.user.id.eq(userId))
-                .and(friend.status.ne(FriendStatus.DELETE))
+                .and(friend.status.notIn(List.of(FriendStatus.CANCEL,
+                    FriendStatus.REJECT, FriendStatus.DELETE)))
         )
         .where(
             user.nickName.like("%" + nickName + "%")
