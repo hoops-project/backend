@@ -186,7 +186,7 @@ public class GameUserService {
     int totalPages = (int) Math.ceil((double) totalSize / size);
     int lastPage = totalPages == 0 ? 1 : totalPages;
 
-    page = Math.min(page, lastPage);
+    page = Math.max(1, Math.min(page, lastPage));
 
     int start = (page - 1) * size;
     int end = Math.min(page * size, totalSize);
