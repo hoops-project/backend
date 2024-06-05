@@ -94,7 +94,7 @@ public class FriendController {
   @Operation(summary = "친구 리스트 조회")
   @GetMapping("/myfriends")
   public ResponseEntity<Map<String, List<ListResponse>>> getMyFriends(
-      @PageableDefault(size = 10, page = 0, sort = "FriendUserEntityNickName",
+      @PageableDefault(size = 10, page = 0, sort = "FriendUserNickName",
           direction = Direction.ASC) Pageable pageable) {
     List<ListResponse> result = friendService.getMyFriends(pageable);
     return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
