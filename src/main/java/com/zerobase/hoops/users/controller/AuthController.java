@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,6 +65,7 @@ public class AuthController {
    */
   @Operation(summary = "refresh")
   @PostMapping("/refresh-token")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<Response> refreshToken(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
@@ -84,6 +86,7 @@ public class AuthController {
    */
   @Operation(summary = "로그아웃")
   @PostMapping("/logout")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<HttpStatus> logOut(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
@@ -101,6 +104,7 @@ public class AuthController {
    */
   @Operation(summary = "회원 정보 조회")
   @GetMapping("/user/info")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<UserDto> getUserInfo(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user
@@ -115,6 +119,7 @@ public class AuthController {
    */
   @Operation(summary = "회원 정보 수정")
   @PatchMapping("/user/edit")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<EditDto.Response> editUserInfo(
       HttpServletRequest request,
       @RequestBody @Validated EditDto.Request editDto,
@@ -136,6 +141,7 @@ public class AuthController {
    */
   @Operation(summary = "회원 탈퇴")
   @PostMapping("/deactivate")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<HttpStatus> deactivateUser(
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user

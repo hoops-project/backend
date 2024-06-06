@@ -49,21 +49,15 @@ public class WebSecurityConfig {
             .frameOptions(FrameOptionsConfig::disable))
         .authorizeHttpRequests(request -> request
             .requestMatchers(
+                "/ws/**",
                 "/api/user/**",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
                 "/api/auth/login",
-                "/api/oauth2/login/kakao",
-                "/api/oauth2/kakao",
+                "/api/oauth2/**",
                 "/api/game-user/**",
-                "/h2-console/**",
                 "/api/game-creator/game/detail").permitAll()
-            .requestMatchers("/ws/**").permitAll()
             .requestMatchers("/api/chat/create")
-            .hasAnyRole("USER")
-            .requestMatchers("/api/auth/**")
-            .hasAnyRole("USER", "CREATOR", "ADMIN")
-            .requestMatchers("/api/oauth2/logout/kakao")
             .hasAnyRole("USER")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
@@ -78,9 +72,7 @@ public class WebSecurityConfig {
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
-    // 웹소켓 로컬 테스트
     corsConfiguration.addAllowedOrigin("http://127.0.0.1:5001");
-    //
     corsConfiguration.addAllowedOrigin("http://localhost:5173");
     corsConfiguration.addAllowedOrigin(
         "https://hoops-frontend-jet.vercel.app");
