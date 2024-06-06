@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,6 +43,7 @@ public class FriendController {
   private final FriendService friendService;
 
   @Operation(summary = "친구 신청")
+  @PreAuthorize("hasRole('USER')")
   @PostMapping("/apply")
   public ResponseEntity<ApplyResponse> applyFriend(
       @RequestBody @Validated FriendDto.ApplyRequest request) {
@@ -50,6 +52,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 신청 취소")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/cancel")
   public ResponseEntity<CancelResponse> cancelFriend(
       @RequestBody @Validated CancelRequest request) {
@@ -58,6 +61,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 수락")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/accept")
   public ResponseEntity<Map<String, List<AcceptResponse>>> acceptFriend(
       @RequestBody @Validated AcceptRequest request) {
@@ -66,6 +70,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 거절")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/reject")
   public ResponseEntity<RejectResponse> rejectFriend(
       @RequestBody @Validated RejectRequest request) {
@@ -74,6 +79,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 삭제")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/delete")
   public ResponseEntity<Map<String, List<DeleteResponse>>> deleteFriend(
       @RequestBody @Validated DeleteRequest request) {
@@ -82,6 +88,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 검색")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/search")
   public ResponseEntity<Page<ListResponse>> searchFriend(
       @RequestParam String nickName,
@@ -92,6 +99,7 @@ public class FriendController {
   }
 
   @Operation(summary = "친구 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/myfriends")
   public ResponseEntity<Map<String, List<ListResponse>>> getMyFriends(
       @PageableDefault(size = 10, page = 0, sort = "FriendUserNickName",
@@ -101,6 +109,7 @@ public class FriendController {
   }
 
   @Operation(summary = "경기 초대 친구 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/invite/list")
   public ResponseEntity<Page<InviteListResponse>> getMyInviteList(
       @RequestParam Long gameId,
@@ -111,6 +120,7 @@ public class FriendController {
   }
 
   @Operation(summary = "내가 친구 요청 받은 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/requestFriendList")
   public ResponseEntity<Map<String, List<RequestListResponse>>> getRequestFriendList() {
     List<RequestListResponse> result = friendService.getRequestFriendList();

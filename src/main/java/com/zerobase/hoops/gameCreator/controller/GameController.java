@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,6 +32,7 @@ public class GameController {
    * 경기 생성
    */
   @Operation(summary = "경기 생성")
+  @PreAuthorize("hasRole('USER')")
   @PostMapping("/game/create")
   public ResponseEntity<CreateResponse> createGame(
       @RequestBody @Validated GameDto.CreateRequest request) {
@@ -52,6 +54,7 @@ public class GameController {
    * 경기 수정
    */
   @Operation(summary = "경기 수정")
+  @PreAuthorize("hasRole('USER')")
   @PutMapping("/game/update")
   public ResponseEntity<UpdateResponse> updateGame(
       @RequestBody @Validated GameDto.UpdateRequest request) {
@@ -63,6 +66,7 @@ public class GameController {
    * 경기 삭제
    */
   @Operation(summary = "경기 삭제")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/game/delete")
   public ResponseEntity<Object> deleteGame(
       @RequestBody @Validated GameDto.DeleteRequest request) {

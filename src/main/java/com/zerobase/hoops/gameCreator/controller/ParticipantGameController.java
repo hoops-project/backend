@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,10 +28,8 @@ public class ParticipantGameController {
 
   private final ParticipantGameService participantGameService;
 
-  /**
-   * 경기 참가 희망자 리스트 조회
-   */
   @Operation(summary = "경기 참가 희망자 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/apply/list")
   public ResponseEntity<Map<String, List<DetailResponse>>>
   getApplyParticipantList(@RequestParam("gameId") Long gameId) {
@@ -42,10 +41,8 @@ public class ParticipantGameController {
         result));
   }
 
-  /**
-   * 경기 참가자 리스트 조회
-   */
   @Operation(summary = "경기 참가자 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/accept/list")
   public ResponseEntity<Map<String, List<DetailResponse>>>
   getAcceptParticipantList(@RequestParam("gameId") Long gameId) {
@@ -57,10 +54,8 @@ public class ParticipantGameController {
         result));
   }
 
-  /**
-   * 경기 참가 희망자 수락
-   */
   @Operation(summary = "경기 참가 희망자 수락")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/accept")
   public ResponseEntity<AcceptResponse>
   acceptParticipant(@RequestBody @Validated ParticipantDto.AcceptRequest request) {
@@ -68,10 +63,8 @@ public class ParticipantGameController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 경기 참가 희망자 거절
-   */
   @Operation(summary = "경기 참가 희망자 거절")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/reject")
   public ResponseEntity<RejectResponse>
   rejectParticipant(@RequestBody @Validated ParticipantDto.RejectRequest request) {
@@ -79,10 +72,8 @@ public class ParticipantGameController {
     return ResponseEntity.ok(result);
   }
 
-  /**
-   * 경기 참가자 강퇴
-   */
   @Operation(summary = "경기 참가자 강퇴")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/kickout")
   public ResponseEntity<KickoutResponse>
   kickoutParticipant(@RequestBody @Validated ParticipantDto.KickoutRequest request) {

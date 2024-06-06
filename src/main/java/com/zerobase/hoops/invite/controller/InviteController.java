@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -29,6 +30,7 @@ public class InviteController {
   private final InviteService inviteService;
 
   @Operation(summary = "경기 초대 요청")
+  @PreAuthorize("hasRole('USER')")
   @PostMapping("/request")
   public ResponseEntity<CreateResponse> requestInviteGame(
       @RequestBody @Validated InviteDto.CreateRequest request) {
@@ -37,6 +39,7 @@ public class InviteController {
   }
 
   @Operation(summary = "경기 초대 요청 취소")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/cancel")
   public ResponseEntity<CancelResponse> cancelInviteGame(
       @RequestBody @Validated InviteDto.CancelRequest request) {
@@ -45,6 +48,7 @@ public class InviteController {
   }
 
   @Operation(summary = "경기 초대 요청 상대방 수락")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/accept")
   public ResponseEntity<ReceiveAcceptResponse> receiveAcceptInviteGame(
       @RequestBody @Validated InviteDto.ReceiveAcceptRequest request) {
@@ -53,6 +57,7 @@ public class InviteController {
   }
 
   @Operation(summary = "경기 초대 요청 상대방 거절")
+  @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/reject")
   public ResponseEntity<ReceiveRejectResponse> receiveRejectInviteGame(
       @RequestBody @Validated InviteDto.ReceiveRejectRequest request) {
@@ -62,6 +67,7 @@ public class InviteController {
   }
 
   @Operation(summary = "내가 초대 요청 받은 리스트 조회")
+  @PreAuthorize("hasRole('USER')")
   @GetMapping("/myList")
   public ResponseEntity<Map<String, List<InviteMyListResponse>>> getInviteRequestList() {
     List<InviteMyListResponse> result = inviteService.getInviteRequestList();

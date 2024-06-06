@@ -66,18 +66,6 @@ public class WebSecurityConfig {
             .requestMatchers("/api/oauth2/logout/kakao")
             .hasAnyRole("USER")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers(
-                "/api/game-creator/game/create",
-                "/api/game-creator/game/update")
-            .hasRole("USER")
-            .requestMatchers("/api/game-creator/game/delete")
-            .hasAnyRole("USER", "ADMIN")
-            .requestMatchers("/api/game-creator/participant/**")
-            .hasRole("USER")
-            .requestMatchers("/api/friend/**")
-            .hasRole("USER")
-            .requestMatchers("/api/invite/**")
-            .hasRole("USER")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,

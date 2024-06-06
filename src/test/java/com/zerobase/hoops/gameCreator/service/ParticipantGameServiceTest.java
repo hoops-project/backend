@@ -398,8 +398,6 @@ class ParticipantGameServiceTest {
 
     getCurrentUser();
 
-    getCurrentUser();
-
     when(participantGameRepository.findByIdAndStatus(anyLong(), eq(ACCEPT)))
         .thenReturn(Optional.ofNullable(acceptPartEntity));
 
