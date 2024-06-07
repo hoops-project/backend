@@ -385,7 +385,7 @@ class GameServiceTest {
     // 현재 경기에 수락된 인원수가 개설자 한명만 있다고 가정
     when(participantGameRepository.countByStatusAndGameId
         (eq(ACCEPT), eq(gameId)))
-        .thenReturn(1L);
+        .thenReturn(1);
 
     // 경기 수정
     when(gameRepository.save(any())).thenReturn(updatedGameEntity);
@@ -524,7 +524,7 @@ class GameServiceTest {
 
     when(participantGameRepository
         .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
-        .thenReturn(8L);
+        .thenReturn(8);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -570,7 +570,7 @@ class GameServiceTest {
 
     when(participantGameRepository
         .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
-        .thenReturn(8L);
+        .thenReturn(8);
 
     when(participantGameRepository
         .existsByStatusAndGameIdAndUserGender
@@ -622,7 +622,7 @@ class GameServiceTest {
 
     when(participantGameRepository
         .countByStatusAndGameId(eq(ACCEPT), eq(gameId)))
-        .thenReturn(8L);
+        .thenReturn(8);
 
     when(participantGameRepository
         .existsByStatusAndGameIdAndUserGender

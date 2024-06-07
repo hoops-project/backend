@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface ParticipantGameRepository extends
     JpaRepository<ParticipantGameEntity, Long> {
 
-  long countByStatusAndGameId(
+  int countByStatusAndGameId(
       ParticipantGameStatus participantGameStatus, Long gameId);
 
   List<ParticipantGameEntity> findByStatusInAndGameId(

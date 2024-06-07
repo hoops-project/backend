@@ -116,7 +116,7 @@ public class ParticipantGameService {
 
     validateIsNotCreator(user);
 
-    long count = participantGameRepository.countByStatusAndGameId
+    int count = participantGameRepository.countByStatusAndGameId
         (ACCEPT, gameEntity.getId());
 
     // 경기에 참가자가 다 찼을때 수락 못함
@@ -217,7 +217,7 @@ public class ParticipantGameService {
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 
-  // 경기 개설자만 수락,거절,강퇴 가능
+  // 경기 개설자만 참가 희망자 리스트 조회, 경기 (수락,거절,강퇴) 가능
   public void validationCreatorCheck(UserEntity user, GameEntity game) {
 
     if (!Objects.equals(user.getId(), game.getUser().getId())) {

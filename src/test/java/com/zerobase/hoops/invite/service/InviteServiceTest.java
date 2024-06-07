@@ -246,7 +246,7 @@ class InviteServiceTest {
     when(participantGameRepository
         .countByStatusAndGameId
             (eq(ParticipantGameStatus.ACCEPT), eq(1L)))
-        .thenReturn(1L);
+        .thenReturn(1);
 
     when(inviteRepository.save(any(InviteEntity.class))).thenAnswer(invocation -> {
       InviteEntity savedInviteEntity = invocation.getArgument(0);
@@ -353,7 +353,7 @@ class InviteServiceTest {
     when(participantGameRepository
         .countByStatusAndGameId(eq(ParticipantGameStatus.ACCEPT),
             eq(1L)))
-        .thenReturn(0L);
+        .thenReturn(0);
 
     when(inviteRepository.save(any(InviteEntity.class))).thenReturn(inviteEntity);
 
