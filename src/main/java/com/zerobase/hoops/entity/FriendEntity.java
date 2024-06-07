@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -59,5 +60,21 @@ public class FriendEntity {
   @ManyToOne
   @JoinColumn(nullable = false)
   private UserEntity friendUser;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FriendEntity that = (FriendEntity) o;
+    return Objects.equals(id, that.id) &&
+        Objects.equals(status, that.status) &&
+        Objects.equals(user, that.user) &&
+        Objects.equals(friendUser, that.friendUser);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, status, user, friendUser);
+  }
 
 }
