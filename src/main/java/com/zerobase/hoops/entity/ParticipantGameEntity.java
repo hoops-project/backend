@@ -151,14 +151,13 @@ public class ParticipantGameEntity {
     ParticipantGameEntity that = (ParticipantGameEntity) o;
     return Objects.equals(id, that.id) &&
         Objects.equals(status, that.status) &&
-        Objects.equals(createdDateTime, that.createdDateTime) &&
         Objects.equals(game, that.game) &&
         Objects.equals(user, that.user);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, status, createdDateTime, game, user);
+    return Objects.hash(id, status, game, user);
   }
 
 }

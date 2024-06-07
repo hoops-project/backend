@@ -1,6 +1,7 @@
 package com.zerobase.hoops.entity;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 import lombok.*;
 
 @Entity(name = "chat_room")
@@ -26,5 +27,19 @@ public class ChatRoomEntity {
   }
   public void changeNewSessionId(Long newSessionId){
     this.sessionId = newSessionId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ChatRoomEntity that = (ChatRoomEntity) o;
+    return Objects.equals(id, that.id) &&
+        Objects.equals(gameEntity, that.gameEntity);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, gameEntity);
   }
 }

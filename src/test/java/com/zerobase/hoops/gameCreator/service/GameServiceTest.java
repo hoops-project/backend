@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.chat.repository.ChatRoomRepository;
+import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -52,6 +53,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -131,6 +133,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
+        .createdDateTime(LocalDateTime.now())
         .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
@@ -148,6 +151,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
+        .createdDateTime(LocalDateTime.now())
         .startDateTime(LocalDateTime.now().plusHours(1))
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
@@ -165,6 +169,7 @@ class GameServiceTest {
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
+        .createdDateTime(LocalDateTime.now())
         .startDateTime(LocalDateTime.now().plusHours(1))
         .deletedDateTime(LocalDateTime.now().minusHours(1))
         .inviteYn(true)
@@ -204,37 +209,73 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
+    GameEntity gameEntity = CreateRequest.toEntity(request, requestUser);
+
     LocalDateTime startDatetime = request.getStartDateTime();
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
 
+    ParticipantGameEntity participantGameEntity =
+        ParticipantGameEntity.toGameCreatorEntity(gameEntity, requestUser);
+
+    ChatRoomEntity chatRoomEntity = new ChatRoomEntity();
+    chatRoomEntity.saveGameInfo(gameEntity);
+
+    ChatRoomEntity createedChatRoomEntity = ChatRoomEntity.builder()
+        .gameEntity(gameEntity)
+        .build();
+
     getCurrentUser();
+
+    // ArgumentCaptor를 사용하여 저장된 엔티티를 캡처합니다.
+    ArgumentCaptor<GameEntity> gameEntityCaptor = ArgumentCaptor.forClass(GameEntity.class);
+    ArgumentCaptor<ParticipantGameEntity> participantGameEntityCaptor = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+    ArgumentCaptor<ChatRoomEntity> chatRoomEntityCaptor = ArgumentCaptor.forClass(ChatRoomEntity.class);
 
     // aroundGameCount를 0으로 설정하여 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
         (eq(beforeDatetime), eq(afterDateTime), eq(request.getAddress())))
         .thenReturn(false);
 
-    when(gameRepository.save(any())).thenReturn(createdGameEntity);
-
-    when(participantGameRepository.save(any())).thenReturn(creatorParticipantGameEntity);
+    when(gameRepository.save(gameEntityCaptor.capture())).thenReturn(createdGameEntity);
+    when(participantGameRepository.save(participantGameEntityCaptor.capture()))
+        .thenReturn(creatorParticipantGameEntity);
+    when(chatRoomRepository.save(chatRoomEntityCaptor.capture())).thenReturn(createedChatRoomEntity);
 
     // when
-    CreateResponse result = gameService.createGame(request);
+    gameService.createGame(request);
 
     // Then
-    assertEquals(result.getTitle(), createdGameEntity.getTitle());
-    assertEquals(result.getContent(), createdGameEntity.getContent());
-    assertEquals(result.getHeadCount(), createdGameEntity.getHeadCount());
-    assertEquals(result.getFieldStatus(), createdGameEntity.getFieldStatus());
-    assertEquals(result.getGender(), createdGameEntity.getGender());
-    assertEquals(result.getInviteYn(), createdGameEntity.getInviteYn());
-    assertEquals(result.getAddress(), createdGameEntity.getAddress());
-    assertEquals(result.getPlaceName(), createdGameEntity.getPlaceName());
-    assertEquals(result.getLatitude(), createdGameEntity.getLatitude());
-    assertEquals(result.getLongitude(), createdGameEntity.getLongitude());
-    assertEquals(result.getCityName(), createdGameEntity.getCityName());
-    assertEquals(result.getMatchFormat(), createdGameEntity.getMatchFormat());
+    verify(gameRepository).save(gameEntity);
+    verify(participantGameRepository).save(participantGameEntity);
+    verify(chatRoomRepository).save(chatRoomEntity);
+
+    // 저장된 엔티티 캡처
+    GameEntity savedGameEntity = gameEntityCaptor.getValue();
+    ParticipantGameEntity savedParticipantGameEntity = participantGameEntityCaptor.getValue();
+    ChatRoomEntity savedChatRoomEntity = chatRoomEntityCaptor.getValue();
+
+    assertEquals(savedGameEntity.getTitle(), createdGameEntity.getTitle());
+    assertEquals(savedGameEntity.getContent(), createdGameEntity.getContent());
+    assertEquals(savedGameEntity.getHeadCount(), createdGameEntity.getHeadCount());
+    assertEquals(savedGameEntity.getFieldStatus(), createdGameEntity.getFieldStatus());
+    assertEquals(savedGameEntity.getGender(), createdGameEntity.getGender());
+    assertEquals(savedGameEntity.getInviteYn(), createdGameEntity.getInviteYn());
+    assertEquals(savedGameEntity.getAddress(), createdGameEntity.getAddress());
+    assertEquals(savedGameEntity.getPlaceName(), createdGameEntity.getPlaceName());
+    assertEquals(savedGameEntity.getLatitude(), createdGameEntity.getLatitude());
+    assertEquals(savedGameEntity.getLongitude(), createdGameEntity.getLongitude());
+    assertEquals(savedGameEntity.getCityName(), createdGameEntity.getCityName());
+    assertEquals(savedGameEntity.getMatchFormat(), createdGameEntity.getMatchFormat());
+
+    assertEquals(savedParticipantGameEntity.getStatus(),
+        creatorParticipantGameEntity.getStatus());
+    assertEquals(savedParticipantGameEntity.getUser(),
+        creatorParticipantGameEntity.getUser());
+
+    assertEquals(savedChatRoomEntity.getGameEntity(),
+        createedChatRoomEntity.getGameEntity());
+
   }
 
   @Test
@@ -254,7 +295,7 @@ class GameServiceTest {
 
     // 이미 예정된 게임이 없는 상황을 가정합니다.
     when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
-        (eq(beforeDatetime), eq(afterDateTime), eq("테스트 주소")))
+        (eq(beforeDatetime), eq(afterDateTime), eq(request.getAddress())))
         .thenReturn(false);
 
     // when
@@ -282,7 +323,7 @@ class GameServiceTest {
     getCurrentUser();
 
     when(gameRepository.existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
-        (eq(beforeDatetime), eq(afterDateTime), eq("테스트 주소")))
+        (eq(beforeDatetime), eq(afterDateTime), eq(request.getAddress())))
         .thenReturn(true);
 
     // when
@@ -388,7 +429,7 @@ class GameServiceTest {
         .thenReturn(1);
 
     // 경기 수정
-    when(gameRepository.save(any())).thenReturn(updatedGameEntity);
+    when(gameRepository.save(updatedGameEntity)).thenReturn(updatedGameEntity);
 
     // when
     UpdateResponse result = gameService.updateGame(updateRequest);
@@ -423,10 +464,6 @@ class GameServiceTest {
     LocalDateTime startDatetime = updateRequest.getStartDateTime();
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
-
-
-    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
-        createdGameEntity);
 
     getCurrentUser();
 
@@ -466,9 +503,6 @@ class GameServiceTest {
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
 
-    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
-        createdGameEntity);
-
     getCurrentUser();
 
     // 경기
@@ -506,9 +540,6 @@ class GameServiceTest {
     LocalDateTime startDatetime = updateRequest.getStartDateTime();
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
-
-    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
-        createdGameEntity);
 
     getCurrentUser();
 
@@ -552,9 +583,6 @@ class GameServiceTest {
     LocalDateTime startDatetime = updateRequest.getStartDateTime();
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
-
-    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
-        createdGameEntity);
 
     getCurrentUser();
 
@@ -604,9 +632,6 @@ class GameServiceTest {
     LocalDateTime startDatetime = updateRequest.getStartDateTime();
     LocalDateTime beforeDatetime = startDatetime.minusHours(1).plusSeconds(1);
     LocalDateTime afterDateTime = startDatetime.plusHours(1).minusSeconds(1);
-
-    GameEntity gameEntity = UpdateRequest.toEntity(updateRequest,
-        createdGameEntity);
 
     getCurrentUser();
 
@@ -681,7 +706,7 @@ class GameServiceTest {
         (eq(InviteStatus.REQUEST), eq(gameId)))
         .thenReturn(inviteEntityList);
 
-    when(gameRepository.save(any())).thenReturn(deletedGameEntity);
+    when(gameRepository.save(deletedGameEntity)).thenReturn(deletedGameEntity);
 
     // when
     Object object = gameService.delete(deleteRequest);
@@ -739,9 +764,9 @@ class GameServiceTest {
     when(participantGameRepository
         .findByStatusAndGameIdAndUserId
         (eq(ACCEPT), eq(gameId), eq(receiveUser.getId())))
-        .thenReturn(Optional.ofNullable(receivePartEntity));
+        .thenReturn(Optional.of(receivePartEntity));
 
-    when(participantGameRepository.save(any())).thenReturn(deletedPartEntity);
+    when(participantGameRepository.save(deletedPartEntity)).thenReturn(deletedPartEntity);
 
     // when
     Object object = gameService.delete(deleteRequest);

@@ -99,7 +99,6 @@ public class GameService {
     ChatRoomEntity chatRoomEntity = new ChatRoomEntity();
     chatRoomEntity.saveGameInfo(gameEntity);
     chatRoomRepository.save(chatRoomEntity);
-    //
 
     log.info("createGame end");
 
