@@ -9,8 +9,10 @@ import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -79,12 +81,13 @@ public class FriendDto {
     @Min(1)
     private Long friendId;
 
-    public static FriendEntity toEntity(FriendEntity friendEntity) {
+    public static FriendEntity toEntity(FriendEntity friendEntity,
+        Clock clock) {
       return FriendEntity.builder()
           .id(friendEntity.getId())
           .status(FriendStatus.CANCEL)
           .createdDateTime(friendEntity.getCreatedDateTime())
-          .canceledDateTime(LocalDateTime.now())
+          .canceledDateTime(LocalDateTime.now(clock))
           .user(friendEntity.getUser())
           .friendUser(friendEntity.getFriendUser())
           .build();
@@ -133,18 +136,19 @@ public class FriendDto {
     @Min(1)
     private Long friendId;
 
-    public static FriendEntity toSelfEntity(FriendEntity friendEntity) {
+    public static FriendEntity toMyFriendEntity(FriendEntity friendEntity,
+        Clock clock) {
       return FriendEntity.builder()
           .id(friendEntity.getId())
           .status(FriendStatus.ACCEPT)
           .createdDateTime(friendEntity.getCreatedDateTime())
-          .acceptedDateTime(LocalDateTime.now())
+          .acceptedDateTime(LocalDateTime.now(clock))
           .user(friendEntity.getUser())
           .friendUser(friendEntity.getFriendUser())
           .build();
     }
 
-    public static FriendEntity toOtherEntity(FriendEntity friendEntity) {
+    public static FriendEntity toOtherFriendEntity(FriendEntity friendEntity) {
       return FriendEntity.builder()
           .status(FriendStatus.ACCEPT)
           .createdDateTime(friendEntity.getCreatedDateTime())
@@ -197,12 +201,13 @@ public class FriendDto {
     @Min(1)
     private Long friendId;
 
-    public static FriendEntity toEntity(FriendEntity friendEntity) {
+    public static FriendEntity toEntity(FriendEntity friendEntity,
+        Clock clock) {
       return FriendEntity.builder()
           .id(friendEntity.getId())
           .status(FriendStatus.REJECT)
           .createdDateTime(friendEntity.getCreatedDateTime())
-          .rejectedDateTime(LocalDateTime.now())
+          .rejectedDateTime(LocalDateTime.now(clock))
           .user(friendEntity.getUser())
           .friendUser(friendEntity.getFriendUser())
           .build();
@@ -251,19 +256,20 @@ public class FriendDto {
     @Min(1)
     private Long friendId;
 
-    public static FriendEntity toSelfEntity(FriendEntity friendEntity) {
+    public static FriendEntity toMyFriendEntity(FriendEntity friendEntity,
+        Clock clock) {
       return FriendEntity.builder()
           .id(friendEntity.getId())
           .status(FriendStatus.DELETE)
           .createdDateTime(friendEntity.getCreatedDateTime())
           .acceptedDateTime(friendEntity.getAcceptedDateTime())
-          .deletedDateTime(LocalDateTime.now())
+          .deletedDateTime(LocalDateTime.now(clock))
           .user(friendEntity.getUser())
           .friendUser(friendEntity.getFriendUser())
           .build();
     }
 
-    public static FriendEntity toOtherEntity(FriendEntity selfFriendEntity,
+    public static FriendEntity toOtherFriendEntity(FriendEntity selfFriendEntity,
         FriendEntity otherFriendEntity) {
       return FriendEntity.builder()
           .id(otherFriendEntity.getId())
@@ -309,6 +315,25 @@ public class FriendDto {
           .friendNickName(friendEntity.getFriendUser().getNickName())
           .build();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      DeleteResponse that = (DeleteResponse) o;
+      return Objects.equals(friendId, that.friendId) &&
+          Objects.equals(status, that.status) &&
+          Objects.equals(createdDateTime, that.createdDateTime) &&
+          Objects.equals(acceptedDateTime, that.acceptedDateTime) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(friendNickName, that.friendNickName);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(friendId, status, createdDateTime, acceptedDateTime, nickName, friendNickName);
+    }
+
   }
 
   @Getter
@@ -316,7 +341,7 @@ public class FriendDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class ListResponse {
+  public static class FriendListResponse {
 
     private Long userId;
 
@@ -334,8 +359,8 @@ public class FriendDto {
 
     private Long friendId;
 
-    public static ListResponse toDto(FriendEntity friendEntity) {
-      return ListResponse.builder()
+    public static FriendListResponse toDto(FriendEntity friendEntity) {
+      return FriendListResponse.builder()
           .userId(friendEntity.getFriendUser().getId())
           .birthday(friendEntity.getFriendUser().getBirthday())
           .gender(friendEntity.getFriendUser().getGender())
@@ -346,6 +371,28 @@ public class FriendDto {
           .friendId(friendEntity.getId())
           .build();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      FriendListResponse that = (FriendListResponse) o;
+      return Objects.equals(userId, that.userId) &&
+          Objects.equals(birthday, that.birthday) &&
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint) &&
+          Objects.equals(friendId, that.friendId);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(userId, birthday, gender, nickName, playStyle,
+          ability, mannerPoint, friendId);
+    }
+
   }
 
   @Getter
@@ -353,7 +400,7 @@ public class FriendDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class InviteListResponse {
+  public static class InviteFriendListResponse {
 
     private Long userId;
 
@@ -370,6 +417,28 @@ public class FriendDto {
     private String mannerPoint;
 
     private InviteStatus status;
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      InviteFriendListResponse that = (InviteFriendListResponse) o;
+      return Objects.equals(userId, that.userId) &&
+          Objects.equals(birthday, that.birthday) &&
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint) &&
+          Objects.equals(status, that.status);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(userId, birthday, gender, nickName, playStyle,
+          ability, mannerPoint, status);
+    }
+
   }
 
   @Getter
@@ -377,7 +446,7 @@ public class FriendDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class RequestListResponse {
+  public static class RequestFriendListResponse {
 
     private Long userId;
 
@@ -395,8 +464,8 @@ public class FriendDto {
 
     private Long friendId;
 
-    public static RequestListResponse toDto(FriendEntity friendEntity) {
-      return RequestListResponse.builder()
+    public static RequestFriendListResponse toDto(FriendEntity friendEntity) {
+      return RequestFriendListResponse.builder()
           .userId(friendEntity.getUser().getId())
           .birthday(friendEntity.getUser().getBirthday())
           .gender(friendEntity.getUser().getGender())
@@ -406,6 +475,27 @@ public class FriendDto {
           .mannerPoint(friendEntity.getUser().getStringAverageRating())
           .friendId(friendEntity.getId())
           .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      RequestFriendListResponse that = (RequestFriendListResponse) o;
+      return Objects.equals(userId, that.userId) &&
+          Objects.equals(birthday, that.birthday) &&
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint) &&
+          Objects.equals(friendId, that.friendId);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(userId, birthday, gender, nickName, playStyle,
+          ability, mannerPoint, friendId);
     }
 
   }
