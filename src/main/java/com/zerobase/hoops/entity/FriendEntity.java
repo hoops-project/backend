@@ -68,13 +68,19 @@ public class FriendEntity {
     FriendEntity that = (FriendEntity) o;
     return Objects.equals(id, that.id) &&
         Objects.equals(status, that.status) &&
+        Objects.equals(createdDateTime, that.createdDateTime) &&
+        Objects.equals(acceptedDateTime, that.acceptedDateTime) &&
+        Objects.equals(rejectedDateTime, that.rejectedDateTime) &&
+        Objects.equals(canceledDateTime, that.canceledDateTime) &&
+        Objects.equals(deletedDateTime, that.deletedDateTime) &&
         Objects.equals(user, that.user) &&
         Objects.equals(friendUser, that.friendUser);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, status, user, friendUser);
+    return Objects.hash(id, status, createdDateTime, acceptedDateTime,
+        rejectedDateTime, canceledDateTime, deletedDateTime, user, friendUser);
   }
 
 }
