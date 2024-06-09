@@ -8,14 +8,13 @@ import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.InviteListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.InviteFriendListResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.FriendListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RequestFriendListResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.constraints.NotBlank;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -90,10 +89,10 @@ public class FriendController {
   @Operation(summary = "친구 검색")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/search")
-  public ResponseEntity<Page<ListResponse>> searchFriend(
+  public ResponseEntity<Page<FriendListResponse>> searchFriend(
       @RequestParam String nickName,
       @PageableDefault(size = 10, page = 0) Pageable pageable) {
-    Page<ListResponse> result = friendService.searchNickName(nickName,
+    Page<FriendListResponse> result = friendService.searchNickName(nickName,
         pageable);
     return ResponseEntity.ok(result);
   }
@@ -101,20 +100,20 @@ public class FriendController {
   @Operation(summary = "친구 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myfriends")
-  public ResponseEntity<Map<String, List<ListResponse>>> getMyFriends(
+  public ResponseEntity<Map<String, List<FriendListResponse>>> getMyFriends(
       @PageableDefault(size = 10, page = 0, sort = "FriendUserNickName",
           direction = Direction.ASC) Pageable pageable) {
-    List<ListResponse> result = friendService.getMyFriends(pageable);
+    List<FriendListResponse> result = friendService.getMyFriends(pageable);
     return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
   }
 
   @Operation(summary = "경기 초대 친구 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/invite/list")
-  public ResponseEntity<Page<InviteListResponse>> getMyInviteList(
+  public ResponseEntity<Page<InviteFriendListResponse>> getMyInviteList(
       @RequestParam Long gameId,
       @PageableDefault(size = 10, page = 0) Pageable pageable) {
-    Page<InviteListResponse> result =
+    Page<InviteFriendListResponse> result =
         friendService.getMyInviteList(gameId, pageable);
     return ResponseEntity.ok(result);
   }
@@ -122,8 +121,8 @@ public class FriendController {
   @Operation(summary = "내가 친구 요청 받은 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/requestFriendList")
-  public ResponseEntity<Map<String, List<RequestListResponse>>> getRequestFriendList() {
-    List<RequestListResponse> result = friendService.getRequestFriendList();
+  public ResponseEntity<Map<String, List<RequestFriendListResponse>>> getRequestFriendList() {
+    List<RequestFriendListResponse> result = friendService.getRequestFriendList();
     return ResponseEntity.ok(Collections.singletonMap("requestFriendList",
         result));
   }

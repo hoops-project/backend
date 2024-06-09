@@ -7,8 +7,8 @@ import com.zerobase.hoops.entity.QFriendEntity;
 import com.zerobase.hoops.entity.QInviteEntity;
 import com.zerobase.hoops.entity.QParticipantGameEntity;
 import com.zerobase.hoops.entity.QUserEntity;
-import com.zerobase.hoops.friends.dto.FriendDto.InviteListResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.InviteFriendListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.FriendListResponse;
 import com.zerobase.hoops.friends.repository.FriendCustomRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
@@ -31,7 +31,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
   }
 
   @Override
-  public Page<ListResponse> findBySearchFriendList(Long userId, String nickName, Pageable pageable) {
+  public Page<FriendListResponse> findBySearchFriendList(Long userId, String nickName, Pageable pageable) {
     QUserEntity user = QUserEntity.userEntity;
     QFriendEntity friend = QFriendEntity.friendEntity;
 
@@ -71,8 +71,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     int pageSize = pageable.getPageSize();
 
     // 결과 쿼리 생성
-    List<ListResponse> result = jpaQueryFactory
-        .select(Projections.constructor(ListResponse.class, user.id,
+    List<FriendListResponse> result = jpaQueryFactory
+        .select(Projections.constructor(FriendListResponse.class, user.id,
             user.birthday,
                 user.gender, user.nickName, user.playStyle, user.ability,
                 user.stringAverageRating, friend.id))
@@ -104,7 +104,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
   }
 
   @Override
-  public Page<InviteListResponse> findByMyInviteFriendList(Long userId,
+  public Page<InviteFriendListResponse> findByMyInviteFriendList(Long userId,
       Long gameId, Pageable pageable) {
     QUserEntity user = QUserEntity.userEntity;
     QFriendEntity friend = QFriendEntity.friendEntity;
@@ -144,8 +144,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     int pageSize = pageable.getPageSize();
 
     // 결과 쿼리 생성
-    List<InviteListResponse> result = jpaQueryFactory
-        .select(Projections.constructor(InviteListResponse.class, user.id, user.birthday,
+    List<InviteFriendListResponse> result = jpaQueryFactory
+        .select(Projections.constructor(InviteFriendListResponse.class, user.id, user.birthday,
             user.gender, user.nickName, user.playStyle, user.ability,
             user.stringAverageRating, invite.inviteStatus))
         .from(friend)

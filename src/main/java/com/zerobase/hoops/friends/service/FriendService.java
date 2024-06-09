@@ -25,20 +25,20 @@ import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.InviteListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.InviteFriendListResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.ListResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.RequestListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.FriendListResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.RequestFriendListResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,9 +48,11 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class FriendService {
 
-  private FriendRepository friendRepository;
-
   private final JwtTokenExtract jwtTokenExtract;
+
+  private final Clock clock;
+
+  private final FriendRepository friendRepository;
 
   private final UserRepository userRepository;
 
@@ -128,7 +130,7 @@ public class FriendService {
       throw new CustomException(NOT_SELF_APPLY);
     }
 
-    FriendEntity result = CancelRequest.toEntity(friendEntity);
+    FriendEntity result = CancelRequest.toEntity(friendEntity, clock);
 
     friendRepository.save(result);
 
@@ -171,17 +173,17 @@ public class FriendService {
     }
 
 
-    FriendEntity selfEntity = AcceptRequest.toSelfEntity(friendEntity);
+    FriendEntity myFriendEntity = AcceptRequest.toMyFriendEntity(friendEntity, clock);
 
-    friendRepository.save(selfEntity);
+    friendRepository.save(myFriendEntity);
 
-    FriendEntity otherEntity = AcceptRequest.toOtherEntity(selfEntity);
+    FriendEntity otherFriendEntity = AcceptRequest.toOtherFriendEntity(myFriendEntity);
 
-    friendRepository.save(otherEntity);
+    friendRepository.save(otherFriendEntity);
 
     List<AcceptResponse> result = new ArrayList<>();
-    result.add(AcceptResponse.toDto(selfEntity));
-    result.add(AcceptResponse.toDto(otherEntity));
+    result.add(AcceptResponse.toDto(myFriendEntity));
+    result.add(AcceptResponse.toDto(otherFriendEntity));
 
     return result;
   }
@@ -203,7 +205,7 @@ public class FriendService {
       throw new CustomException(NOT_SELF_RECEIVE);
     }
 
-    FriendEntity rejectEntity = RejectRequest.toEntity(friendEntity);
+    FriendEntity rejectEntity = RejectRequest.toEntity(friendEntity, clock);
 
     friendRepository.save(rejectEntity);
 
@@ -216,36 +218,38 @@ public class FriendService {
   public List<DeleteResponse> deleteFriend(DeleteRequest request) {
     setUpUser();
 
-    FriendEntity selfFriendEntity =
+    FriendEntity myFriendAcceptEntity =
         friendRepository.findByIdAndStatus(request.getFriendId(),
                 FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
-    Long userId = user.getId();
-    Long friendUserId = selfFriendEntity.getFriendUser().getId();
+    // 자신이 받은 친구만 삭제 가능
+    if(!Objects.equals(user.getId(),
+        myFriendAcceptEntity.getUser().getId())) {
+      throw new CustomException(NOT_SELF_ACCEPT);
+    }
 
-    FriendEntity otherFriendEntity =
+    Long userId = user.getId();
+    Long friendUserId = myFriendAcceptEntity.getFriendUser().getId();
+
+    FriendEntity otherFriendAcceptEntity =
         friendRepository.findByFriendUserIdAndUserIdAndStatus
                 (userId, friendUserId, FriendStatus.ACCEPT)
             .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
 
-    // 자신이 받은 친구만 삭제 가능
-    if(!Objects.equals(user.getId(),
-        selfFriendEntity.getUser().getId())) {
-      throw new CustomException(NOT_SELF_ACCEPT);
-    }
-    
-    FriendEntity selfResult = DeleteRequest.toSelfEntity(selfFriendEntity);
+    FriendEntity myDeleteFriendEntity =
+        DeleteRequest.toMyFriendEntity(myFriendAcceptEntity, clock);
 
-    friendRepository.save(selfResult);
+    friendRepository.save(myDeleteFriendEntity);
 
-    FriendEntity otherResult = DeleteRequest.toOtherEntity(selfResult, otherFriendEntity);
+    FriendEntity otherDeleteFriendEntity =
+        DeleteRequest.toOtherFriendEntity(myDeleteFriendEntity, otherFriendAcceptEntity);
 
-    friendRepository.save(otherResult);
+    friendRepository.save(otherDeleteFriendEntity);
 
     List<DeleteResponse> result = new ArrayList<>();
-    result.add(DeleteResponse.toDto(selfResult));
-    result.add(DeleteResponse.toDto(otherResult));
+    result.add(DeleteResponse.toDto(myDeleteFriendEntity));
+    result.add(DeleteResponse.toDto(otherDeleteFriendEntity));
 
     return result;
   }
@@ -253,7 +257,7 @@ public class FriendService {
   /**
    * 친구 검색
    */
-  public Page<ListResponse> searchNickName(String nickName, Pageable pageable) {
+  public Page<FriendListResponse> searchNickName(String nickName, Pageable pageable) {
     //validation
     if(nickName.isBlank()) {
       throw new CustomException(NOT_FOUND_NICKNAME);
@@ -261,7 +265,7 @@ public class FriendService {
 
     setUpUser();
 
-    Page<ListResponse> result =
+    Page<FriendListResponse> result =
         friendCustomRepository.findBySearchFriendList
             (user.getId(), nickName,
             pageable);
@@ -272,18 +276,16 @@ public class FriendService {
   /**
    * 친구 리스트 조회
    */
-  public List<ListResponse> getMyFriends(Pageable pageable) {
+  public List<FriendListResponse> getMyFriends(Pageable pageable) {
     setUpUser();
 
     Page<FriendEntity> friendEntityPage =
         friendRepository.findByStatusAndUserId
             (FriendStatus.ACCEPT, user.getId(), pageable);
 
-    List<ListResponse> result = new ArrayList<>();
-
-    friendEntityPage.stream().forEach(friendEntity -> {
-      result.add(ListResponse.toDto(friendEntity));
-    });
+    List<FriendListResponse> result = friendEntityPage.stream()
+        .map(FriendListResponse::toDto)
+        .toList();
 
     return result;
   }
@@ -291,11 +293,11 @@ public class FriendService {
   /**
    * 경기 초대 친구 리스트 조회
    */
-  public Page<InviteListResponse> getMyInviteList(Long gameId,
+  public Page<InviteFriendListResponse> getMyInviteList(Long gameId,
       Pageable pageable) {
     setUpUser();
 
-    Page<InviteListResponse> result =
+    Page<InviteFriendListResponse> result =
         friendCustomRepository.findByMyInviteFriendList
             (user.getId(), gameId, pageable);
 
@@ -305,16 +307,16 @@ public class FriendService {
   /**
    * 내가 친구 요청 받은 리스트 조회
    */
-  public List<RequestListResponse> getRequestFriendList() {
+  public List<RequestFriendListResponse> getRequestFriendList() {
     setUpUser();
 
     List<FriendEntity> friendEntityList = friendRepository
         .findByStatusAndFriendUserId
             (FriendStatus.APPLY, user.getId());
 
-    List<RequestListResponse> result = friendEntityList.stream()
-        .map(RequestListResponse::toDto)
-        .collect(Collectors.toList());
+    List<RequestFriendListResponse> result = friendEntityList.stream()
+        .map(RequestFriendListResponse::toDto)
+        .toList();
 
     return result;
   }
