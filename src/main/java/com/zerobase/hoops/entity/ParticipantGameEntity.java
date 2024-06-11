@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -123,10 +124,8 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity) {
-
-    LocalDateTime nowDateTime = LocalDateTime.now();
-
+  public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity,
+      LocalDateTime nowDateTime) {
     return ParticipantGameEntity.builder()
             .status(ParticipantGameStatus.ACCEPT)
             .createdDateTime(nowDateTime)

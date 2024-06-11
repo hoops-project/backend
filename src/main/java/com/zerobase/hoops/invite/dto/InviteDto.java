@@ -15,10 +15,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 public class InviteDto {
@@ -83,6 +85,7 @@ public class InviteDto {
   }
 
   @Getter
+  @Setter
   @ToString
   @NoArgsConstructor
   @AllArgsConstructor
@@ -228,80 +231,52 @@ public class InviteDto {
   public static class InviteMyListResponse {
     private Long inviteId;
 
-    private InviteStatus inviteStatus;
+    private LocalDate birthday;
 
-    private LocalDateTime requestedDateTime;
+    private GenderType gender;
 
-    private Long senderUserId;
+    private String nickName;
 
-    private LocalDate senderUserBirthday;
+    private PlayStyleType playStyle;
 
-    private GenderType senderUserGenderType;
-
-    private String senderUserNickName;
-
-    private PlayStyleType senderUserPlayStyle;
-
-    private AbilityType senderUserAbility;
+    private AbilityType ability;
 
     private String mannerPoint;
 
-    private String receiverUserNickName;
-
     private Long gameId;
 
-    private String title;
 
-    private String content;
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      InviteMyListResponse that = (InviteMyListResponse) o;
+      return Objects.equals(inviteId, that.inviteId) &&
+          Objects.equals(birthday, that.birthday) &&
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(playStyle, that.playStyle) &&
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint) &&
+          Objects.equals(gameId, that.gameId);
+    }
 
-    private Long headCount;
-
-    private FieldStatus fieldStatus;
-
-    private Gender gender;
-
-    private LocalDateTime startDateTime;
-
-    private Boolean inviteYn;
-
-    private String address;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    private CityName cityName;
-
-    private MatchFormat matchFormat;
-
-
+    @Override
+    public int hashCode() {
+      return Objects.hash(inviteId, birthday, gender, nickName,
+          playStyle, ability, mannerPoint, gameId);
+    }
 
     public static InviteMyListResponse toDto(InviteEntity inviteEntity) {
       return InviteMyListResponse.builder()
           .inviteId(inviteEntity.getId())
-          .inviteStatus(inviteEntity.getInviteStatus())
-          .requestedDateTime(inviteEntity.getRequestedDateTime())
-          .senderUserId(inviteEntity.getSenderUser().getId())
-          .senderUserBirthday(inviteEntity.getSenderUser().getBirthday())
-          .senderUserGenderType(inviteEntity.getSenderUser().getGender())
-          .senderUserNickName(inviteEntity.getSenderUser().getNickName())
-          .senderUserPlayStyle(inviteEntity.getSenderUser().getPlayStyle())
-          .senderUserAbility(inviteEntity.getSenderUser().getAbility())
+          .birthday(inviteEntity.getSenderUser().getBirthday())
+          .gender(inviteEntity.getSenderUser().getGender())
+          .nickName(inviteEntity.getSenderUser().getNickName())
+          .playStyle(inviteEntity.getSenderUser().getPlayStyle())
+          .ability(inviteEntity.getSenderUser().getAbility())
           .mannerPoint(inviteEntity.getSenderUser().getStringAverageRating())
-          .receiverUserNickName(inviteEntity.getReceiverUser().getNickName())
           .gameId(inviteEntity.getGame().getId())
-          .title(inviteEntity.getGame().getTitle())
-          .content(inviteEntity.getGame().getContent())
-          .headCount(inviteEntity.getGame().getHeadCount())
-          .fieldStatus(inviteEntity.getGame().getFieldStatus())
-          .gender(inviteEntity.getGame().getGender())
-          .startDateTime(inviteEntity.getGame().getStartDateTime())
-          .inviteYn(inviteEntity.getGame().getInviteYn())
-          .address(inviteEntity.getGame().getAddress())
-          .latitude(inviteEntity.getGame().getLatitude())
-          .longitude(inviteEntity.getGame().getLongitude())
-          .cityName(inviteEntity.getGame().getCityName())
-          .matchFormat(inviteEntity.getGame().getMatchFormat())
           .build();
     }
   }
