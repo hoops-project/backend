@@ -36,6 +36,7 @@ import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -61,9 +62,9 @@ public class InviteService {
 
   private final JwtTokenExtract jwtTokenExtract;
 
-  private static UserEntity user;
+  private final Clock clock;
 
-  private static UserEntity receiverUser;
+  private static UserEntity user;
 
   /**
    * 경기 초대 요청
@@ -74,12 +75,6 @@ public class InviteService {
     GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull
             (request.getGameId()).orElseThrow
         (() -> new CustomException(GAME_NOT_FOUND));
-
-    UserEntity receiverUser = userRepository
-        .findById(request.getReceiverUserId())
-        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-
-    validFriendUser(receiverUser.getId());
 
     //해당 경기가 초대 불가능이면 막음
     if(!game.getInviteYn()) {
@@ -93,42 +88,48 @@ public class InviteService {
       throw new CustomException(ALREADY_GAME_START);
     }
 
-    // 해당 경기에 이미 초대 요청 되어 있으면 막음
-    boolean inviteRequestFlag =
-        inviteRepository.existsByInviteStatusAndGameIdAndReceiverUserId
-        (InviteStatus.REQUEST, request.getGameId(),
-            request.getReceiverUserId());
-
-    if(inviteRequestFlag) {
-      throw new CustomException(ALREADY_INVITE_GAME);
-    }
-
     // 해당 경기에 참가해 있지 않은 사람이 초대를 할경우 막음
     boolean gameExistFlag = participantGameRepository
         .existsByStatusAndGameIdAndUserId
-            (ParticipantGameStatus.ACCEPT, request.getGameId(),
-                user.getId());
+            (ParticipantGameStatus.ACCEPT, game.getId(), user.getId());
 
     if(!gameExistFlag) {
       throw new CustomException(NOT_PARTICIPANT_GAME);
     }
 
-    // 해당 경기에 이미 참가 하거나 요청한 경우 막음
-    boolean participantGameFlag = participantGameRepository
-        .existsByStatusInAndGameIdAndUserId
-            (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY)
-                ,request.getGameId(), request.getReceiverUserId());
-
-    if(participantGameFlag) {
-      throw new CustomException(ALREADY_PARTICIPANT_GAME);
-    }
-
     // 경기 인원이 다 차면 초대 막음
-    long headCount = participantGameRepository.countByStatusAndGameId(
+    int headCount = participantGameRepository.countByStatusAndGameId(
         ParticipantGameStatus.ACCEPT, request.getGameId());
 
     if(headCount >= game.getHeadCount()) {
       throw new CustomException(FULL_PARTICIPANT);
+    }
+
+    UserEntity receiverUser = userRepository
+        .findById(request.getReceiverUserId())
+        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+    // 초대 받은 사람이 친구 인지 검사
+    checkFriend(receiverUser.getId());
+
+    // 해당 경기에 이미 초대 요청 되어 있으면 막음
+    boolean inviteRequestFlag =
+        inviteRepository.existsByInviteStatusAndGameIdAndReceiverUserId
+        (InviteStatus.REQUEST, game.getId(),
+            receiverUser.getId());
+
+    if(inviteRequestFlag) {
+      throw new CustomException(ALREADY_INVITE_GAME);
+    }
+
+    // 해당 경기에 이미 참가 하거나 요청한 경우 막음
+    boolean participantGameFlag = participantGameRepository
+        .existsByStatusInAndGameIdAndUserId
+            (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY),
+                game.getId(), receiverUser.getId());
+
+    if(participantGameFlag) {
+      throw new CustomException(ALREADY_PARTICIPANT_GAME);
     }
 
     InviteEntity inviteEntity = CreateRequest
@@ -162,7 +163,7 @@ public class InviteService {
       throw new CustomException(NOT_INVITE_FOUND);
     }
 
-    InviteEntity result = InviteEntity.toCancelEntity(inviteEntity);
+    InviteEntity result = InviteEntity.toCancelEntity(inviteEntity, clock);
 
     inviteRepository.save(result);
 
@@ -180,7 +181,7 @@ public class InviteService {
             InviteStatus.REQUEST)
         .orElseThrow(() -> new CustomException(NOT_INVITE_FOUND));
 
-    validFriendUser(inviteEntity.getSenderUser().getId());
+    GameEntity game = inviteEntity.getGame();
 
     // 본인이 받은 초대 요청만 수락 가능
     if(!Objects.equals(inviteEntity.getReceiverUser().getId(),
@@ -188,16 +189,47 @@ public class InviteService {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
 
+    // 친구 인지 검사
+    checkFriend(inviteEntity.getSenderUser().getId());
+
+    LocalDateTime nowDatetime = LocalDateTime.now();
+
+    // 경기 시작이 되면 경기 수락 막음
+    if(game.getStartDateTime().isBefore(nowDatetime)) {
+      throw new CustomException(ALREADY_GAME_START);
+    }
+
+    // 초대한 사람이 해당 경기에 참가해 있지 않으면 막음
+    boolean gameExistFlag = participantGameRepository
+        .existsByStatusAndGameIdAndUserId
+            (ParticipantGameStatus.ACCEPT, game.getId(),
+                inviteEntity.getSenderUser().getId());
+
+    if(!gameExistFlag) {
+      throw new CustomException(NOT_PARTICIPANT_GAME);
+    }
+
     // 해당 경기에 인원이 다차면 수락 불가능
-    long count = participantGameRepository
-        .countByStatusAndGameId(ParticipantGameStatus.ACCEPT,
-            inviteEntity.getGame().getId());
+    int count = participantGameRepository
+        .countByStatusAndGameId(ParticipantGameStatus.ACCEPT, game.getId());
 
     if(count >= inviteEntity.getGame().getHeadCount()) {
       throw new CustomException(FULL_PARTICIPANT);
     }
 
-    InviteEntity result = InviteEntity.toAcceptEntity(inviteEntity);
+    // 해당 경기에 이미 참가 하거나 요청한 경우 막음
+    boolean participantGameFlag = participantGameRepository
+        .existsByStatusInAndGameIdAndUserId
+            (List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY),
+                game.getId(), user.getId());
+
+    if(participantGameFlag) {
+      throw new CustomException(ALREADY_PARTICIPANT_GAME);
+    }
+
+    LocalDateTime nowDateTime = LocalDateTime.now(clock);
+
+    InviteEntity result = InviteEntity.toAcceptEntity(inviteEntity, nowDateTime);
     inviteRepository.save(result);
 
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
@@ -205,7 +237,7 @@ public class InviteService {
         inviteEntity.getSenderUser().getId())) {
 
       ParticipantGameEntity gameCreatorInvite =
-          ParticipantGameEntity.gameCreatorInvite(inviteEntity);
+          ParticipantGameEntity.gameCreatorInvite(inviteEntity, nowDateTime);
 
       participantGameRepository.save(gameCreatorInvite);
     } else { // 경기 개설자가 아닌 팀원이 초대 한 경우 -> 경기 개설자가 수락,거절 진행
@@ -235,7 +267,7 @@ public class InviteService {
       throw new CustomException(NOT_SELF_INVITE_REQUEST);
     }
 
-    InviteEntity result = InviteEntity.toRejectEntity(inviteEntity);
+    InviteEntity result = InviteEntity.toRejectEntity(inviteEntity, clock);
 
     inviteRepository.save(result);
 
@@ -267,7 +299,7 @@ public class InviteService {
   }
 
   // 친구 인지 검사
-  private void validFriendUser(Long receiverUserId) {
+  private void checkFriend(Long receiverUserId) {
     boolean existFriendFlag =
         friendRepository
             .existsByUserIdAndFriendUserIdAndStatus
