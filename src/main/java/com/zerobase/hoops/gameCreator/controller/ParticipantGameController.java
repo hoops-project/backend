@@ -1,16 +1,16 @@
 package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.ParticipantDto;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptResponse;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutResponse;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectResponse;
+import com.zerobase.hoops.gameCreator.dto.ParticipantDto.ListResponse;
 import com.zerobase.hoops.gameCreator.service.ParticipantGameService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -28,57 +28,59 @@ public class ParticipantGameController {
 
   private final ParticipantGameService participantGameService;
 
-  @Operation(summary = "경기 참가 희망자 리스트 조회")
+  @Operation(summary = "경기 지원자 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/apply/list")
-  public ResponseEntity<Map<String, List<DetailResponse>>>
-  getApplyParticipantList(@RequestParam("gameId") Long gameId) {
-    List<ParticipantDto.DetailResponse> result =
-        participantGameService.getApplyParticipantList(gameId);
+  public ResponseEntity<Map<String, List<ListResponse>>>
+  getApplyParticipantList(@RequestParam("gameId") Long gameId,
+      @PageableDefault(page = 10, size = 0, sort = "createdDateTime",
+          direction = Direction.ASC) Pageable pageable) {
+    List<ListResponse> result =
+        participantGameService.validApplyParticipantList(gameId, pageable);
 
     return ResponseEntity.ok(Collections.singletonMap(
-        "applyParticipantGameList",
-        result));
+        "applyParticipantGameList", result));
   }
 
   @Operation(summary = "경기 참가자 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/accept/list")
-  public ResponseEntity<Map<String, List<DetailResponse>>>
-  getAcceptParticipantList(@RequestParam("gameId") Long gameId) {
-    List<ParticipantDto.DetailResponse> result =
-        participantGameService.getAcceptParticipantList(gameId);
+  public ResponseEntity<Map<String, List<ListResponse>>>
+  getAcceptParticipantList(@RequestParam("gameId") Long gameId,
+      @PageableDefault(page = 10, size = 0, sort = "createdDateTime",
+          direction = Direction.ASC) Pageable pageable) {
+    List<ListResponse> result =
+        participantGameService.validAcceptParticipantList(gameId, pageable);
 
     return ResponseEntity.ok(Collections.singletonMap(
-        "acceptParticipantGameList",
-        result));
+        "acceptParticipantGameList", result));
   }
 
-  @Operation(summary = "경기 참가 희망자 수락")
+  @Operation(summary = "경기 지원자 수락")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/accept")
-  public ResponseEntity<AcceptResponse>
-  acceptParticipant(@RequestBody @Validated ParticipantDto.AcceptRequest request) {
-    AcceptResponse result = participantGameService.acceptParticipant(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>>
+  acceptParticipant(@RequestBody @Validated ParticipantDto.CommonRequest request) {
+    String message = participantGameService.validAcceptParticipant(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
-  @Operation(summary = "경기 참가 희망자 거절")
+  @Operation(summary = "경기 지원자 거절")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/reject")
-  public ResponseEntity<RejectResponse>
-  rejectParticipant(@RequestBody @Validated ParticipantDto.RejectRequest request) {
-    RejectResponse result = participantGameService.rejectParticipant(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>>
+  rejectParticipant(@RequestBody @Validated ParticipantDto.CommonRequest request) {
+    String message = participantGameService.validRejectParticipant(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "경기 참가자 강퇴")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/kickout")
-  public ResponseEntity<KickoutResponse>
-  kickoutParticipant(@RequestBody @Validated ParticipantDto.KickoutRequest request) {
-    KickoutResponse result = participantGameService.kickoutParticipant(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>>
+  kickoutParticipant(@RequestBody @Validated ParticipantDto.CommonRequest request) {
+    String message = participantGameService.validKickoutParticipant(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
 

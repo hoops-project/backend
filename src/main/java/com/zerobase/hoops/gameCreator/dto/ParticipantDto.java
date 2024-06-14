@@ -7,6 +7,7 @@ import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -22,12 +23,10 @@ public class ParticipantDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class DetailResponse {
+  public static class ListResponse {
     private Long participantId;
 
-    private ParticipantGameStatus status;
-
-    private LocalDateTime createdDateTime;
+    private LocalDate birthday;
 
     private GenderType gender;
 
@@ -39,36 +38,37 @@ public class ParticipantDto {
 
     private String mannerPoint;
 
-    private Long userId;
-
-    public static ParticipantDto.DetailResponse toDto(
+    public static ListResponse toDto(
         ParticipantGameEntity participantGameEntity){
-      return DetailResponse.builder()
+      return ListResponse.builder()
           .participantId(participantGameEntity.getId())
-          .status(participantGameEntity.getStatus())
-          .createdDateTime(participantGameEntity.getCreatedDateTime())
+          .birthday(participantGameEntity.getUser().getBirthday())
           .gender(participantGameEntity.getUser().getGender())
           .nickName(participantGameEntity.getUser().getNickName())
           .playStyle(participantGameEntity.getUser().getPlayStyle())
           .ability(participantGameEntity.getUser().getAbility())
           .mannerPoint(participantGameEntity.getUser().getStringAverageRating())
-          .userId(participantGameEntity.getUser().getId())
           .build();
     }
 
-    // 테스트 코드용 List 간 equals
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      DetailResponse that = (DetailResponse) o;
+      ListResponse that = (ListResponse) o;
       return Objects.equals(participantId, that.participantId) &&
-          Objects.equals(status, that.status) &&
-          Objects.equals(createdDateTime, that.createdDateTime) &&
+          Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&
           Objects.equals(nickName, that.nickName) &&
           Objects.equals(playStyle, that.playStyle) &&
-          Objects.equals(ability, that.ability);
+          Objects.equals(ability, that.ability) &&
+          Objects.equals(mannerPoint, that.mannerPoint);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(participantId, birthday, gender, nickName,
+          playStyle, ability, mannerPoint);
     }
 
   }
@@ -78,119 +78,10 @@ public class ParticipantDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class AcceptRequest {
+  public static class CommonRequest {
     @NotNull(message = "참가 아이디는 필수 값입니다.")
     @Min(1)
     private Long participantId;
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class AcceptResponse {
-
-    private Long participantId;
-
-    private ParticipantGameStatus status;
-
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime acceptedDateTime;
-
-    private Long userId;
-
-    public static ParticipantDto.AcceptResponse toDto(
-        ParticipantGameEntity participantGameEntity) {
-      return AcceptResponse.builder()
-          .participantId(participantGameEntity.getId())
-          .status(participantGameEntity.getStatus())
-          .createdDateTime(participantGameEntity.getCreatedDateTime())
-          .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
-          .userId(participantGameEntity.getUser().getId()).build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class RejectRequest {
-    @NotNull(message = "참가 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long participantId;
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class RejectResponse {
-
-    private Long participantId;
-
-    private ParticipantGameStatus status;
-
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime rejectedDateTime;
-
-    private Long userId;
-
-    public static ParticipantDto.RejectResponse toDto(
-        ParticipantGameEntity participantGameEntity) {
-      return RejectResponse.builder()
-          .participantId(participantGameEntity.getId())
-          .status(participantGameEntity.getStatus())
-          .createdDateTime(participantGameEntity.getCreatedDateTime())
-          .rejectedDateTime(participantGameEntity.getRejectedDateTime())
-          .userId(participantGameEntity.getUser().getId()).build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class KickoutRequest {
-    @NotNull(message = "참가 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long participantId;
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class KickoutResponse {
-
-    private Long participantId;
-
-    private ParticipantGameStatus status;
-
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime acceptedDateTime;
-
-    private LocalDateTime kickoutDateTime;
-
-    private Long userId;
-
-    public static ParticipantDto.KickoutResponse toDto(
-        ParticipantGameEntity participantGameEntity) {
-      return KickoutResponse.builder()
-          .participantId(participantGameEntity.getId())
-          .status(participantGameEntity.getStatus())
-          .createdDateTime(participantGameEntity.getCreatedDateTime())
-          .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
-          .kickoutDateTime(participantGameEntity.getKickoutDateTime())
-          .userId(participantGameEntity.getUser().getId()).build();
-    }
   }
 
 }
