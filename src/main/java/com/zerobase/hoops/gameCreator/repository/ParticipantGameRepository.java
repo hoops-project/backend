@@ -5,6 +5,8 @@ import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.users.type.GenderType;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -22,8 +24,8 @@ public interface ParticipantGameRepository extends
       ParticipantGameStatus participantGameStatus, Long gameId,
       GenderType queryGender);
 
-  List<ParticipantGameEntity> findByStatusAndGameId(
-      ParticipantGameStatus participantGameStatus, Long gameId);
+  Page<ParticipantGameEntity> findByStatusAndGameId(
+      ParticipantGameStatus participantGameStatus, Long gameId, Pageable pageable);
 
   Optional<ParticipantGameEntity> findByIdAndStatus(
       Long participantId, ParticipantGameStatus participantGameStatus);
