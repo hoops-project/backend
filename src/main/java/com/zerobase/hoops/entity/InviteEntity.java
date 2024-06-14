@@ -136,4 +136,17 @@ public class InviteEntity {
         .build();
   }
 
+  public static InviteEntity setCancel(InviteEntity inviteEntity,
+      Clock clock) {
+    return InviteEntity.builder()
+        .id(inviteEntity.getId())
+        .inviteStatus(InviteStatus.CANCEL)
+        .requestedDateTime(inviteEntity.getRequestedDateTime())
+        .canceledDateTime(LocalDateTime.now(clock))
+        .senderUser(inviteEntity.getSenderUser())
+        .receiverUser(inviteEntity.getReceiverUser())
+        .game(inviteEntity.getGame())
+        .build();
+  }
+
 }
