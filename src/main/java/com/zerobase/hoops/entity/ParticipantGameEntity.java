@@ -78,35 +78,38 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setAccept(ParticipantGameEntity entity) {
+  public static ParticipantGameEntity setAccept(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(entity.getCreatedDateTime())
-        .acceptedDateTime(LocalDateTime.now())
+        .acceptedDateTime(LocalDateTime.now(clock))
         .game(entity.getGame())
         .user(entity.getUser())
         .build();
   }
 
-  public static ParticipantGameEntity setReject(ParticipantGameEntity entity) {
+  public static ParticipantGameEntity setReject(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
         .status(ParticipantGameStatus.REJECT)
         .createdDateTime(entity.getCreatedDateTime())
-        .rejectedDateTime(LocalDateTime.now())
+        .rejectedDateTime(LocalDateTime.now(clock))
         .game(entity.getGame())
         .user(entity.getUser())
         .build();
   }
 
-  public static ParticipantGameEntity setKickout(ParticipantGameEntity entity) {
+  public static ParticipantGameEntity setKickout(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
         .status(ParticipantGameStatus.KICKOUT)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
-        .kickoutDateTime(LocalDateTime.now())
+        .kickoutDateTime(LocalDateTime.now(clock))
         .game(entity.getGame())
         .user(entity.getUser())
         .build();
