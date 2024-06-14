@@ -68,11 +68,11 @@ public class ParticipantGameEntity {
 
   public static ParticipantGameEntity toGameCreatorEntity(
       GameEntity gameEntity,
-      UserEntity userEntity) {
+      UserEntity userEntity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.ACCEPT)
-        .createdDateTime(gameEntity.getCreatedDateTime())
-        .acceptedDateTime(gameEntity.getCreatedDateTime())
+        .acceptedDateTime(LocalDateTime.now(clock))
         .game(gameEntity)
         .user(userEntity)
         .build();
@@ -112,13 +112,27 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setWithdraw(ParticipantGameEntity entity) {
+  public static ParticipantGameEntity setWithdraw(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
         .status(ParticipantGameStatus.WITHDRAW)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
-        .withdrewDateTime(LocalDateTime.now())
+        .withdrewDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
+        .build();
+  }
+
+  public static ParticipantGameEntity setDelete(ParticipantGameEntity entity,
+      Clock clock) {
+    return ParticipantGameEntity.builder()
+        .id(entity.getId())
+        .status(ParticipantGameStatus.DELETE)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(entity.getAcceptedDateTime())
+        .deletedDateTime(LocalDateTime.now(clock))
         .game(entity.getGame())
         .user(entity.getUser())
         .build();
@@ -150,13 +164,22 @@ public class ParticipantGameEntity {
     ParticipantGameEntity that = (ParticipantGameEntity) o;
     return Objects.equals(id, that.id) &&
         Objects.equals(status, that.status) &&
+        Objects.equals(createdDateTime, that.createdDateTime) &&
+        Objects.equals(acceptedDateTime, that.acceptedDateTime) &&
+        Objects.equals(rejectedDateTime, that.rejectedDateTime) &&
+        Objects.equals(canceledDateTime, that.canceledDateTime) &&
+        Objects.equals(withdrewDateTime, that.withdrewDateTime) &&
+        Objects.equals(kickoutDateTime, that.kickoutDateTime) &&
+        Objects.equals(deletedDateTime, that.deletedDateTime) &&
         Objects.equals(game, that.game) &&
         Objects.equals(user, that.user);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, status, game, user);
+    return Objects.hash(id, status, createdDateTime, acceptedDateTime,
+        rejectedDateTime, canceledDateTime, withdrewDateTime, kickoutDateTime,
+        deletedDateTime, game, user);
   }
 
 }
