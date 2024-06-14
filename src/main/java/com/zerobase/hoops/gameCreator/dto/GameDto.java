@@ -4,7 +4,6 @@ package com.zerobase.hoops.gameCreator.dto;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -17,6 +16,8 @@ import com.zerobase.hoops.users.type.PlayStyleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -100,64 +101,6 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class CreateResponse {
-
-    private Long gameId;
-
-    private String title;
-
-    private String content;
-
-    private Long headCount;
-
-    private FieldStatus fieldStatus;
-
-    private Gender gender;
-
-    private LocalDateTime startDateTime;
-
-    private LocalDateTime createdDateTime;
-
-    private Boolean inviteYn;
-
-    private String address;
-
-    private String placeName;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    private CityName cityName;
-
-    private MatchFormat matchFormat;
-
-    public static CreateResponse toDto(GameEntity gameEntity) {
-      return CreateResponse.builder()
-          .gameId(gameEntity.getId())
-          .title(gameEntity.getTitle())
-          .content(gameEntity.getContent())
-          .headCount(gameEntity.getHeadCount())
-          .fieldStatus(gameEntity.getFieldStatus())
-          .gender(gameEntity.getGender())
-          .startDateTime(gameEntity.getStartDateTime())
-          .createdDateTime(gameEntity.getCreatedDateTime())
-          .inviteYn(gameEntity.getInviteYn())
-          .address(gameEntity.getAddress())
-          .placeName(gameEntity.getPlaceName())
-          .latitude(gameEntity.getLatitude())
-          .longitude(gameEntity.getLongitude())
-          .cityName(gameEntity.getCityName())
-          .matchFormat(gameEntity.getMatchFormat())
-          .build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
   public static class DetailResponse {
     private Long gameId;
 
@@ -170,12 +113,6 @@ public class GameDto {
     private FieldStatus fieldStatus;
 
     private Gender gender;
-
-    private LocalDateTime startDateTime;
-
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime deletedDateTime;
 
     private Boolean inviteYn;
 
@@ -206,9 +143,6 @@ public class GameDto {
           .headCount(gameEntity.getHeadCount())
           .fieldStatus(gameEntity.getFieldStatus())
           .gender(gameEntity.getGender())
-          .startDateTime(gameEntity.getStartDateTime())
-          .createdDateTime(gameEntity.getCreatedDateTime())
-          .deletedDateTime(gameEntity.getDeletedDateTime())
           .inviteYn(gameEntity.getInviteYn())
           .address(gameEntity.getAddress())
           .placeName(gameEntity.getPlaceName())
@@ -221,6 +155,38 @@ public class GameDto {
           .participantUserList(participantUserList)
           .build();
     }
+
+    // 테스트 코드용 List 간 equals
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GameDto.DetailResponse that = (GameDto.DetailResponse) o;
+      return Objects.equals(gameId, that.gameId) &&
+          Objects.equals(title, that.title) &&
+          Objects.equals(content, that.content) &&
+          Objects.equals(headCount, that.headCount) &&
+          Objects.equals(fieldStatus, that.fieldStatus) &&
+          Objects.equals(gender, that.gender) &&
+          Objects.equals(inviteYn, that.inviteYn) &&
+          Objects.equals(address, that.address) &&
+          Objects.equals(placeName, that.placeName) &&
+          Objects.equals(latitude, that.latitude) &&
+          Objects.equals(longitude, that.longitude) &&
+          Objects.equals(cityName, that.cityName) &&
+          Objects.equals(matchFormat, that.matchFormat) &&
+          Objects.equals(nickName, that.nickName) &&
+          Objects.equals(userId, that.userId) &&
+          Objects.equals(participantUserList, that.participantUserList);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(gameId, title, content, headCount, fieldStatus,
+          gender, inviteYn, address, placeName, latitude, longitude,
+          cityName, matchFormat, nickName, userId, participantUserList);
+    }
+
   }
 
   @Getter
@@ -300,69 +266,12 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class UpdateResponse {
-    private Long gameId;
-
-    private String title;
-
-    private String content;
-
-    private Long headCount;
-
-    private FieldStatus fieldStatus;
-
-    private Gender gender;
-
-    private LocalDateTime startDateTime;
-
-    private LocalDateTime createdDateTime;
-
-    private Boolean inviteYn;
-
-    private String address;
-
-    private String placeName;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    private CityName cityName;
-
-    private MatchFormat matchFormat;
-
-    public static UpdateResponse toDto(GameEntity gameEntity) {
-      return UpdateResponse.builder()
-          .gameId(gameEntity.getId())
-          .title(gameEntity.getTitle())
-          .content(gameEntity.getContent())
-          .headCount(gameEntity.getHeadCount())
-          .fieldStatus(gameEntity.getFieldStatus())
-          .gender(gameEntity.getGender())
-          .startDateTime(gameEntity.getStartDateTime())
-          .createdDateTime(gameEntity.getCreatedDateTime())
-          .inviteYn(gameEntity.getInviteYn())
-          .address(gameEntity.getAddress())
-          .placeName(gameEntity.getPlaceName())
-          .latitude(gameEntity.getLatitude())
-          .longitude(gameEntity.getLongitude())
-          .cityName(gameEntity.getCityName())
-          .matchFormat(gameEntity.getMatchFormat())
-          .build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
   public static class DeleteRequest {
 
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;
 
-    public static GameEntity toEntity(GameEntity game) {
+    public static GameEntity toEntity(GameEntity game, Clock clock) {
       return GameEntity.builder()
           .id(game.getId())
           .title(game.getTitle())
@@ -372,7 +281,7 @@ public class GameDto {
           .gender(game.getGender())
           .startDateTime(game.getStartDateTime())
           .createdDateTime(game.getCreatedDateTime())
-          .deletedDateTime(LocalDateTime.now())
+          .deletedDateTime(LocalDateTime.now(clock))
           .inviteYn(game.getInviteYn())
           .address(game.getAddress())
           .placeName(game.getPlaceName())
@@ -390,94 +299,10 @@ public class GameDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class DeleteGameResponse {
-
-    private Long gameId;
-
-    private String title;
-
-    private String content;
-
-    private Long headCount;
-
-    private FieldStatus fieldStatus;
-
-    private Gender gender;
-
-    private LocalDateTime startDateTime;
-
-    private LocalDateTime createdDateTime;
-
-    private LocalDateTime deletedDateTime;
-
-    private Boolean inviteYn;
-
-    private String address;
-
-    private String placeName;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    private CityName cityName;
-
-    private MatchFormat matchFormat;
-
-    public static DeleteGameResponse toDto(GameEntity gameEntity) {
-      return DeleteGameResponse.builder()
-          .gameId(gameEntity.getId())
-          .title(gameEntity.getTitle())
-          .content(gameEntity.getContent())
-          .headCount(gameEntity.getHeadCount())
-          .fieldStatus(gameEntity.getFieldStatus())
-          .gender(gameEntity.getGender())
-          .startDateTime(gameEntity.getStartDateTime())
-          .createdDateTime(gameEntity.getCreatedDateTime())
-          .deletedDateTime(gameEntity.getDeletedDateTime())
-          .inviteYn(gameEntity.getInviteYn())
-          .address(gameEntity.getAddress())
-          .placeName(gameEntity.getPlaceName())
-          .latitude(gameEntity.getLatitude())
-          .longitude(gameEntity.getLongitude())
-          .cityName(gameEntity.getCityName())
-          .matchFormat(gameEntity.getMatchFormat())
-          .build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class WithDrawGameResponse {
-
-    private ParticipantGameStatus status;
-
-    private LocalDateTime withdrewDateTime;
-
-    private Long gameId;
-
-    private Long userId;
-
-    public static WithDrawGameResponse toDto(ParticipantGameEntity entity) {
-      return WithDrawGameResponse.builder()
-          .status(entity.getStatus())
-          .withdrewDateTime(entity.getWithdrewDateTime())
-          .gameId(entity.getGame().getId())
-          .userId(entity.getUser().getId())
-          .build();
-    }
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
   public static class ParticipantUser {
     private Long userId;
+
+    private LocalDate birthday;
 
     private GenderType genderType;
 
@@ -489,14 +314,15 @@ public class GameDto {
 
     private String mannerPoint;
 
-    public static ParticipantUser toDto(ParticipantGameEntity entity) {
+    public static ParticipantUser toDto(ParticipantGameEntity participantGame) {
       return ParticipantUser.builder()
-          .userId(entity.getUser().getId())
-          .genderType(entity.getUser().getGender())
-          .nickName(entity.getUser().getNickName())
-          .playStyle(entity.getUser().getPlayStyle())
-          .ability(entity.getUser().getAbility())
-          .mannerPoint(entity.getUser().getStringAverageRating())
+          .userId(participantGame.getUser().getId())
+          .birthday(participantGame.getUser().getBirthday())
+          .genderType(participantGame.getUser().getGender())
+          .nickName(participantGame.getUser().getNickName())
+          .playStyle(participantGame.getUser().getPlayStyle())
+          .ability(participantGame.getUser().getAbility())
+          .mannerPoint(participantGame.getUser().getStringAverageRating())
           .build();
     }
 
@@ -507,11 +333,18 @@ public class GameDto {
       if (o == null || getClass() != o.getClass()) return false;
       GameDto.ParticipantUser that = (GameDto.ParticipantUser) o;
       return Objects.equals(userId, that.userId) &&
+          Objects.equals(birthday, that.birthday) &&
           Objects.equals(genderType, that.genderType) &&
           Objects.equals(nickName, that.nickName) &&
           Objects.equals(playStyle, that.playStyle) &&
           Objects.equals(ability, that.ability) &&
           Objects.equals(mannerPoint, that.mannerPoint);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(userId, birthday, genderType, nickName, playStyle,
+          ability, mannerPoint);
     }
 
   }
