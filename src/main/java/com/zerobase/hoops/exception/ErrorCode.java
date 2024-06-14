@@ -73,7 +73,7 @@ public enum ErrorCode {
   // 친구
   NOT_SELF_FRIEND(HttpStatus.BAD_REQUEST.value(), "자기 자신을 친구 신청 할수 없습니다."),
   NOT_SELF_APPLY(HttpStatus.BAD_REQUEST.value(), "자기 자신이 한 친구 신청만 취소 할수 있습니다."),
-  NOT_SELF_RECEIVE(HttpStatus.BAD_REQUEST.value(), "자신이 받은 친구 신청만 수락 할수 있습니다."),
+  NOT_MY_RECEIVE(HttpStatus.BAD_REQUEST.value(), "자신이 받은 친구 신청만 수락 할수 있습니다."),
   NOT_SELF_ACCEPT(HttpStatus.BAD_REQUEST.value(), "자신이 받은 친구만 삭제 할수 있습니다."),
   ALREADY_APPLY_ACCEPT_STATUS(HttpStatus.BAD_REQUEST.value(), "이미 친구 신청 햇거나 "
       + "수락한 상태 입니다."),
