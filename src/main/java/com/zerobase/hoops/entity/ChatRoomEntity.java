@@ -6,6 +6,7 @@ import lombok.*;
 
 @Entity(name = "chat_room")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
