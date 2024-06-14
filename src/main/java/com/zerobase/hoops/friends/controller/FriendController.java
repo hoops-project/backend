@@ -1,21 +1,12 @@
 package com.zerobase.hoops.friends.controller;
 
-import com.zerobase.hoops.friends.dto.FriendDto;
-import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
-import com.zerobase.hoops.friends.dto.FriendDto.AcceptResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.ApplyResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.CancelRequest;
-import com.zerobase.hoops.friends.dto.FriendDto.CancelResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.DeleteRequest;
-import com.zerobase.hoops.friends.dto.FriendDto.DeleteResponse;
+import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
+import com.zerobase.hoops.friends.dto.FriendDto.CommonRequest;
 import com.zerobase.hoops.friends.dto.FriendDto.InviteFriendListResponse;
-import com.zerobase.hoops.friends.dto.FriendDto.RejectRequest;
-import com.zerobase.hoops.friends.dto.FriendDto.RejectResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.FriendListResponse;
 import com.zerobase.hoops.friends.dto.FriendDto.RequestFriendListResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -44,46 +35,46 @@ public class FriendController {
   @Operation(summary = "친구 신청")
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/apply")
-  public ResponseEntity<ApplyResponse> applyFriend(
-      @RequestBody @Validated FriendDto.ApplyRequest request) {
-    ApplyResponse result = friendService.applyFriend(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> applyFriend(
+      @RequestBody @Validated ApplyRequest request) {
+    String message = friendService.validApplyFriend(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "친구 신청 취소")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/cancel")
-  public ResponseEntity<CancelResponse> cancelFriend(
-      @RequestBody @Validated CancelRequest request) {
-    CancelResponse result = friendService.cancelFriend(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> cancelFriend(
+      @RequestBody @Validated CommonRequest request) {
+    String message = friendService.validCancelFriend(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "친구 수락")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/accept")
-  public ResponseEntity<Map<String, List<AcceptResponse>>> acceptFriend(
-      @RequestBody @Validated AcceptRequest request) {
-    List<AcceptResponse> result = friendService.acceptFriend(request);
-    return ResponseEntity.ok(Collections.singletonMap("friendList", result));
+  public ResponseEntity<Map<String, String>> acceptFriend(
+      @RequestBody @Validated CommonRequest request) {
+    String message = friendService.validAcceptFriend(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "친구 거절")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/reject")
-  public ResponseEntity<RejectResponse> rejectFriend(
-      @RequestBody @Validated RejectRequest request) {
-    RejectResponse result = friendService.rejectFriend(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> rejectFriend(
+      @RequestBody @Validated CommonRequest request) {
+    String message = friendService.validRejectFriend(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "친구 삭제")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/delete")
-  public ResponseEntity<Map<String, List<DeleteResponse>>> deleteFriend(
-      @RequestBody @Validated DeleteRequest request) {
-    List<DeleteResponse> result = friendService.deleteFriend(request);
-    return ResponseEntity.ok(Collections.singletonMap("friendList", result));
+  public ResponseEntity<Map<String, String>> deleteFriend(
+      @RequestBody @Validated CommonRequest request) {
+    String message = friendService.validDeleteFriend(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "친구 검색")
@@ -91,9 +82,9 @@ public class FriendController {
   @GetMapping("/search")
   public ResponseEntity<Page<FriendListResponse>> searchFriend(
       @RequestParam String nickName,
-      @PageableDefault(size = 10, page = 0) Pageable pageable) {
-    Page<FriendListResponse> result = friendService.searchNickName(nickName,
-        pageable);
+      @PageableDefault(page = 0, size = 10) Pageable pageable) {
+    Page<FriendListResponse> result =
+        friendService.validSearchNickName(nickName, pageable);
     return ResponseEntity.ok(result);
   }
 
@@ -101,10 +92,10 @@ public class FriendController {
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myfriends")
   public ResponseEntity<Map<String, List<FriendListResponse>>> getMyFriends(
-      @PageableDefault(size = 10, page = 0, sort = "FriendUserNickName",
+      @PageableDefault(page = 0, size = 10, sort = "FriendUserNickName",
           direction = Direction.ASC) Pageable pageable) {
-    List<FriendListResponse> result = friendService.getMyFriends(pageable);
-    return ResponseEntity.ok(Collections.singletonMap("myFriendList", result));
+    List<FriendListResponse> result = friendService.validGetMyFriends(pageable);
+    return ResponseEntity.ok(Map.of("myFriendList", result));
   }
 
   @Operation(summary = "경기 초대 친구 리스트 조회")
@@ -112,19 +103,20 @@ public class FriendController {
   @GetMapping("/invite/list")
   public ResponseEntity<Page<InviteFriendListResponse>> getMyInviteList(
       @RequestParam Long gameId,
-      @PageableDefault(size = 10, page = 0) Pageable pageable) {
+      @PageableDefault(page = 0, size = 10) Pageable pageable) {
     Page<InviteFriendListResponse> result =
-        friendService.getMyInviteList(gameId, pageable);
+        friendService.validGetMyInviteList(gameId, pageable);
     return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "내가 친구 요청 받은 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/requestFriendList")
-  public ResponseEntity<Map<String, List<RequestFriendListResponse>>> getRequestFriendList() {
-    List<RequestFriendListResponse> result = friendService.getRequestFriendList();
-    return ResponseEntity.ok(Collections.singletonMap("requestFriendList",
-        result));
+  public ResponseEntity<Map<String, List<RequestFriendListResponse>>> getRequestFriendList(
+      @PageableDefault(page = 0, size = 10,
+          sort = "createdDateTime", direction = Direction.ASC) Pageable pageable) {
+    List<RequestFriendListResponse> result = friendService.validGetRequestFriendList(pageable);
+    return ResponseEntity.ok(Map.of("requestFriendList", result));
   }
 
 }

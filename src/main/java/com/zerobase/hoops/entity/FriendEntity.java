@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -81,6 +82,78 @@ public class FriendEntity {
   public int hashCode() {
     return Objects.hash(id, status, createdDateTime, acceptedDateTime,
         rejectedDateTime, canceledDateTime, deletedDateTime, user, friendUser);
+  }
+
+  public static FriendEntity setCancel(FriendEntity friendEntity,
+      Clock clock) {
+    return FriendEntity.builder()
+        .id(friendEntity.getId())
+        .status(FriendStatus.CANCEL)
+        .createdDateTime(friendEntity.getCreatedDateTime())
+        .canceledDateTime(LocalDateTime.now(clock))
+        .user(friendEntity.getUser())
+        .friendUser(friendEntity.getFriendUser())
+        .build();
+  }
+
+  public static FriendEntity setAcceptMyFriend(FriendEntity friendEntity,
+      Clock clock) {
+    return FriendEntity.builder()
+        .id(friendEntity.getId())
+        .status(FriendStatus.ACCEPT)
+        .createdDateTime(friendEntity.getCreatedDateTime())
+        .acceptedDateTime(LocalDateTime.now(clock))
+        .user(friendEntity.getUser())
+        .friendUser(friendEntity.getFriendUser())
+        .build();
+  }
+
+  public static FriendEntity setAcceptOtherFriend(FriendEntity friendEntity) {
+    return FriendEntity.builder()
+        .status(FriendStatus.ACCEPT)
+        .createdDateTime(friendEntity.getCreatedDateTime())
+        .acceptedDateTime(friendEntity.getAcceptedDateTime())
+        .user(friendEntity.getFriendUser())
+        .friendUser(friendEntity.getUser())
+        .build();
+  }
+
+  public static FriendEntity setReject(FriendEntity friendEntity,
+      Clock clock) {
+    return FriendEntity.builder()
+        .id(friendEntity.getId())
+        .status(FriendStatus.REJECT)
+        .createdDateTime(friendEntity.getCreatedDateTime())
+        .rejectedDateTime(LocalDateTime.now(clock))
+        .user(friendEntity.getUser())
+        .friendUser(friendEntity.getFriendUser())
+        .build();
+  }
+
+  public static FriendEntity setDeleteMyFriend(FriendEntity friendEntity,
+      Clock clock) {
+    return FriendEntity.builder()
+        .id(friendEntity.getId())
+        .status(FriendStatus.DELETE)
+        .createdDateTime(friendEntity.getCreatedDateTime())
+        .acceptedDateTime(friendEntity.getAcceptedDateTime())
+        .deletedDateTime(LocalDateTime.now(clock))
+        .user(friendEntity.getUser())
+        .friendUser(friendEntity.getFriendUser())
+        .build();
+  }
+
+  public static FriendEntity setDeleteOtherFriend(FriendEntity selfFriendEntity,
+      FriendEntity otherFriendEntity) {
+    return FriendEntity.builder()
+        .id(otherFriendEntity.getId())
+        .status(FriendStatus.DELETE)
+        .createdDateTime(otherFriendEntity.getCreatedDateTime())
+        .acceptedDateTime(otherFriendEntity.getAcceptedDateTime())
+        .deletedDateTime(selfFriendEntity.getDeletedDateTime())
+        .user(otherFriendEntity.getUser())
+        .friendUser(otherFriendEntity.getFriendUser())
+        .build();
   }
 
 }
