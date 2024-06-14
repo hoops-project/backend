@@ -99,12 +99,29 @@ public class GameEntity {
     if (o == null || getClass() != o.getClass()) return false;
     GameEntity that = (GameEntity) o;
     return Objects.equals(id, that.id) &&
+        Objects.equals(title, that.title) &&
+        Objects.equals(content, that.content) &&
+        Objects.equals(headCount, that.headCount) &&
+        Objects.equals(fieldStatus, that.fieldStatus) &&
+        Objects.equals(gender, that.gender) &&
+        Objects.equals(startDateTime, that.startDateTime) &&
+        Objects.equals(createdDateTime, that.createdDateTime) &&
+        Objects.equals(deletedDateTime, that.deletedDateTime) &&
+        Objects.equals(inviteYn, that.inviteYn) &&
+        Objects.equals(address, that.address) &&
+        Objects.equals(placeName, that.placeName) &&
+        Objects.equals(latitude, that.latitude) &&
+        Objects.equals(longitude, that.longitude) &&
+        Objects.equals(cityName, that.cityName) &&
+        Objects.equals(matchFormat, that.matchFormat) &&
         Objects.equals(user, that.user);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, user);
+    return Objects.hash(id, title, content, headCount, fieldStatus, gender,
+        startDateTime, createdDateTime, deletedDateTime, inviteYn, address,
+        placeName, latitude, longitude, cityName, matchFormat, user);
   }
 
 }
