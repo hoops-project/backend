@@ -1,12 +1,11 @@
 package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.gameCreator.dto.GameDto;
-import com.zerobase.hoops.gameCreator.dto.GameDto.CreateResponse;
 import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
-import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateResponse;
 import com.zerobase.hoops.gameCreator.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,10 +33,10 @@ public class GameController {
   @Operation(summary = "경기 생성")
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/game/create")
-  public ResponseEntity<CreateResponse> createGame(
+  public ResponseEntity<Map<String, String>> createGame(
       @RequestBody @Validated GameDto.CreateRequest request) {
-    GameDto.CreateResponse result = gameService.createGame(request);
-    return ResponseEntity.ok(result);
+    String message = gameService.validCreateGame(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   /**
@@ -56,22 +55,22 @@ public class GameController {
   @Operation(summary = "경기 수정")
   @PreAuthorize("hasRole('USER')")
   @PutMapping("/game/update")
-  public ResponseEntity<UpdateResponse> updateGame(
+  public ResponseEntity<Map<String, String>> updateGame(
       @RequestBody @Validated GameDto.UpdateRequest request) {
-    GameDto.UpdateResponse result = gameService.updateGame(request);
-    return ResponseEntity.ok(result);
+    String message = gameService.validUpdateGame(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   /**
    * 경기 삭제
    */
-  @Operation(summary = "경기 삭제")
+  @Operation(summary = "경기 삭제 및 팀원 탈퇴")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/game/delete")
-  public ResponseEntity<Object> deleteGame(
+  public ResponseEntity<Map<String, String>> deleteGameOrWithdrewGame(
       @RequestBody @Validated GameDto.DeleteRequest request) {
-    Object result = gameService.delete(request);
-    return ResponseEntity.ok(result);
+    String message = gameService.validDeleteGame(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
 }
