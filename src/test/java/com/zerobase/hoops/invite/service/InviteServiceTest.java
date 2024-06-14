@@ -717,20 +717,19 @@ class InviteServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    LocalDateTime nowDateTime = LocalDateTime.now(clock);
+    LocalDateTime createdDateTime = LocalDateTime.now(clock);
 
     ParticipantGameEntity expectedParticipantGameEntity = ParticipantGameEntity
         .builder()
         .id(3L)
         .status(APPLY)
-        .createdDateTime(nowDateTime)
-        .acceptedDateTime(nowDateTime)
+        .createdDateTime(createdDateTime)
         .game(createdGameEntity1)
         .user(otherUser)
         .build();
 
     acceptInviteEntity =
-        InviteEntity.toAcceptEntity(expectedGameParticipantRequestInviteEntity, nowDateTime);
+        InviteEntity.toAcceptEntity(expectedGameParticipantRequestInviteEntity, createdDateTime);
 
     ParticipantGameEntity gameUserInvite =
         ParticipantGameEntity.gameUserInvite(
@@ -762,8 +761,8 @@ class InviteServiceTest {
     when(participantGameRepository.save(gameUserInvite)).thenAnswer(invocation -> {
       ParticipantGameEntity savedParticipantGameEntity =
           invocation.getArgument(0);
-      savedParticipantGameEntity.setId(3L); // id 동적 할당
-      savedParticipantGameEntity.setCreatedDateTime(nowDateTime);
+      savedParticipantGameEntity.setId(3L); // id 할당
+      savedParticipantGameEntity.setCreatedDateTime(createdDateTime);
       return savedParticipantGameEntity;
     });
 
