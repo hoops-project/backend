@@ -1,18 +1,16 @@
 package com.zerobase.hoops.invite.controller;
 
-
-import com.zerobase.hoops.invite.dto.InviteDto;
-import com.zerobase.hoops.invite.dto.InviteDto.CancelResponse;
-import com.zerobase.hoops.invite.dto.InviteDto.CreateResponse;
+import com.zerobase.hoops.invite.dto.InviteDto.CommonRequest;
+import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
-import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptResponse;
-import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectResponse;
 import com.zerobase.hoops.invite.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -32,46 +30,48 @@ public class InviteController {
   @Operation(summary = "경기 초대 요청")
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/request")
-  public ResponseEntity<CreateResponse> requestInviteGame(
-      @RequestBody @Validated InviteDto.CreateRequest request) {
-    CreateResponse result = inviteService.requestInviteGame(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> requestInvite(
+      @RequestBody @Validated CreateRequest request) {
+    String message = inviteService.validRequestInvite(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "경기 초대 요청 취소")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/cancel")
-  public ResponseEntity<CancelResponse> cancelInviteGame(
-      @RequestBody @Validated InviteDto.CancelRequest request) {
-    CancelResponse result = inviteService.cancelInviteGame(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> cancelInvite(
+      @RequestBody @Validated CommonRequest request) {
+    String message = inviteService.validCancelInvite(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
-  @Operation(summary = "경기 초대 요청 상대방 수락")
+  @Operation(summary = "경기 초대 요청 수락")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/accept")
-  public ResponseEntity<ReceiveAcceptResponse> receiveAcceptInviteGame(
-      @RequestBody @Validated InviteDto.ReceiveAcceptRequest request) {
-    ReceiveAcceptResponse result = inviteService.receiveAcceptInviteGame(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> acceptInvite(
+      @RequestBody @Validated CommonRequest request) {
+    String message = inviteService.validAcceptInvite(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
-  @Operation(summary = "경기 초대 요청 상대방 거절")
+  @Operation(summary = "경기 초대 요청 거절")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/reject")
-  public ResponseEntity<ReceiveRejectResponse> receiveRejectInviteGame(
-      @RequestBody @Validated InviteDto.ReceiveRejectRequest request) {
-    ReceiveRejectResponse result =
-        inviteService.receiveRejectInviteGame(request);
-    return ResponseEntity.ok(result);
+  public ResponseEntity<Map<String, String>> rejectInvite(
+      @RequestBody @Validated CommonRequest request) {
+    String message = inviteService.validRejectInvite(request);
+    return ResponseEntity.ok(Map.of("message", message));
   }
 
   @Operation(summary = "내가 초대 요청 받은 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myList")
-  public ResponseEntity<Map<String, List<InviteMyListResponse>>> getInviteRequestList() {
-    List<InviteMyListResponse> result = inviteService.getInviteRequestList();
-    return ResponseEntity.ok(Collections.singletonMap("inviteList", result));
+  public ResponseEntity<Map<String, List<InviteMyListResponse>>> getInviteRequestList(
+      @PageableDefault(page = 0, size = 10,
+          sort = "requestedDateTime", direction = Direction.ASC) Pageable pageable
+  ) {
+    List<InviteMyListResponse> result = inviteService.validGetRequestInviteList(pageable);
+    return ResponseEntity.ok(Map.of("inviteList", result));
   }
 
 }
