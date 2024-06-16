@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -23,11 +22,9 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
-import com.zerobase.hoops.invite.dto.InviteDto.CancelRequest;
+import com.zerobase.hoops.invite.dto.InviteDto.CommonRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
-import com.zerobase.hoops.invite.dto.InviteDto.ReceiveAcceptRequest;
-import com.zerobase.hoops.invite.dto.InviteDto.ReceiveRejectRequest;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.JwtTokenExtract;
@@ -52,6 +49,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class InviteServiceTest {
@@ -81,19 +82,11 @@ class InviteServiceTest {
   private Clock clock;
 
   private UserEntity requestUser;
-
   private UserEntity receiverUser;
-
   private UserEntity otherUser;
 
-  private GameEntity createdGameEntity1;
-  private GameEntity createdGameEntity2;
-
-  private ParticipantGameEntity creatorParticipantGameEntity;
-
-  private FriendEntity requestUserFriendEntity;
-
-  private FriendEntity receiverUserFriendEntity;
+  private GameEntity createdGame1;
+  private GameEntity createdGame2;
 
   private InviteEntity expectedGameCreatorRequestInviteEntity;
   private InviteEntity expectedGameCreatorAcceptInviteEntity;
@@ -105,21 +98,13 @@ class InviteServiceTest {
   private LocalDateTime fixedCanceledDateTime;
   private LocalDateTime fixedAcceptedDateTime;
   private LocalDateTime fixedRejectedDateTime;
-  private LocalDateTime fixedDeleteDateTime;
 
-  private CreateRequest requestInvite;
+  private CreateRequest createRequest;
+  private CommonRequest commonRequest;
 
   private InviteEntity requestInviteEntity;
-
   private InviteEntity cancelInviteEntity;
-
   private InviteEntity acceptInviteEntity;
-
-  private CancelRequest cancelInvite;
-
-  private ReceiveAcceptRequest receiveAcceptRequest;
-
-  private ReceiveRejectRequest receiveRejectRequest;
 
   @BeforeEach
   void setUp() {
@@ -131,15 +116,12 @@ class InviteServiceTest {
         .of(2024, 6, 10, 0, 0, 0);
     fixedRejectedDateTime = LocalDateTime
         .of(2024, 6, 10, 0, 0, 0);
-    fixedDeleteDateTime = LocalDateTime
-        .of(2024, 6, 10, 0, 0, 0);
-    requestInvite = CreateRequest.builder()
+    createRequest = CreateRequest.builder()
         .gameId(1L)
         .receiverUserId(2L)
         .build();
-    cancelInvite = CancelRequest.builder()
+    commonRequest = CommonRequest.builder()
         .inviteId(1L)
-        .gameId(1L)
         .build();
     requestUser = UserEntity.builder()
         .id(1L)
@@ -186,7 +168,7 @@ class InviteServiceTest {
         .createdDateTime(LocalDateTime.now())
         .emailAuth(true)
         .build();
-    createdGameEntity1 = GameEntity.builder()
+    createdGame1 = GameEntity.builder()
         .id(1L)
         .title("테스트제목")
         .content("테스트내용")
@@ -202,7 +184,7 @@ class InviteServiceTest {
         .cityName(CityName.SEOUL)
         .user(requestUser)
         .build();
-    createdGameEntity2 = GameEntity.builder()
+    createdGame2 = GameEntity.builder()
         .id(2L)
         .title("테스트제목2")
         .content("테스트내용2")
@@ -218,31 +200,13 @@ class InviteServiceTest {
         .cityName(CityName.SEOUL)
         .user(receiverUser)
         .build();
-    creatorParticipantGameEntity = ParticipantGameEntity.builder()
-        .id(1L)
-        .status(ACCEPT)
-        .game(createdGameEntity1)
-        .user(requestUser)
-        .build();
-    requestUserFriendEntity = FriendEntity.builder()
-        .id(1L)
-        .status(FriendStatus.ACCEPT)
-        .user(requestUser)
-        .friendUser(receiverUser)
-        .build();
-    receiverUserFriendEntity = FriendEntity.builder()
-        .id(2L)
-        .status(FriendStatus.ACCEPT)
-        .user(receiverUser)
-        .friendUser(requestUser)
-        .build();
     expectedGameCreatorRequestInviteEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.REQUEST)
         .requestedDateTime(fixedRequestedDateTime)
         .senderUser(requestUser)
         .receiverUser(receiverUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
     expectedGameCreatorAcceptInviteEntity = InviteEntity.builder()
         .id(1L)
@@ -251,7 +215,7 @@ class InviteServiceTest {
         .acceptedDateTime(fixedAcceptedDateTime)
         .senderUser(requestUser)
         .receiverUser(receiverUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
     expectedGameCreatorRejectInviteEntity = InviteEntity.builder()
         .id(1L)
@@ -260,7 +224,7 @@ class InviteServiceTest {
         .rejectedDateTime(fixedRejectedDateTime)
         .senderUser(requestUser)
         .receiverUser(receiverUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
         expectedGameParticipantRequestInviteEntity = InviteEntity.builder()
         .id(1L)
@@ -268,7 +232,7 @@ class InviteServiceTest {
         .requestedDateTime(fixedRequestedDateTime)
         .senderUser(receiverUser)
         .receiverUser(otherUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
     expectedGameParticipantAcceptInviteEntity = InviteEntity.builder()
         .id(1L)
@@ -277,17 +241,11 @@ class InviteServiceTest {
         .acceptedDateTime(fixedAcceptedDateTime)
         .senderUser(receiverUser)
         .receiverUser(otherUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
 
     requestInviteEntity = CreateRequest
-        .toEntity(requestUser, receiverUser, createdGameEntity1);
-    receiveAcceptRequest = ReceiveAcceptRequest.builder()
-            .inviteId(1L)
-            .build();
-    receiveRejectRequest = ReceiveRejectRequest.builder()
-            .inviteId(1L)
-            .build();
+        .toEntity(requestUser, receiverUser, createdGame1);
   }
 
   @Test
@@ -299,27 +257,27 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
     
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있는 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(), true);
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(), true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
-    countsAcceptedGame(createdGameEntity1.getId(), 1);
+    countsAcceptedGame(createdGame1.getId(), 1);
 
     // 초대 받으려는 유저 조회
-    getReceiverUser(requestInvite.getReceiverUserId());
+    getReceiverUser(createRequest.getReceiverUserId());
     
     // 초대 받은 사람이 친구 라고 가정
     checkFriendUser(requestUser.getId(), receiverUser.getId(), true);
 
     // 해당 경기에 이미 초대 요청 되어 있지 않다고 가정
     checkAlreadyRequestInviteGame
-        (createdGameEntity1.getId(), receiverUser.getId(), false);
+        (createdGame1.getId(), receiverUser.getId(), false);
 
     // 초대 받는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
     checkAlreadyAcceptOrApplyGame
-        (createdGameEntity1.getId(), receiverUser.getId(), false);
+        (createdGame1.getId(), receiverUser.getId(), false);
 
     when(inviteRepository.save(requestInviteEntity)).thenAnswer(invocation -> {
       InviteEntity savedInviteEntity = invocation.getArgument(0);
@@ -333,7 +291,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(InviteEntity.class);
 
     // when
-    inviteService.requestInviteGame(requestInvite);
+    inviteService.validRequestInvite(createRequest);
 
     // Then
     verify(inviteRepository).save(inviteEntityArgumentCaptor.capture());
@@ -348,17 +306,17 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 해당 경기가 초대 불가능일 때")
   public void requestInviteGame_failIfGameInviteNo() {
     //Given
-    createdGameEntity1.setInviteYn(false);
+    createdGame1.setInviteYn(false);
 
     // 로그인 한 유저 조회
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -369,17 +327,17 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 경기가 이미 시작이 되었을 때")
   public void requestInviteGame_failIfGameStarted() {
     //Given
-    createdGameEntity1.setStartDateTime(LocalDateTime.now().minusMinutes(1));
+    createdGame1.setStartDateTime(LocalDateTime.now().minusMinutes(1));
 
     // 로그인 한 유저 조회
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -395,15 +353,15 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있지 않은 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(),
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(),
         false);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -419,18 +377,18 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있는 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(),
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(),
         true);
 
     // 해당 경기 인원이 6명 있다고 가정
-    countsAcceptedGame(createdGameEntity1.getId(), 6);
+    countsAcceptedGame(createdGame1.getId(), 6);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -446,24 +404,24 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있는 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(),
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(),
         true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
-    countsAcceptedGame(createdGameEntity1.getId(), 1);
+    countsAcceptedGame(createdGame1.getId(), 1);
 
     // 초대 받으려는 유저 조회
-    getReceiverUser(requestInvite.getReceiverUserId());
+    getReceiverUser(createRequest.getReceiverUserId());
 
     // 초대 받은 사람이 친구가 아니 라고 가정
     checkFriendUser(requestUser.getId(), receiverUser.getId(), false);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -479,28 +437,28 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있는 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(),
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(),
         true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
-    countsAcceptedGame(createdGameEntity1.getId(), 1);
+    countsAcceptedGame(createdGame1.getId(), 1);
 
     // 초대 받으려는 유저 조회
-    getReceiverUser(requestInvite.getReceiverUserId());
+    getReceiverUser(createRequest.getReceiverUserId());
 
     // 초대 받은 사람이 친구 라고 가정
     checkFriendUser(requestUser.getId(), receiverUser.getId(), true);
 
     // 해당 경기에 이미 초대 요청 되어 있다고 가정
     checkAlreadyRequestInviteGame
-        (createdGameEntity1.getId(), receiverUser.getId(), true);
+        (createdGame1.getId(), receiverUser.getId(), true);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -516,32 +474,32 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 경기 조회
-    getGame(requestInvite.getGameId());
+    getGame(createRequest.getGameId());
 
     // 해당 경기에 참가해 있는 사람이 초대할 경우를 가정
-    checkParticipantGame(createdGameEntity1.getId(), requestUser.getId(),
+    checkParticipantGame(createdGame1.getId(), requestUser.getId(),
         true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
-    countsAcceptedGame(createdGameEntity1.getId(), 1);
+    countsAcceptedGame(createdGame1.getId(), 1);
 
     // 초대 받으려는 유저 조회
-    getReceiverUser(requestInvite.getReceiverUserId());
+    getReceiverUser(createRequest.getReceiverUserId());
 
     // 초대 받은 사람이 친구 라고 가정
     checkFriendUser(requestUser.getId(), receiverUser.getId(), true);
 
     // 해당 경기에 이미 초대 요청 되어 있지 않다고 가정
     checkAlreadyRequestInviteGame
-        (createdGameEntity1.getId(), receiverUser.getId(), false);
+        (createdGame1.getId(), receiverUser.getId(), false);
 
     // 초대 받는 사람이 해당 경기에 참가 및 요청 했을 경우를 가정
     checkAlreadyAcceptOrApplyGame
-        (createdGameEntity1.getId(), receiverUser.getId(), true);
+        (createdGame1.getId(), receiverUser.getId(), true);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.requestInviteGame(requestInvite);
+      inviteService.validRequestInvite(createRequest);
     });
 
     // then
@@ -559,7 +517,7 @@ class InviteServiceTest {
         .canceledDateTime(fixedCanceledDateTime)
         .senderUser(requestUser)
         .receiverUser(receiverUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
 
     Instant fixedInstant = fixedCanceledDateTime.atZone(ZoneId.systemDefault())
@@ -572,7 +530,7 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(cancelInvite.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     cancelInviteEntity = InviteEntity.toCancelEntity(
         expectedGameCreatorRequestInviteEntity, clock);
@@ -580,7 +538,7 @@ class InviteServiceTest {
     when(inviteRepository.save(cancelInviteEntity)).thenReturn(cancelInviteEntity);
 
     // when
-    inviteService.cancelInviteGame(cancelInvite);
+    inviteService.validCancelInvite(commonRequest);
 
     // Then
     assertEquals(expectedcancelInviteEntity, cancelInviteEntity);
@@ -596,36 +554,15 @@ class InviteServiceTest {
     getCurrentUser(requestUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(cancelInvite.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.cancelInviteGame(cancelInvite);
+      inviteService.validCancelInvite(commonRequest);
     });
 
     // then
     assertEquals(ErrorCode.NOT_SELF_REQUEST, exception.getErrorCode());
-  }
-
-  @Test
-  @DisplayName("경기 초대 요청 취소 실패 : 다른 경기 초대 요청 일때")
-  public void cancelInvitation_failIfRequestInvitationToAnotherGame() {
-    //Given
-    cancelInvite.setGameId(2L);
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
-
-    // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(cancelInvite.getInviteId());
-
-    // when
-    CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.cancelInviteGame(cancelInvite);
-    });
-
-    // then
-    assertEquals(ErrorCode.NOT_INVITE_FOUND, exception.getErrorCode());
   }
 
   @Test
@@ -646,7 +583,7 @@ class InviteServiceTest {
         .status(ACCEPT)
         .createdDateTime(nowDateTime)
         .acceptedDateTime(nowDateTime)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .user(receiverUser)
         .build();
 
@@ -661,14 +598,14 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 초대한 사람이 해당 경기에 참가해 있다고 가정
-    checkParticipantGame(createdGameEntity1.getId(),
+    checkParticipantGame(createdGame1.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
@@ -676,7 +613,7 @@ class InviteServiceTest {
 
     // 수락 하는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
     checkAlreadyAcceptOrApplyGame
-        (createdGameEntity1.getId(), receiverUser.getId(), false);
+        (createdGame1.getId(), receiverUser.getId(), false);
 
     when(inviteRepository.save(acceptInviteEntity)).thenReturn(acceptInviteEntity);
 
@@ -693,7 +630,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+    inviteService.validAcceptInvite(commonRequest);
 
     // Then
     verify(participantGameRepository)
@@ -724,7 +661,7 @@ class InviteServiceTest {
         .id(3L)
         .status(APPLY)
         .createdDateTime(createdDateTime)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .user(otherUser)
         .build();
 
@@ -739,14 +676,14 @@ class InviteServiceTest {
     getCurrentUser(otherUser);
 
     // 해당 초대 정보 조회
-    getGameParticipantRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameParticipantRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(otherUser.getId(),
         expectedGameParticipantRequestInviteEntity.getSenderUser().getId(), true);
 
     // 초대한 사람이 해당 경기에 참가해 있다고 가정
-    checkParticipantGame(createdGameEntity1.getId(),
+    checkParticipantGame(createdGame1.getId(),
         expectedGameParticipantRequestInviteEntity.getSenderUser().getId(), true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
@@ -754,7 +691,7 @@ class InviteServiceTest {
 
     // 수락 하는 사람이 해당 경기에 참가 및 요청 안했을 경우를 가정
     checkAlreadyAcceptOrApplyGame
-        (createdGameEntity1.getId(), otherUser.getId(), false);
+        (createdGame1.getId(), otherUser.getId(), false);
 
     when(inviteRepository.save(acceptInviteEntity)).thenReturn(acceptInviteEntity);
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
@@ -771,7 +708,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+    inviteService.validAcceptInvite(commonRequest);
 
     // Then
     verify(participantGameRepository)
@@ -795,11 +732,11 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+      inviteService.validAcceptInvite(commonRequest);
     });
 
     // then
@@ -815,7 +752,7 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구가 아니 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -823,7 +760,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+      inviteService.validAcceptInvite(commonRequest);
     });
 
     // then
@@ -839,19 +776,19 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 초대한 사람이 해당 경기에 참가해 있지 않다고 가정
-    checkParticipantGame(createdGameEntity1.getId(),
+    checkParticipantGame(createdGame1.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), false);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+      inviteService.validAcceptInvite(commonRequest);
     });
 
     // then
@@ -867,14 +804,14 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 초대한 사람이 해당 경기에 참가해 있지 않다고 가정
-    checkParticipantGame(createdGameEntity1.getId(),
+    checkParticipantGame(createdGame1.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 해당 경기 인원이 다 찼다고 가정
@@ -882,7 +819,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+      inviteService.validAcceptInvite(commonRequest);
     });
 
     // then
@@ -898,14 +835,14 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveAcceptRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 초대한 사람이 해당 경기에 참가해 있지 않다고 가정
-    checkParticipantGame(createdGameEntity1.getId(),
+    checkParticipantGame(createdGame1.getId(),
         expectedGameCreatorRequestInviteEntity.getSenderUser().getId(), true);
 
     // 해당 경기 인원이 경기개설자(1명 만) 있다고 가정
@@ -913,11 +850,11 @@ class InviteServiceTest {
 
     // 수락 하는 사람이 해당 경기에 참가 및 요청 했을 경우를 가정
     checkAlreadyAcceptOrApplyGame
-        (createdGameEntity1.getId(), receiverUser.getId(), true);
+        (createdGame1.getId(), receiverUser.getId(), true);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveAcceptInviteGame(receiveAcceptRequest);
+      inviteService.validAcceptInvite(commonRequest);
     });
 
     // then
@@ -938,7 +875,7 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveRejectRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     InviteEntity rejectEntity = InviteEntity.toRejectEntity
         (expectedGameCreatorRequestInviteEntity, clock);
@@ -948,7 +885,7 @@ class InviteServiceTest {
         .thenReturn(rejectEntity);
 
     // when
-    inviteService.receiveRejectInviteGame(receiveRejectRequest);
+    inviteService.validRejectInvite(commonRequest);
 
     // Then
     assertEquals(expectedGameCreatorRejectInviteEntity ,rejectEntity);
@@ -964,11 +901,11 @@ class InviteServiceTest {
     getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(receiveRejectRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.receiveRejectInviteGame(receiveRejectRequest);
+      inviteService.validRejectInvite(commonRequest);
     });
 
     // then
@@ -984,7 +921,7 @@ class InviteServiceTest {
         .inviteStatus(InviteStatus.REQUEST)
         .senderUser(requestUser)
         .receiverUser(otherUser)
-        .game(createdGameEntity1)
+        .game(createdGame1)
         .build();
 
     InviteEntity inviteEntity2 = InviteEntity.builder()
@@ -992,10 +929,15 @@ class InviteServiceTest {
         .inviteStatus(InviteStatus.REQUEST)
         .senderUser(receiverUser)
         .receiverUser(otherUser)
-        .game(createdGameEntity2)
+        .game(createdGame2)
         .build();
 
+    Pageable pageable = PageRequest.of(0, 2);
+
     List<InviteEntity> inviteEntityList = List.of(inviteEntity1, inviteEntity2);
+
+    Page<InviteEntity> inviteEntityPage =
+        new PageImpl<>(inviteEntityList, pageable, 2);
 
     List<InviteMyListResponse> expectList = inviteEntityList.stream()
         .map(InviteMyListResponse::toDto)
@@ -1005,11 +947,12 @@ class InviteServiceTest {
     getCurrentUser(otherUser);
 
     when(inviteRepository.findByInviteStatusAndReceiverUserId
-        (InviteStatus.REQUEST, otherUser.getId()))
-        .thenReturn(inviteEntityList);
+        (InviteStatus.REQUEST, otherUser.getId(), pageable))
+        .thenReturn(inviteEntityPage);
 
     // when
-    List<InviteMyListResponse> result = inviteService.getInviteRequestList();
+    List<InviteMyListResponse> result =
+        inviteService.validGetRequestInviteList(pageable);
 
     // Then
     assertEquals(expectList, result);
@@ -1027,7 +970,7 @@ class InviteServiceTest {
   private void getGame(Long gameId) {
     when(gameRepository
         .findByIdAndDeletedDateTimeNull(gameId))
-        .thenReturn(Optional.ofNullable(createdGameEntity1));
+        .thenReturn(Optional.ofNullable(createdGame1));
   }
 
   // 해당 경기에 참가 했는지 검사
