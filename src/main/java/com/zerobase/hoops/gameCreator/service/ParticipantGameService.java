@@ -6,7 +6,6 @@ import static com.zerobase.hoops.exception.ErrorCode.GAME_NOT_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_GAME_CREATOR;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_PARTICIPANT_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_CREATOR;
-import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 
@@ -21,8 +20,6 @@ import com.zerobase.hoops.gameCreator.dto.ParticipantDto.ListResponse;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
-import com.zerobase.hoops.security.JwtTokenExtract;
-import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,10 +39,6 @@ public class ParticipantGameService {
 
   private final GameRepository gameRepository;
 
-  private final UserRepository userRepository;
-
-  private final JwtTokenExtract jwtTokenExtract;
-
   private final NotificationService notificationService;
 
   private final Clock clock;
@@ -54,95 +47,131 @@ public class ParticipantGameService {
    * 경기 참가 지원자 리스트 조회 전 validation
    */
   public List<ListResponse> validApplyParticipantList(Long gameId,
-      Pageable pageable) {
-    log.info("getParticipantList start");
+      Pageable pageable, UserEntity user) {
+    log.info("loginId = {} validApplyParticipantList start", user.getLoginId());
 
-    UserEntity user = getCurrentUser();
+    List<ListResponse> result = null;
 
-    GameEntity game = getGame(gameId);
+    try {
+      GameEntity game = getGame(gameId);
 
-    checkCreator(user, game);
+      checkCreator(user, game);
 
-    List<ListResponse> result =
-        getApplyParticipantList(game.getId(), pageable);
+      result = getApplyParticipantList(game.getId(), pageable, user);
 
-    log.info("getAcceptParticipantList end");
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validApplyParticipantList end", user.getLoginId());
     return result;
   }
 
   /**
    * 경기 지원자 리스트 조회
    */
-  private List<ListResponse> getApplyParticipantList(Long gameId, Pageable pageable) {
-    return getParticipantList(APPLY, gameId, pageable);
+  private List<ListResponse> getApplyParticipantList(Long gameId,
+      Pageable pageable, UserEntity user) {
+    return getParticipantList(APPLY, gameId, pageable, user);
   }
 
   /**
    * 경기 지원자 리스트 조회 전 validation
    */
-  public List<ListResponse> validAcceptParticipantList(Long gameId, Pageable pageable) {
-    log.info("getAcceptParticipantList start");
+  public List<ListResponse> validAcceptParticipantList(Long gameId,
+      Pageable pageable, UserEntity user) {
+    log.info("loginId = {} validAcceptParticipantList start", user.getLoginId());
 
-    getCurrentUser();
+    List<ListResponse> result = null;
 
-    GameEntity game = getGame(gameId);
+    try {
+      GameEntity game = getGame(gameId);
 
-    List<ListResponse> result =
-        getAcceptParticipantList(game.getId(), pageable);
+      result = getAcceptParticipantList(game.getId(), pageable, user);
 
-    log.info("getAcceptParticipantList end");
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validAcceptParticipantList end", user.getLoginId());
     return result;
   }
 
   /**
    * 경기 참가자 리스트 조회
    */
-  public List<ListResponse> getAcceptParticipantList(Long gameId, Pageable pageable) {
-    return getParticipantList(ACCEPT, gameId, pageable);
+  public List<ListResponse> getAcceptParticipantList(Long gameId,
+      Pageable pageable, UserEntity user) {
+    return getParticipantList(ACCEPT, gameId, pageable, user);
   }
 
   /**
    * 경기 지원자 수락 전 validation
    */
-  public String validAcceptParticipant(CommonRequest request) {
-    log.info("acceptParticipant start");
+  public String validAcceptParticipant(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validAcceptParticipant start", user.getLoginId());
 
-    UserEntity user = getCurrentUser();
+    String message = "";
 
-    ParticipantGameEntity participantGame =
-        getParticipantGame(request.getParticipantId(), APPLY);
+    try {
+      ParticipantGameEntity participantGame =
+          getParticipantGame(request.getParticipantId(), APPLY);
 
-    checkIsNotCreatorParticipantGame(user, participantGame);
+      checkIsNotCreatorParticipantGame(user, participantGame);
 
-    GameEntity game = getGame(participantGame.getGame().getId());
+      GameEntity game = getGame(participantGame.getGame().getId());
 
-    checkCreator(user, game);
+      checkCreator(user, game);
 
-    checkGameStart(game);
+      checkGameStart(game);
 
-    int count = participantGameRepository.countByStatusAndGameId
-        (ACCEPT, game.getId());
+      int count = participantGameRepository.countByStatusAndGameId
+          (ACCEPT, game.getId());
 
-    // 경기에 참가자가 다 찼을때 수락 못함
-    if (game.getHeadCount() <= count) {
-      throw new CustomException(FULL_PARTICIPANT);
+      // 경기에 참가자가 다 찼을때 수락 못함
+      if (game.getHeadCount() <= count) {
+        throw new CustomException(FULL_PARTICIPANT);
+      }
+
+      message = acceptParticipant(participantGame, user);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    String message = acceptParticipant(participantGame);
-
-    log.info("acceptParticipant end");
+    log.info("loginId = {} validAcceptParticipant end", user.getLoginId());
     return message;
   }
 
   /**
    * 경기 지원자 수락
    */
-  private String acceptParticipant(ParticipantGameEntity participantGame) {
+  private String acceptParticipant(ParticipantGameEntity participantGame,
+      UserEntity user) {
 
     ParticipantGameEntity result =
         ParticipantGameEntity.setAccept(participantGame, clock);
 
     participantGameRepository.save(result);
+    log.info("loginId = {} participantGame accepted", user.getLoginId());
 
     notificationService.send(NotificationType.ACCEPTED_GAME, result.getUser(),
         result.getGame().getTitle() + "에 참가가 수락되었습니다.");
@@ -153,34 +182,47 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 거절 전 validation
    */
-  public String validRejectParticipant(CommonRequest request) {
-    log.info("rejectParticipant start");
+  public String validRejectParticipant(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validRejectParticipant start", user.getLoginId());
 
-    UserEntity user = getCurrentUser();
+    String message = "";
 
-    ParticipantGameEntity participantGame =
-        getParticipantGame(request.getParticipantId(), APPLY);
+    try {
+      ParticipantGameEntity participantGame =
+          getParticipantGame(request.getParticipantId(), APPLY);
 
-    checkIsNotCreatorParticipantGame(user, participantGame);
+      checkIsNotCreatorParticipantGame(user, participantGame);
 
-    GameEntity game = getGame(participantGame.getGame().getId());
+      GameEntity game = getGame(participantGame.getGame().getId());
 
-    checkCreator(user, game);
+      checkCreator(user, game);
 
-    String message = rejectParticipant(participantGame);
+      message = rejectParticipant(participantGame, user);
 
-    log.info("rejectParticipant end");
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validRejectParticipant end", user.getLoginId());
     return message;
   }
 
   /**
    * 경기 지원자 거절
    */
-  private String rejectParticipant(ParticipantGameEntity participantGame) {
+  private String rejectParticipant(ParticipantGameEntity participantGame,
+      UserEntity user) {
     ParticipantGameEntity result =
         ParticipantGameEntity.setReject(participantGame, clock);
 
     participantGameRepository.save(result);
+    log.info("loginId = {} participantGame rejected", user.getLoginId());
 
     notificationService.send(NotificationType.REJECTED_GAME, result.getUser(),
         result.getGame().getTitle() + "에 참가가 거절되었습니다.");
@@ -193,56 +235,64 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 강퇴 전 validation
    */
-  public String validKickoutParticipant(CommonRequest request) {
-    log.info("kickoutParticipant start");
+  public String validKickoutParticipant(CommonRequest request,
+      UserEntity user) {
+    log.info("loginId = {} validKickoutParticipant start", user.getLoginId());
 
-    UserEntity user = getCurrentUser();
+    String message = "";
 
-    ParticipantGameEntity participantGame =
-        getParticipantGame(request.getParticipantId(), ACCEPT);
+    try {
+      ParticipantGameEntity participantGame =
+          getParticipantGame(request.getParticipantId(), ACCEPT);
 
-    checkIsNotCreatorParticipantGame(user, participantGame);
+      checkIsNotCreatorParticipantGame(user, participantGame);
 
-    GameEntity game = getGame(participantGame.getGame().getId());
+      GameEntity game = getGame(participantGame.getGame().getId());
 
-    checkCreator(user, game);
+      checkCreator(user, game);
 
-    checkGameStart(game);
+      checkGameStart(game);
 
-    String message = kickoutParticipant(participantGame);
+      message = kickoutParticipant(participantGame, user);
 
-    log.info("kickoutParticipant end");
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validKickoutParticipant end", user.getLoginId());
     return message;
   }
 
   /**
    * 경기 참가자 강퇴
    */
-  private String kickoutParticipant(ParticipantGameEntity participantGame) {
+  private String kickoutParticipant(ParticipantGameEntity participantGame,
+      UserEntity user) {
     ParticipantGameEntity result =
         ParticipantGameEntity.setKickout(participantGame, clock);
 
     participantGameRepository.save(result);
+    log.info("loginId = {} participantGame kickouted", user.getLoginId());
+
     notificationService.send(NotificationType.KICKED_OUT, result.getUser()
         , result.getGame().getTitle() + "에서 강퇴당하였습니다.");
 
-    log.info("kickoutParticipant end");
     return result.getUser().getNickName() + "을 경기에 강퇴 완료 했습니다.";
-  }
-
-  // 로그인 한 유저 조회
-  private UserEntity getCurrentUser() {
-    Long userId = jwtTokenExtract.currentUser().getId();
-
-    return userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
 
   // 리스트 조회
   private List<ListResponse> getParticipantList
-  (ParticipantGameStatus status, Long gameId, Pageable pageable) {
+  (ParticipantGameStatus status, Long gameId, Pageable pageable,
+      UserEntity user) {
     Page<ParticipantGameEntity> participantGameEntityPage =
         participantGameRepository.findByStatusAndGameId(status, gameId, pageable);
+    log.info("loginId = {} ParticipantList got", user.getLoginId());
 
     return participantGameEntityPage.stream()
         .map(ListResponse::toDto)
