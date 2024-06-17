@@ -209,11 +209,11 @@ public class GameService {
 
       message = updateGame(request, game, user);
     } catch(CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validUpdateGame CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch(Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validUpdateGame Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
@@ -264,11 +264,11 @@ public class GameService {
       }
 
     } catch(CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validDeleteGame CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch(Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validDeleteGame Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }

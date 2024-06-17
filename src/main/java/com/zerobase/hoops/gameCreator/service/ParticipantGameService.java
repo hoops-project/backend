@@ -60,11 +60,11 @@ public class ParticipantGameService {
       result = getApplyParticipantList(game.getId(), pageable, user);
 
     } catch (CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validApplyParticipantList CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch (Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validApplyParticipantList Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
@@ -96,11 +96,11 @@ public class ParticipantGameService {
       result = getAcceptParticipantList(game.getId(), pageable, user);
 
     } catch (CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validAcceptParticipantList CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch (Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validAcceptParticipantList Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
@@ -148,11 +148,11 @@ public class ParticipantGameService {
       message = acceptParticipant(participantGame, user);
 
     } catch (CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validAcceptParticipant CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch (Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validAcceptParticipant Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
@@ -200,11 +200,11 @@ public class ParticipantGameService {
       message = rejectParticipant(participantGame, user);
 
     } catch (CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validRejectParticipant CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch (Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validRejectParticipant Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
@@ -256,11 +256,11 @@ public class ParticipantGameService {
       message = kickoutParticipant(participantGame, user);
 
     } catch (CustomException e) {
-      log.warn("loginId = {} validCreateGame CustomException message = {}",
+      log.warn("loginId = {} validKickoutParticipant CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
     } catch (Exception e) {
-      log.error("loginId = {} validCreateGame Exception message = {}",
+      log.error("loginId = {} validKickoutParticipant Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
     }
