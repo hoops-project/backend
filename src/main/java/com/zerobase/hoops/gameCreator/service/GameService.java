@@ -11,12 +11,10 @@ import static com.zerobase.hoops.exception.ErrorCode.NOT_PARTICIPANT_FOUND;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_HEADCOUNT;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_MAN;
 import static com.zerobase.hoops.exception.ErrorCode.NOT_UPDATE_WOMAN;
-import static com.zerobase.hoops.exception.ErrorCode.USER_NOT_FOUND;
 import static com.zerobase.hoops.gameCreator.type.Gender.FEMALEONLY;
 import static com.zerobase.hoops.gameCreator.type.Gender.MALEONLY;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
-import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
 
@@ -38,8 +36,6 @@ import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
-import com.zerobase.hoops.security.JwtTokenExtract;
-import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -47,6 +43,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -58,48 +55,56 @@ public class GameService {
 
   private final ParticipantGameRepository participantGameRepository;
 
-  private final UserRepository userRepository;
-
   private final InviteRepository inviteRepository;
-
-  private final JwtTokenExtract jwtTokenExtract;
 
   private final ChatRoomRepository chatRoomRepository;
 
   private final Clock clock;
 
-  private static UserEntity user;
-
   /**
-   * 경기 생성 전 validation 체크
+   * 경기 생성 전 validation
    */
-  public String validCreateGame(CreateRequest request) {
-    log.info("createGame start");
+  public String validCreateGame(CreateRequest request, UserEntity user) {
+    log.info("loginId = {} validCreateGame start", user.getLoginId());
 
-    setUpUser();
+    String message = "";
 
-    validCreateAndUpdateGame(request.getHeadCount(),
-        request.getStartDateTime(), request.getAddress(),
-        request.getMatchFormat(), null);
+    try {
+      validCreateAndUpdateGame(request.getHeadCount(),
+          request.getStartDateTime(), request.getAddress(),
+          request.getMatchFormat(), null);
 
-    createGame(request);
+      message = createGame(request, user);
 
-    log.info("createGame end");
-    return request.getTitle() + " 경기가 생성되었습니다.";
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validCreateGame end", user.getLoginId());
+
+    return message;
   }
 
   /**
    * 경기 생성
    */
-  private void createGame(CreateRequest request) {
+  private String createGame(CreateRequest request, UserEntity user) {
     // 경기 생성
     GameEntity game = CreateRequest.toEntity(request, user);
 
     gameRepository.save(game);
+    log.info("loginId = {} game created", game.getId());
 
     // 경기 개설자는 경기에 참가인 상태로 있어야 함
     ParticipantGameEntity participantGame =
         ParticipantGameEntity.toGameCreatorEntity(game, user, clock);
+    log.info("loginId = {} participantGame created ", user.getLoginId());
 
     participantGameRepository.save(participantGame);
 
@@ -107,19 +112,39 @@ public class GameService {
     ChatRoomEntity chatRoom = new ChatRoomEntity();
     chatRoom.saveGameInfo(game);
     chatRoomRepository.save(chatRoom);
+    log.info("loginId = {} chatRoom created ", user.getLoginId());
+
+    return game.getTitle() + " 경기가 생성되었습니다.";
+  }
+
+  /**
+   * 경기 상세 조회 전 validation
+   */
+  public DetailResponse validGetGameDetail(Long gameId) {
+    log.info("validGetGameDetail start");
+
+    DetailResponse result = null;
+
+    try {
+      GameEntity game = getGame(gameId);
+      result = getGameDetail(game);
+    } catch (Exception e) {
+      log.error("validGetGameDetail Exception message = {}", e.getMessage(), e);
+      throw e;
+    }
+    log.info("validGetGameDetail end");
+    return result;
   }
 
   /**
    * 경기 상세 조회
    */
-  public DetailResponse getGameDetail(Long gameId) {
-    GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull(gameId)
-        .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
-
+  private DetailResponse getGameDetail(GameEntity game) {
     List<ParticipantGameEntity> participantGameEntityList =
         participantGameRepository
             .findByGameIdAndStatusAndDeletedDateTimeNull
                 (game.getId(), ACCEPT);
+    log.info("participantGameEntityList got");
 
     List<ParticipantUser> participantUserList =
         participantGameEntityList.stream().map(ParticipantUser::toDto).toList();
@@ -130,106 +155,134 @@ public class GameService {
   /**
    * 경기 수정 전 validation 체크
    */
-  public String validUpdateGame(UpdateRequest request) {
-    log.info("updateGame start");
+  public String validUpdateGame(UpdateRequest request, UserEntity user) {
+    log.info("loginId = {} validUpdateGame start", user.getLoginId());
+    String message = "";
 
-    setUpUser();
+    try {
+      // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
+      GameEntity game = getGame(request.getGameId());
 
-    // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    GameEntity game =
-        gameRepository.findByIdAndDeletedDateTimeNull(request.getGameId())
-        .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+      //자신이 경기 개최자가 아니면 수정 못하게
+      if(!Objects.equals(user.getId(), game.getUser().getId())) {
+        throw new CustomException(NOT_GAME_CREATOR);
+      }
 
-    //자신이 경기 개최자가 아니면 수정 못하게
-    if(!Objects.equals(user.getId(), game.getUser().getId())) {
-      throw new CustomException(NOT_GAME_CREATOR);
-    }
-
-    validCreateAndUpdateGame(request.getHeadCount(),
-        request.getStartDateTime(), request.getAddress(),
-        request.getMatchFormat(), game.getId());
-
-    /**
-     * 예) 변경 하려는 인원수 : 6
-     *     현재 경기에 수락된 인원수 : 8
-     *     이 경우 Exception 발생
-     */
-    int headCount =
-        participantGameRepository.countByStatusAndGameId
-            (ACCEPT, game.getId());
-
-    if (request.getHeadCount() < headCount) {
-      throw new CustomException(NOT_UPDATE_HEADCOUNT);
-    }
-
-    // 수정하려는 성별이 ALL 이면 이 메서드 통과
-    Gender gender = request.getGender();
-    if (gender == MALEONLY || gender == FEMALEONLY) {
-      GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
-
-      boolean genderExist = participantGameRepository
-          .existsByStatusAndGameIdAndUserGender
-              (ACCEPT, game.getId(), queryGender);
+      validCreateAndUpdateGame(request.getHeadCount(),
+          request.getStartDateTime(), request.getAddress(),
+          request.getMatchFormat(), game.getId());
 
       /**
-       * 예) 수정하려는 성별 : MALEONLY
-       *     경기에 수락된 인원들중 FEMALE 갯수를 검사
-       *     FEMALE이 한명이라도 있으면 안되므로 Exception 발생
+       * 예) 변경 하려는 인원수 : 6
+       *     현재 경기에 수락된 인원수 : 8
+       *     이 경우 Exception 발생
        */
-      if (genderExist) {
-        if (gender == MALEONLY) {
-          throw new CustomException(NOT_UPDATE_MAN);
-        } else {
-          throw new CustomException(NOT_UPDATE_WOMAN);
+      int headCount =
+          participantGameRepository.countByStatusAndGameId
+              (ACCEPT, game.getId());
+
+      if (request.getHeadCount() < headCount) {
+        throw new CustomException(NOT_UPDATE_HEADCOUNT);
+      }
+
+      // 수정하려는 성별이 ALL 이면 이 메서드 통과
+      Gender gender = request.getGender();
+      if (gender == MALEONLY || gender == FEMALEONLY) {
+        GenderType queryGender = gender == MALEONLY ? FEMALE : MALE;
+
+        boolean genderExist = participantGameRepository
+            .existsByStatusAndGameIdAndUserGender
+                (ACCEPT, game.getId(), queryGender);
+
+        /**
+         * 예) 수정하려는 성별 : MALEONLY
+         *     경기에 수락된 인원들중 FEMALE 갯수를 검사
+         *     FEMALE이 한명이라도 있으면 안되므로 Exception 발생
+         */
+        if (genderExist) {
+          if (gender == MALEONLY) {
+            throw new CustomException(NOT_UPDATE_MAN);
+          } else {
+            throw new CustomException(NOT_UPDATE_WOMAN);
+          }
         }
       }
+
+      message = updateGame(request, game, user);
+    } catch(CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch(Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    updateGame(request, game);
+    log.info("loginId = {} validUpdateGame end", user.getLoginId());
 
-    log.info("updateGame end");
-    return request.getTitle() + " 경기가 수정되었습니다.";
+    return message;
   }
 
   /**
    * 경기 수정
    */
-  private void updateGame(UpdateRequest request, GameEntity game) {
-    GameEntity gameEntity = UpdateRequest.toEntity(request, game);
-    gameRepository.save(gameEntity);
+  private String updateGame(UpdateRequest request, GameEntity game,
+      UserEntity user) {
+    GameEntity updateGame = UpdateRequest.toEntity(request, game);
+    gameRepository.save(updateGame);
+    log.info("loginId = {} game updated ", user.getLoginId());
+
+    return updateGame.getTitle() + " 경기가 수정되었습니다.";
   }
 
   /**
    * 경기 삭제 전 validation 체크
    */
-  public String validDeleteGame(DeleteRequest request) {
-    setUpUser();
+  public String validDeleteGame(DeleteRequest request, UserEntity user) {
+    log.info("loginId = {} validDeleteGame start", user.getLoginId());
 
-    // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-    GameEntity game = gameRepository.findByIdAndDeletedDateTimeNull(request.getGameId())
-        .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+    String message = "";
 
-    // 설정한 경기 시작 30분 전에만 삭제 가능
-    LocalDateTime beforeDatetime = game.getStartDateTime().minusMinutes(30);
-    LocalDateTime nowDateTime = LocalDateTime.now();
+    try {
 
-    if(nowDateTime.isAfter(beforeDatetime)) {
-      throw new CustomException(NOT_DELETE_STARTDATE);
+      // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
+      GameEntity game = getGame(request.getGameId());
+
+      // 설정한 경기 시작 30분 전에만 삭제 가능
+      LocalDateTime beforeDatetime = game.getStartDateTime().minusMinutes(30);
+      LocalDateTime nowDateTime = LocalDateTime.now();
+
+      if(nowDateTime.isAfter(beforeDatetime)) {
+        throw new CustomException(NOT_DELETE_STARTDATE);
+      }
+
+      // 경기 개최자가 삭제 시 -> 경기 삭제
+      if(Objects.equals(user.getId(), game.getUser().getId())) {
+        message = deleteGame(game, user);
+      } else { // 팀원이 삭제 시 -> 팀원 탈퇴
+        message = withdrewGame(game, user);
+      }
+
+    } catch(CustomException e) {
+      log.warn("loginId = {} validCreateGame CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch(Exception e) {
+      log.error("loginId = {} validCreateGame Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    // 경기 개최자가 삭제 시 -> 경기 삭제
-    if(Objects.equals(user.getId(), game.getUser().getId())) {
-      return deleteGame(game);
-    } else { // 팀원이 삭제 시 -> 팀원 탈퇴
-      return withdrewGame(game);
-    }
+    log.info("loginId = {} validDeleteGame end", user.getLoginId());
 
+    return message;
   }
 
   /**
    * 경기 삭제
    */
-  private String deleteGame(GameEntity game) {
+  private String deleteGame(GameEntity game, UserEntity user) {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 조회
     List<ParticipantGameEntity> participantGameEntityList =
@@ -240,6 +293,7 @@ public class GameService {
       ParticipantGameEntity entity =
           ParticipantGameEntity.setDelete(participantGame, clock);
       participantGameRepository.save(entity);
+      log.info("loginId = {} participantGame deleted ", user.getLoginId());
     });
 
     // 해당 경기에 초대 신청된 것들 다 조회
@@ -250,11 +304,13 @@ public class GameService {
     inviteEntityList.forEach(invite -> {
       InviteEntity entity = InviteEntity.setCancel(invite, clock);
       inviteRepository.save(entity);
+      log.info("loginId = {} invite deleted ", user.getLoginId());
     });
 
     // 경기 삭제
     GameEntity gameEntity = DeleteRequest.toEntity(game, clock);
     gameRepository.save(gameEntity);
+    log.info("loginId = {} game deleted ", user.getLoginId());
 
     return game.getTitle() + " 경기가 삭제되었습니다.";
   }
@@ -262,7 +318,7 @@ public class GameService {
   /**
    * 경기 팀원 탈퇴
    */
-  private String withdrewGame(GameEntity game) {
+  private String withdrewGame(GameEntity game, UserEntity user) {
 
     ParticipantGameEntity participantGameEntity =
         participantGameRepository.findByStatusAndGameIdAndUserId
@@ -275,16 +331,6 @@ public class GameService {
     participantGameRepository.save(result);
 
     return game.getTitle() + " 경기에 탈퇴했습니다.";
-  }
-
-  /**
-   * 로그인 유저 조회
-   */
-  private void setUpUser() {
-    Long userId = jwtTokenExtract.currentUser().getId();
-
-    user = userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
 
   /**
@@ -332,6 +378,12 @@ public class GameService {
         throw new CustomException(NOT_CREATE_FIVEONFIVE);
       }
     }
+  }
+
+  // 경기 조회
+  private GameEntity getGame(Long gameId) {
+    return gameRepository.findByIdAndDeletedDateTimeNull(gameId)
+        .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 
 }
