@@ -27,7 +27,6 @@ import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
 import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
-import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
@@ -59,9 +58,6 @@ class InviteServiceTest {
 
   @InjectMocks
   private InviteService inviteService;
-
-  @Mock
-  private JwtTokenExtract jwtTokenExtract;
 
   @Mock
   private UserRepository userRepository;
@@ -252,9 +248,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 성공")
   public void requestInviteGame_success() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
     
     // 해당 경기 조회
     getGame(createRequest.getGameId());
@@ -291,7 +284,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(InviteEntity.class);
 
     // when
-    inviteService.validRequestInvite(createRequest);
+    inviteService.validRequestInvite(createRequest, requestUser);
 
     // Then
     verify(inviteRepository).save(inviteEntityArgumentCaptor.capture());
@@ -308,15 +301,12 @@ class InviteServiceTest {
     //Given
     createdGame1.setInviteYn(false);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
-
     // 해당 경기 조회
     getGame(createRequest.getGameId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -329,15 +319,13 @@ class InviteServiceTest {
     //Given
     createdGame1.setStartDateTime(LocalDateTime.now().minusMinutes(1));
 
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
 
     // 해당 경기 조회
     getGame(createRequest.getGameId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -349,9 +337,6 @@ class InviteServiceTest {
   public void requestInviteGame_failIfNotParticipantUserRequestGameInvite() {
     //Given
 
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
-
     // 해당 경기 조회
     getGame(createRequest.getGameId());
 
@@ -361,7 +346,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -372,9 +357,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 해당 경기 인원이 다 찰 경우")
   public void requestInviteGame_failIfFulledGame() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
 
     // 해당 경기 조회
     getGame(createRequest.getGameId());
@@ -388,7 +370,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -399,9 +381,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 친구가 아닌 사람이 요청할 때")
   public void requestInviteGame_failIfNotFriendRequestInvite() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
 
     // 해당 경기 조회
     getGame(createRequest.getGameId());
@@ -421,7 +400,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -432,9 +411,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 해당 경기에 이미 초대 요청 되어 있을 때")
   public void requestInviteGame_failIfAlreadyRequestGameInvite() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
 
     // 해당 경기 조회
     getGame(createRequest.getGameId());
@@ -458,7 +434,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -469,9 +445,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 실패 : 해당 경기에 이미 참가 하거나 요청한 경우")
   public void requestInviteGame_failIfAlreadyAcceptOrApplyGame() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
 
     // 해당 경기 조회
     getGame(createRequest.getGameId());
@@ -499,7 +472,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRequestInvite(createRequest);
+      inviteService.validRequestInvite(createRequest, requestUser);
     });
 
     // then
@@ -526,9 +499,6 @@ class InviteServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
@@ -538,7 +508,7 @@ class InviteServiceTest {
     when(inviteRepository.save(cancelInviteEntity)).thenReturn(cancelInviteEntity);
 
     // when
-    inviteService.validCancelInvite(commonRequest);
+    inviteService.validCancelInvite(commonRequest, requestUser);
 
     // Then
     assertEquals(expectedcancelInviteEntity, cancelInviteEntity);
@@ -550,15 +520,12 @@ class InviteServiceTest {
     //Given
     expectedGameCreatorRequestInviteEntity.assignSenderUser(receiverUser);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(requestUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validCancelInvite(commonRequest);
+      inviteService.validCancelInvite(commonRequest, requestUser);
     });
 
     // then
@@ -594,9 +561,6 @@ class InviteServiceTest {
         ParticipantGameEntity.gameCreatorInvite(
             expectedGameCreatorRequestInviteEntity, nowDateTime);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
@@ -630,7 +594,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.validAcceptInvite(commonRequest);
+    inviteService.validAcceptInvite(commonRequest, receiverUser);
 
     // Then
     verify(participantGameRepository)
@@ -672,8 +636,6 @@ class InviteServiceTest {
         ParticipantGameEntity.gameUserInvite(
             expectedGameParticipantRequestInviteEntity);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(otherUser);
 
     // 해당 초대 정보 조회
     getGameParticipantRequestInviteEntity(commonRequest.getInviteId());
@@ -708,7 +670,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.validAcceptInvite(commonRequest);
+    inviteService.validAcceptInvite(commonRequest, otherUser);
 
     // Then
     verify(participantGameRepository)
@@ -728,15 +690,13 @@ class InviteServiceTest {
     //Given
     expectedGameCreatorRequestInviteEntity.assignReceiverUser(requestUser);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest);
+      inviteService.validAcceptInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -748,9 +708,6 @@ class InviteServiceTest {
   public void acceptInvitation_failIfNotFriendRequestInvite() {
     //Given
 
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
@@ -760,7 +717,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest);
+      inviteService.validAcceptInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -771,9 +728,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 초대한 사람이 해당 경기에 참가해 있지 않을 때")
   public void acceptInvitation_failIfSenderUserNotParticipantGame() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
@@ -788,7 +742,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest);
+      inviteService.validAcceptInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -799,9 +753,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 해당 경기에 인원이 다 찼을 때")
   public void acceptInvitation_failIfFulledGame() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
@@ -819,7 +770,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest);
+      inviteService.validAcceptInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -830,9 +781,6 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 수락 하는 사람이 해당 경기에 참가 및 요청 했을 때")
   public void acceptInvitation_failIfApplyOrAcceptGame() {
     //Given
-
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
 
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
@@ -854,7 +802,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest);
+      inviteService.validAcceptInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -871,9 +819,6 @@ class InviteServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
@@ -885,7 +830,7 @@ class InviteServiceTest {
         .thenReturn(rejectEntity);
 
     // when
-    inviteService.validRejectInvite(commonRequest);
+    inviteService.validRejectInvite(commonRequest, receiverUser);
 
     // Then
     assertEquals(expectedGameCreatorRejectInviteEntity ,rejectEntity);
@@ -897,15 +842,12 @@ class InviteServiceTest {
     //Given
     expectedGameCreatorRequestInviteEntity.assignReceiverUser(requestUser);
 
-    // 로그인 한 유저 조회
-    getCurrentUser(receiverUser);
-
     // 해당 초대 정보 조회
     getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRejectInvite(commonRequest);
+      inviteService.validRejectInvite(commonRequest, receiverUser);
     });
 
     // then
@@ -943,27 +885,16 @@ class InviteServiceTest {
         .map(InviteMyListResponse::toDto)
         .toList();
 
-    // 로그인 한 유저 조회
-    getCurrentUser(otherUser);
-
     when(inviteRepository.findByInviteStatusAndReceiverUserId
         (InviteStatus.REQUEST, otherUser.getId(), pageable))
         .thenReturn(inviteEntityPage);
 
     // when
     List<InviteMyListResponse> result =
-        inviteService.validGetRequestInviteList(pageable);
+        inviteService.validGetRequestInviteList(pageable, otherUser);
 
     // Then
     assertEquals(expectList, result);
-  }
-
-  // 로그인 유저 조회
-  private void getCurrentUser(UserEntity userEntity) {
-    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
-
-    when(userRepository.findById(userEntity.getId())).thenReturn(
-        Optional.of(userEntity));
   }
 
   // 해당 경기 조회
