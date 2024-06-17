@@ -98,7 +98,7 @@ public class GameService {
     GameEntity game = CreateRequest.toEntity(request, user);
 
     gameRepository.save(game);
-    log.info("loginId = {} game created", game.getId());
+    log.info("loginId = {} game created", user.getLoginId());
 
     // 경기 개설자는 경기에 참가인 상태로 있어야 함
     ParticipantGameEntity participantGame =
