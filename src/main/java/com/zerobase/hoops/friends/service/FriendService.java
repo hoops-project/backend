@@ -25,21 +25,20 @@ import com.zerobase.hoops.friends.dto.FriendDto.RequestFriendListResponse;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
-import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class FriendService {
-
-  private final JwtTokenExtract jwtTokenExtract;
 
   private final Clock clock;
 
@@ -54,35 +53,49 @@ public class FriendService {
   /**
    * 친구 신청 전 validation
    */
-  public String validApplyFriend(ApplyRequest request) {
-    UserEntity user = getCurrentUser();
+  public String validApplyFriend(ApplyRequest request, UserEntity user) {
+    log.info("loginId = {} validApplyFriend start", user.getLoginId());
 
-    // 자기 자신은 친구 신청 불가
-    if(Objects.equals(user.getId(), request.getFriendUserId())) {
-      throw new CustomException(NOT_SELF_FRIEND);
+    String message = "";
+
+    try {
+      // 자기 자신은 친구 신청 불가
+      if(Objects.equals(user.getId(), request.getFriendUserId())) {
+        throw new CustomException(NOT_SELF_FRIEND);
+      }
+
+      // 이미 친구 신청, 수락 상태이면 신청 불가
+      boolean exist =
+          friendRepository.existsByUserIdAndFriendUserIdAndStatusIn
+              (user.getId(), request.getFriendUserId(),
+                  List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
+
+      if(exist) {
+        throw new CustomException(ALREADY_APPLY_ACCEPT_STATUS);
+      }
+
+      // 자신 친구 목록 최대 30명 체크
+      countsMyFriendMax(user.getId());
+
+      // 상대방 친구 목록 최대 30명 체크
+      countsOtherFriendMax(request.getFriendUserId());
+
+      // 친구 유저 조회
+      UserEntity friendUser = getFriendUser(request.getFriendUserId());
+
+      message = applyFriend(user, friendUser);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validApplyFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validApplyFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    // 이미 친구 신청, 수락 상태이면 신청 불가
-    boolean exist =
-        friendRepository.existsByUserIdAndFriendUserIdAndStatusIn
-            (user.getId(), request.getFriendUserId(),
-                List.of(FriendStatus.APPLY, FriendStatus.ACCEPT));
-
-    if(exist) {
-      throw new CustomException(ALREADY_APPLY_ACCEPT_STATUS);
-    }
-
-    // 자신 친구 목록 최대 30명 체크
-    countsMyFriendMax(user.getId());
-
-    // 상대방 친구 목록 최대 30명 체크
-    countsOtherFriendMax(request.getFriendUserId());
-
-    // 친구 유저 조회
-    UserEntity friendUser = getFriendUser(request.getFriendUserId());
-
-    String message = applyFriend(user, friendUser);
-
+    log.info("loginId = {} validApplyFriend end", user.getLoginId());
     return message;
   }
 
@@ -95,6 +108,8 @@ public class FriendService {
     FriendEntity friendEntity = ApplyRequest.toEntity(user, friendUser);
 
     friendRepository.save(friendEntity);
+    log.info("loginId = {} friend created", user.getLoginId());
+
     notificationService.send(NotificationType.FRIEND,
         friendUser, user.getNickName() + "의 친구신청이 도착했습니다.");
 
@@ -105,32 +120,47 @@ public class FriendService {
   /**
    * 친구 신청 취소 전 validation
    */
-  public String validCancelFriend(CommonRequest request) {
-    UserEntity user = getCurrentUser();
+  public String validCancelFriend(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validCancelFriend start", user.getLoginId());
 
-    // 친구 상태 조회
-    FriendEntity friendEntity =
-        friendRepository.findByIdAndStatus(request.getFriendId(),
-            FriendStatus.APPLY)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+    String message = "";
 
-    // 자기 자신이 한 친구 신청만 취소 가능
-    if(!Objects.equals(user.getId(), friendEntity.getUser().getId())) {
-      throw new CustomException(NOT_SELF_APPLY);
+    try {
+      // 친구 상태 조회
+      FriendEntity friendEntity =
+          friendRepository.findByIdAndStatus(request.getFriendId(),
+                  FriendStatus.APPLY)
+              .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+
+      // 자기 자신이 한 친구 신청만 취소 가능
+      if(!Objects.equals(user.getId(), friendEntity.getUser().getId())) {
+        throw new CustomException(NOT_SELF_APPLY);
+      }
+
+      message = cancelFriend(friendEntity, user);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validCancelFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validCancelFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    String message = cancelFriend(friendEntity);
-
+    log.info("loginId = {} validCancelFriend end", user.getLoginId());
     return message;
   }
 
   /**
    * 친구 신청 취소
    */
-  public String cancelFriend(FriendEntity friend) {
+  public String cancelFriend(FriendEntity friend, UserEntity user) {
     FriendEntity result = FriendEntity.setCancel(friend, clock);
 
     friendRepository.save(result);
+    log.info("loginId = {} friend canceled", user.getLoginId());
 
     return result.getFriendUser().getNickName() + "에게 친구 신청 한것을 취소 했습니다.";
   }
@@ -138,37 +168,54 @@ public class FriendService {
   /**
    * 친구 수락 전 validation
    */
-  public String validAcceptFriend(CommonRequest request) {
-    UserEntity user = getCurrentUser();
+  public String validAcceptFriend(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validAcceptFriend start", user.getLoginId());
 
-    FriendEntity friendEntity = getFriendEntity(request.getFriendId());
+    String message = "";
 
-    // 자신이 받은 친구 신청인지 체크
-    checkMyReceive(user, friendEntity);
+    try {
 
-    // 자신 친구 목록 최대 30명 체크
-    countsMyFriendMax(friendEntity.getFriendUser().getId());
+      FriendEntity friendEntity = getFriendEntity(request.getFriendId());
 
-    // 상대방 친구 목록 최대 30명 체크
-    countsOtherFriendMax(friendEntity.getUser().getId());
+      // 자신이 받은 친구 신청인지 체크
+      checkMyReceive(user, friendEntity);
 
-    String message = acceptFriend(friendEntity);
+      // 자신 친구 목록 최대 30명 체크
+      countsMyFriendMax(friendEntity.getFriendUser().getId());
 
+      // 상대방 친구 목록 최대 30명 체크
+      countsOtherFriendMax(friendEntity.getUser().getId());
+
+      message = acceptFriend(friendEntity, user);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validAcceptFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validAcceptFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validAcceptFriend end", user.getLoginId());
     return message;
   }
 
   /**
    * 친구 수락
    */
-  private String acceptFriend(FriendEntity friend) {
+  private String acceptFriend(FriendEntity friend, UserEntity user) {
     FriendEntity myFriendEntity = FriendEntity.setAcceptMyFriend(friend, clock);
 
     friendRepository.save(myFriendEntity);
+    log.info("loginId = {} myFriend accepted", user.getLoginId());
 
     FriendEntity otherFriendEntity =
         FriendEntity.setAcceptOtherFriend(myFriendEntity);
 
     friendRepository.save(otherFriendEntity);
+    log.info("loginId = {} otherFriend accepted", user.getLoginId());
 
     return myFriendEntity.getUser().getNickName() + "의 친구 신청을 수락 했습니다.";
   }
@@ -176,26 +223,42 @@ public class FriendService {
   /**
    * 친구 거절 전 validation
    */
-  public String validRejectFriend(CommonRequest request) {
-    UserEntity user = getCurrentUser();
+  public String validRejectFriend(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validRejectFriend start", user.getLoginId());
 
-    FriendEntity friendEntity = getFriendEntity(request.getFriendId());
+    String message = "";
 
-    // 자신이 받은 친구 신청인지 체크
-    checkMyReceive(user, friendEntity);
+    try {
 
-    String message = rejectFriend(friendEntity);
+      FriendEntity friendEntity = getFriendEntity(request.getFriendId());
 
+      // 자신이 받은 친구 신청인지 체크
+      checkMyReceive(user, friendEntity);
+
+      message = rejectFriend(friendEntity, user);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validRejectFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validRejectFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validRejectFriend end", user.getLoginId());
     return message;
   }
 
   /**
    * 친구 거절
    */
-  private String rejectFriend(FriendEntity friend) {
+  private String rejectFriend(FriendEntity friend, UserEntity user) {
     FriendEntity rejectEntity = FriendEntity.setReject(friend, clock);
 
     friendRepository.save(rejectEntity);
+    log.info("loginId = {} friend rejected", user.getLoginId());
 
     return rejectEntity.getUser().getNickName() + "의 친구 신청을 거절 했습니다.";
   }
@@ -203,29 +266,45 @@ public class FriendService {
   /**
    * 친구 삭제 전 validation
    */
-  public String validDeleteFriend(CommonRequest request) {
-    UserEntity user = getCurrentUser();
+  public String validDeleteFriend(CommonRequest request, UserEntity user) {
+    log.info("loginId = {} validDeleteFriend start", user.getLoginId());
 
-    FriendEntity myAcceptFriendEntity =
-        friendRepository.findByIdAndStatus(request.getFriendId(),
-                FriendStatus.ACCEPT)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+    String message = "";
 
-    // 자신이 받은 친구만 삭제 가능
-    if(!Objects.equals(user.getId(), myAcceptFriendEntity.getUser().getId())) {
-      throw new CustomException(NOT_SELF_ACCEPT);
+    try {
+
+      FriendEntity myAcceptFriendEntity =
+          friendRepository.findByIdAndStatus(request.getFriendId(),
+                  FriendStatus.ACCEPT)
+              .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+
+      // 자신이 받은 친구만 삭제 가능
+      if(!Objects.equals(user.getId(), myAcceptFriendEntity.getUser().getId())) {
+        throw new CustomException(NOT_SELF_ACCEPT);
+      }
+
+      Long userId = user.getId();
+      Long friendUserId = myAcceptFriendEntity.getFriendUser().getId();
+
+      FriendEntity otherAcceptFriendEntity =
+          friendRepository.findByFriendUserIdAndUserIdAndStatus
+                  (userId, friendUserId, FriendStatus.ACCEPT)
+              .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
+
+      message =
+          deleteFriend(myAcceptFriendEntity, otherAcceptFriendEntity, user);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validDeleteFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validDeleteFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    Long userId = user.getId();
-    Long friendUserId = myAcceptFriendEntity.getFriendUser().getId();
-
-    FriendEntity otherAcceptFriendEntity =
-        friendRepository.findByFriendUserIdAndUserIdAndStatus
-                (userId, friendUserId, FriendStatus.ACCEPT)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_ACCEPT_FRIEND));
-
-    String message = deleteFriend(myAcceptFriendEntity, otherAcceptFriendEntity);
-
+    log.info("loginId = {} validDeleteFriend end", user.getLoginId());
     return message;
   }
 
@@ -233,17 +312,19 @@ public class FriendService {
    * 친구 삭제
    */
   public String deleteFriend(FriendEntity myAcceptFriendEntity,
-      FriendEntity otherAcceptFriendEntity) {
+      FriendEntity otherAcceptFriendEntity, UserEntity user) {
 
     FriendEntity myDeleteFriendEntity =
         FriendEntity.setDeleteMyFriend(myAcceptFriendEntity, clock);
 
     friendRepository.save(myDeleteFriendEntity);
+    log.info("loginId = {} myFriend deleted", user.getLoginId());
 
     FriendEntity otherDeleteFriendEntity =
         FriendEntity.setDeleteOtherFriend(myDeleteFriendEntity, otherAcceptFriendEntity);
 
     friendRepository.save(otherDeleteFriendEntity);
+    log.info("loginId = {} otherFriend deleted", user.getLoginId());
 
     return myAcceptFriendEntity.getFriendUser().getNickName() + "를 친구 삭제 했습니다.";
   }
@@ -251,14 +332,33 @@ public class FriendService {
   /**
    * 친구 검색 전 validation
    */
-  public Page<FriendListResponse> validSearchNickName(String nickName, Pageable pageable) {
-    if(nickName.isBlank()) {
-      throw new CustomException(NOT_FOUND_NICKNAME);
+  public Page<FriendListResponse> validSearchFriend(String nickName,
+      Pageable pageable, UserEntity user) {
+    log.info("loginId = {} validSearchFriend start", user.getLoginId());
+
+    Page<FriendListResponse> result = null;
+
+    try {
+
+      if(nickName.isBlank()) {
+        throw new CustomException(NOT_FOUND_NICKNAME);
+      }
+
+      result = searchNickName(user, nickName, pageable);
+      log.info("loginId = {} searchFriendList got", user.getLoginId());
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validSearchFriend CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validSearchFriend Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
     }
 
-    UserEntity user = getCurrentUser();
-
-    return searchNickName(user, nickName, pageable);
+    log.info("loginId = {} validSearchFriend end", user.getLoginId());
+    return result;
   }
 
   /**
@@ -272,19 +372,39 @@ public class FriendService {
   /**
    * 친구 리스트 조회 전 validation
    */
-  public List<FriendListResponse> validGetMyFriends(Pageable pageable) {
-    UserEntity user = getCurrentUser();
+  public List<FriendListResponse> validGetMyFriendList(Pageable pageable,
+      UserEntity user) {
+    log.info("loginId = {} validGetMyFriendList start", user.getLoginId());
 
-    return getNickName(user, pageable);
+    List<FriendListResponse> result = null;
+
+    try {
+
+      result = getMyFriendList(user, pageable);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validGetMyFriendList CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validGetMyFriendList Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validGetMyFriendList end", user.getLoginId());
+    return result;
   }
 
   /**
    * 친구 리스트 조회
    */
-  private List<FriendListResponse> getNickName(UserEntity user, Pageable pageable) {
+  private List<FriendListResponse> getMyFriendList(UserEntity user,
+      Pageable pageable) {
     Page<FriendEntity> friendEntityPage =
         friendRepository.findByStatusAndUserId
             (FriendStatus.ACCEPT, user.getId(), pageable);
+    log.info("loginId = {} myFriendList got", user.getLoginId());
 
     return friendEntityPage.stream()
         .map(FriendListResponse::toDto)
@@ -294,26 +414,64 @@ public class FriendService {
   /**
    * 경기 초대 친구 리스트 조회 전 validation
    */
-  public Page<InviteFriendListResponse> validGetMyInviteList(Long gameId,
-      Pageable pageable) {
-    UserEntity user = getCurrentUser();
-    return getMyInviteList(user, gameId, pageable);
+  public Page<InviteFriendListResponse> validGetMyInviteFriendList(
+      Long gameId, Pageable pageable, UserEntity user) {
+    log.info("loginId = {} validGetMyInviteFriendList start", user.getLoginId());
+
+    Page<InviteFriendListResponse> result = null;
+
+    try {
+
+      result = getMyInviteFriendList(user, gameId, pageable);
+      log.info("loginId = {} myInviteFriendList got", user.getLoginId());
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validGetMyInviteFriendList CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validGetMyInviteFriendList Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validGetMyInviteFriendList end", user.getLoginId());
+    return result;
   }
 
   /**
    * 경기 초대 친구 리스트 조회
    */
-  private Page<InviteFriendListResponse> getMyInviteList(UserEntity user, Long gameId, Pageable pageable) {
+  private Page<InviteFriendListResponse> getMyInviteFriendList
+  (UserEntity user, Long gameId, Pageable pageable) {
     return friendCustomRepository.findByMyInviteFriendList(user.getId(), gameId, pageable);
   }
 
   /**
    * 내가 친구 요청 받은 리스트 조회 전 validation
    */
-  public List<RequestFriendListResponse> validGetRequestFriendList(Pageable pageable) {
-    UserEntity user = getCurrentUser();
+  public List<RequestFriendListResponse> validGetRequestFriendList
+  (Pageable pageable, UserEntity user) {
+    log.info("loginId = {} validGetRequestFriendList start", user.getLoginId());
 
-    return getRequestFriendList(user, pageable);
+    List<RequestFriendListResponse> result = null;
+
+    try {
+
+      result = getRequestFriendList(user, pageable);
+
+    } catch (CustomException e) {
+      log.warn("loginId = {} validGetRequestFriendList CustomException message = {}",
+          user.getLoginId(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("loginId = {} validGetRequestFriendList Exception message = {}",
+          user.getLoginId(), e.getMessage(), e);
+      throw e;
+    }
+
+    log.info("loginId = {} validGetRequestFriendList end", user.getLoginId());
+    return result;
   }
 
   /**
@@ -324,18 +482,11 @@ public class FriendService {
     Page<FriendEntity> friendEntityList =
         friendRepository.findByStatusAndFriendUserId
             (FriendStatus.APPLY, user.getId(), pageable);
+    log.info("loginId = {} requestFriendList got", user.getLoginId());
 
     return friendEntityList.stream()
         .map(RequestFriendListResponse::toDto)
         .toList();
-  }
-
-  // 로그인 한 유저 조회
-  private UserEntity getCurrentUser() {
-    Long userId = jwtTokenExtract.currentUser().getId();
-
-    return userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
   }
 
   // 내 친구 최대 체크
