@@ -292,8 +292,8 @@ public class GameService {
       ParticipantGameEntity entity =
           ParticipantGameEntity.setDelete(participantGame, clock);
       participantGameRepository.save(entity);
-      log.info("loginId = {} participantGame deleted ", user.getLoginId());
     });
+    log.info("loginId = {} participantGame deleted ", user.getLoginId());
 
     // 해당 경기에 초대 신청된 것들 다 조회
     List<InviteEntity> inviteEntityList = inviteRepository
@@ -303,8 +303,8 @@ public class GameService {
     inviteEntityList.forEach(invite -> {
       InviteEntity entity = InviteEntity.setCancel(invite, clock);
       inviteRepository.save(entity);
-      log.info("loginId = {} invite deleted ", user.getLoginId());
     });
+    log.info("loginId = {} invite deleted ", user.getLoginId());
 
     // 경기 삭제
     GameEntity gameEntity = DeleteRequest.toEntity(game, clock);
