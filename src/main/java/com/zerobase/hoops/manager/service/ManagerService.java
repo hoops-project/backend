@@ -28,20 +28,27 @@ public class ManagerService {
   private final UserRepository userRepository;
   private final ReportRepository reportRepository;
 
-  public void getBlackList(String loginId){
+  public void getBlackList(String loginId) {
+    log.info("getBlackList 시작");
     blackListUserRepository
         .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
             loginId, LocalDate.now())
         .orElseThrow(() -> new CustomException(ErrorCode.NOT_BLACKLIST));
+    log.info("getBlackList 종료");
   }
 
   public void saveBlackList(BlackListDto request) {
+    log.info("saveBlackList 시작");
     Long userId = jwtTokenExtract.currentUser().getId();
     Long reportedId = request.getReportedId();
-
+    log.info(
+        String.format("[user_pk] = %s = / [reported_pk] = %s",
+            userId,
+            reportedId
+        ));
     startBlackListCheckFromReportEntity(request);
     validateBlackList(userId, reportedId);
-
+    log.info("saveBlackList 종료");
   }
 
   private void startBlackListCheckFromReportEntity(BlackListDto request) {
@@ -76,25 +83,40 @@ public class ManagerService {
   }
 
   public void checkBlackList(String blackUserId) {
+    log.info("checkBlackList 시작");
     Optional<BlackListUserEntity> blackUser = blackListUserRepository
-        .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(blackUserId, LocalDate.now());
+        .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            blackUserId, LocalDate.now());
     if (blackUser.isEmpty()) {
+      log.info(
+          String.format("[blackUser_pk] = %s / 데이터 없음",
+              blackUserId
+          ));
       return;
     }
     int comparison = blackUser.get().getEndDate()
         .compareTo(LocalDate.now());
     if (comparison > 0) {
+      log.info(
+          String.format("[blackUser_pk] = %s / 아직 BAN 기간 10일이 넘지 않음",
+              blackUserId
+          ));
       throw new CustomException(ErrorCode.BAN_FOR_10DAYS);
     }
+    log.info("checkBlackList 종료");
   }
 
   public void unLockBlackList(UnLockBlackListDto request) {
+    log.info("unLockBlackList 시작");
     BlackListUserEntity blackUser = blackListUserRepository
         .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
             request.getBlackUserId(), LocalDate.now())
         .orElseThrow(() -> new CustomException(ErrorCode.NOT_BLACKLIST));
+    log.info("unLockBlackList 해제 시작");
     blackUser.unLockBlackList();
     blackListUserRepository.save(blackUser);
+    log.info("unLockBlackList 해제 성공 및 저장");
+    log.info("unLockBlackList 종료");
   }
 
 }

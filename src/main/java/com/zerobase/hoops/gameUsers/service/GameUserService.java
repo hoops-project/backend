@@ -47,11 +47,15 @@ public class GameUserService {
 
   @Transactional
   public void saveMannerPoint(MannerPointDto request) {
-
+    log.info("saveMannerPoint 시작");
     Long userId = jwtTokenExtract.currentUser().getId();
     Long receiverId = request.getReceiverId();
     Long gameId = request.getGameId();
-
+    log.info(
+        String.format("[user_pk] = %s -> [receiverId] = %s / [gameId] = %s",
+            userId,
+            receiverId,
+            gameId));
     UserEntity userEntity = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
@@ -69,6 +73,7 @@ public class GameUserService {
     receiverEntity.saveMannerPoint(request.getPoint());
     mannerPointRepository.save(
         request.toEntity(userEntity, receiverEntity, gameEntity));
+    log.info("saveMannerPoint 종료");
   }
 
   private void checkExistRate(MannerPointDto request, Long userId,
@@ -84,16 +89,24 @@ public class GameUserService {
 
   public List<MannerPointListResponse> getMannerPoint(
       String gameId) {
-
+    log.info("getMannerPoint 시작");
+    Long currentUserId = jwtTokenExtract.currentUser().getId();
     List<ParticipantGameEntity> userList = checkMannerPointList(gameId);
     List<MannerPointListResponse> mannerPointUserList = new ArrayList<>();
 
-    Long currentUserId = jwtTokenExtract.currentUser().getId();
-    
     userList.stream()
         .filter(user -> !user.getUser().getId().equals(currentUserId))
-        .forEach(user -> mannerPointUserList.add(MannerPointListResponse.of(user)));
+        .forEach(user -> mannerPointUserList.add(
+            MannerPointListResponse.of(user)));
 
+    log.info(
+        String.format("[user_pk] = %s ->  [gameId] = %s / [list] = [%s]",
+            currentUserId,
+            gameId,
+            mannerPointUserList
+        ));
+
+    log.info("getMannerPoint 종료");
     return mannerPointUserList;
   }
 
@@ -124,6 +137,7 @@ public class GameUserService {
 
 
   public Page<GameSearchResponse> myCurrentGameList(int page, int size) {
+    log.info("myCurrentGameList 시작");
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
@@ -133,10 +147,19 @@ public class GameUserService {
         .toList();
 
     Long userId = jwtTokenExtract.currentUser().getId();
+
+    log.info(
+        String.format("[user_pk] = %s ->  [gameList] = [%s]",
+            userId,
+            games
+        ));
+
+    log.info("myCurrentGameList 종료");
     return getPageGameSearchResponses(games, userId, page, size);
   }
 
   public Page<GameSearchResponse> myLastGameList(int page, int size) {
+    log.info("myLastGameList 시작");
     List<ParticipantGameEntity> userGameList = checkMyGameList();
 
     List<GameEntity> games = userGameList.stream()
@@ -147,30 +170,50 @@ public class GameUserService {
 
     Long userId = jwtTokenExtract.currentUser().getId();
 
+    log.info(
+        String.format("[user_pk] = %s ->  [gameList] = [%s]",
+            userId,
+            games
+        ));
+
+    log.info("myLastGameList 종료");
     return getPageGameSearchResponses(games, userId, page, size);
   }
 
   public Page<GameSearchResponse> findFilteredGames(
       LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
       Gender gender, MatchFormat matchFormat, int page, int size) {
-
+    log.info("findFilteredGames 시작");
+    log.info(
+        "사용자 필터링 입력 조건 저장 -> [날짜 = {}, 도시 조건 = {}, 경기장 조건 = {}, 성별 조건 = {}, 경기 스타일 = {}]",
+        localDate,
+        cityName,
+        fieldStatus,
+        gender,
+        matchFormat
+    );
     Specification<GameEntity> spec = getGameEntitySpecification(
         localDate, cityName, fieldStatus, gender, matchFormat);
 
     List<GameEntity> gameListNow = gameUserRepository.findAll(spec);
 
     Long userId = null;
-
+    log.info("findFilteredGames 종료");
     return getPageGameSearchResponses(gameListNow, userId, page, size);
   }
 
   public List<GameSearchResponse> searchAddress(String address) {
+    log.info("searchAddress 시작");
     List<GameEntity> allFromDateToday =
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
             address, LocalDateTime.now());
-
+    log.info(
+        String.format("[사용자 주소 입력값] = %s / [실제 존재하는 경기값 조회 결과] = %s",
+            address,
+            allFromDateToday
+        ));
     Long userId = null;
-
+    log.info("searchAddress 종료");
     return getGameSearchResponses(allFromDateToday, userId);
   }
 
@@ -206,6 +249,7 @@ public class GameUserService {
 
   @Transactional
   public ParticipateGameDto participateInGame(Long gameId) {
+    log.info("participateInGame 시작");
     Long userId = jwtTokenExtract.currentUser().getId();
 
     UserEntity user = userRepository.findById(userId)
@@ -215,8 +259,13 @@ public class GameUserService {
     GameEntity game = gameUserRepository.findById(gameId)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
+    log.info(
+        String.format("[user_pk] = %s = / [game] = %s",
+            userId,
+            game
+        ));
     checkValidated(gameId, game, user);
-
+    log.info("participateInGame 종료");
     return ParticipateGameDto.fromEntity(gameCheckOutRepository.save(
         ParticipantGameEntity.builder()
             .status(ParticipantGameStatus.APPLY)

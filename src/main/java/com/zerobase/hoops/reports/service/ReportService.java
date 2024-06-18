@@ -30,25 +30,30 @@ public class ReportService {
   private final NotificationService notificationService;
 
   public String reportContents(String reportId) {
+    log.info("reportContents 시작");
     ReportEntity reportEntity = reportRepository.findById(
         Long.valueOf(reportId)).orElseThrow(
         () -> new CustomException(ErrorCode.NOT_EXIST_REPORTED)
     );
+    log.info("reportContents 종료");
     return reportEntity.getContent();
   }
 
   public Page<ReportListResponseDto> reportList(int page, int size) {
+    log.info("reportList 시작");
     Page<ReportEntity> reportPage = reportRepository.findByBlackListStartDateTimeIsNull(
         PageRequest.of(page, size));
-    List<ReportListResponseDto> reportList = reportPage.getContent().stream()
+    List<ReportListResponseDto> reportList = reportPage.getContent()
+        .stream()
         .map(ReportListResponseDto::of)
         .toList();
-
-    return new PageImpl<>(reportList, reportPage.getPageable(), reportPage.getTotalElements());
+    log.info("reportList 종료");
+    return new PageImpl<>(reportList, reportPage.getPageable(),
+        reportPage.getTotalElements());
   }
 
   public void reportUser(ReportDto request) {
-
+    log.info("reportUser 시작");
     UserEntity user = userRepository.findById(
             jwtTokenExtract.currentUser().getId())
         .orElseThrow(() -> new CustomException(
@@ -63,8 +68,14 @@ public class ReportService {
 
     notificationService.send(NotificationType.REPORT, findManger(),
         user.getNickName() + "에게서 신고가 접수되었습니다.");
-
     reportRepository.save(request.toEntity(user, reportedUser));
+    log.info(
+        String.format(
+            "[user_login_id] = %s = / [reported_user_login_id] = %s 신고완료",
+            user.getLoginId(),
+            reportedUser.getLoginId()
+        ));
+    log.info("reportUser 종료");
   }
 
   private void checkExist(ReportDto request, UserEntity user) {
