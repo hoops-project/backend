@@ -14,9 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
-    servers = {
-        @Server(url = "https://hoops.services", description = "Default Server url")
-    },
     info = @Info(
         title = "HOOPS API Document",
         description = "API Document",
@@ -27,11 +24,17 @@ import org.springframework.context.annotation.Configuration;
         )
     ),
     tags = {
-        @Tag(name = "1. USER", description = "회원 기능"),
-        @Tag(name = "2. AUTH", description = "인증/인가 기능"),
-        @Tag(name = "3. GAME", description = "경기 기능"),
-        @Tag(name = "4. REPORT", description = "신고 기능"),
-        @Tag(name = "5. OAUTH2", description = "소셜 로그인")
+        @Tag(name = "USER", description = "회원 기능"),
+        @Tag(name = "AUTH", description = "인증/인가 기능"),
+        @Tag(name = "OAUTH2", description = "소셜 로그인"),
+        @Tag(name = "GAME-USER", description = "경기 유저 기능"),
+        @Tag(name = "GAME-CREATOR", description = "경기 개설자 기능"),
+        @Tag(name = "PARTICIPANT", description = "경기 참가 기능"),
+        @Tag(name = "REPORT", description = "신고 기능"),
+        @Tag(name = "FRIEND", description = "친구 기능"),
+        @Tag(name = "INVITE", description = "초대 기능"),
+        @Tag(name = "ALARM", description = "알람 기능"),
+        @Tag(name = "MANAGER", description = "관리자 기능"),
     }
 )
 @Configuration
