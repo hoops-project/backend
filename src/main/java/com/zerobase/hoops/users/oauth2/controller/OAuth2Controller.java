@@ -42,13 +42,15 @@ public class OAuth2Controller {
   public ResponseEntity<Response> kakaoLogin(
       @RequestParam(name = "code") String code)
       throws IOException {
-    log.info("카카오 API 서버 code : " + code);
+    log.info("카카오 로그인 시작");
     UserDto userDto = oAuth2Service.kakaoLogin(code);
+    log.info("토큰 요청");
     TokenDto tokenDto = authService.getToken(userDto);
 
     HttpHeaders responseHeaders = new HttpHeaders();
     responseHeaders.set("Authorization", tokenDto.getAccessToken());
 
+    log.info("카카오 로그인 완료");
     return ResponseEntity.ok()
         .headers(responseHeaders)
         .body(KakaoDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));

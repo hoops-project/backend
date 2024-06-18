@@ -9,7 +9,6 @@ import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.oauth2.service.OAuth2Service;
 import com.zerobase.hoops.users.service.AuthService;
-import com.zerobase.hoops.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
-  private final UserService userService;
   private final OAuth2Service oAuth2Service;
   private final ManagerService managerService;
 
@@ -48,6 +46,8 @@ public class AuthController {
   public ResponseEntity<Response> logIn(
       @RequestBody @Validated LogInDto.Request request
   ) {
+    log.info("로그인 요청");
+    log.info("블랙리스트 여부 확인");
     managerService.checkBlackList(request.getLoginId());
     UserDto userDto = authService.logInUser(request);
     TokenDto tokenDto = authService.getToken(userDto);
@@ -55,6 +55,7 @@ public class AuthController {
     HttpHeaders responseHeaders = new HttpHeaders();
     responseHeaders.set("Authorization", tokenDto.getAccessToken());
 
+    log.info("로그인 성공 : {}", userDto.getLoginId());
     return ResponseEntity.ok()
         .headers(responseHeaders)
         .body(LogInDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));
@@ -70,12 +71,14 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
+    log.info("토큰 갱신 요청");
     TokenDto tokenDto = authService.refreshToken(request, userEntity);
-    UserDto userDto = userService.getUserInfo(tokenDto.getLoginId());
+    UserDto userDto = authService.getUserInfo(request, userEntity);
 
     HttpHeaders responseAccessToken = new HttpHeaders();
     responseAccessToken.set("Authorization", tokenDto.getAccessToken());
 
+    log.info("토큰 갱신 성공 : {}", userDto.getLoginId());
     return ResponseEntity.ok()
         .headers(responseAccessToken)
         .body(LogInDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));
@@ -91,10 +94,13 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity userEntity
   ) {
+    log.info("로그아웃 요청");
     if (userEntity.getLoginId().startsWith("kakao_")) {
+      log.info("카카오 로그아웃");
       oAuth2Service.kakaoLogout(request, userEntity);
     }
     authService.logOutUser(request, userEntity);
+    log.info("로그아웃 성공 : {}", userEntity.getLoginId());
 
     return ResponseEntity.ok(HttpStatus.OK);
   }
@@ -109,8 +115,10 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user
   ) {
+    log.info("회원 정보 조회 요청");
     UserDto userDto = authService.getUserInfo(request, user);
 
+    log.info("회원 정보 조회 성공 : {}", user.getLoginId());
     return ResponseEntity.ok(userDto);
   }
 
@@ -125,12 +133,14 @@ public class AuthController {
       @RequestBody @Validated EditDto.Request editDto,
       @AuthenticationPrincipal UserEntity user
   ) {
+    log.info("회원 정보 수정 요청");
     UserDto userDto = authService.editUserInfo(request, editDto, user);
     TokenDto tokenDto = authService.getToken(userDto);
 
     HttpHeaders responseHeaders = new HttpHeaders();
     responseHeaders.set("Authorization", tokenDto.getAccessToken());
 
+    log.info("회원 정보 수정 성공 : {}", user.getLoginId());
     return ResponseEntity.ok()
         .headers(responseHeaders)
         .body(EditDto.Response.fromDto(userDto, tokenDto.getRefreshToken()));
@@ -146,13 +156,16 @@ public class AuthController {
       HttpServletRequest request,
       @AuthenticationPrincipal UserEntity user
   ) {
+    log.info("회원 탈퇴 요청");
     if (user != null && user.getLoginId().startsWith("kakao")) {
+      log.info("카카오 회원 탈퇴");
       oAuth2Service.kakaoLogout(request, user);
       oAuth2Service.kakaoUnlink(request, user);
     }
 
     authService.deactivateUser(request, user);
 
+    log.info("회원 탈퇴 성공 : {}", user.getLoginId());
     return ResponseEntity.ok(HttpStatus.OK);
   }
 }

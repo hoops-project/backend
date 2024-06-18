@@ -32,7 +32,9 @@ public class UserService implements UserDetailsService {
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
   public UserDto signUpUser(Request request) {
+    log.info("회원 가입 시작: {}", request.getLoginId());
     if (!request.getPassword().equals(request.getPasswordCheck())) {
+      log.error("회원가입 에러 : {}", ErrorCode.NOT_MATCHED_PASSWORD.getDescription());
       throw new CustomException(ErrorCode.NOT_MATCHED_PASSWORD);
     }
 
@@ -45,20 +47,13 @@ public class UserService implements UserDetailsService {
       String email = request.getEmail();
       String nickName = request.getNickName();
 
-      boolean isExistId = idCheck(loginId);
-      boolean isExistEmail = emailCheck(email);
-      boolean isExistNickName = nickNameCheck(nickName);
-
-      if (!isExistId) {
-        throw new CustomException(ErrorCode.DUPLICATED_ID);
-      } else if (!isExistEmail) {
-        throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
-      } else if (!isExistNickName) {
-        throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
-      }
+      idCheck(loginId);
+      emailCheck(email);
+      nickNameCheck(nickName);
 
       String certificationNumber =
           CertificationProvider.createCertificationNumber();
+      log.info("인증 번호 생성: {}", certificationNumber);
       try {
         emailProvider.sendCertificationMail(loginId, email,
             certificationNumber);
@@ -70,44 +65,58 @@ public class UserService implements UserDetailsService {
       UserEntity signUpUser =
           userRepository.save(Request.toEntity(request));
 
+      log.info("회원 가입 완료: {}", signUpUser.getLoginId());
+
       return UserDto.fromEntity(signUpUser);
     } catch (NoSuchAlgorithmException e) {
+      log.error("암호화 에러 : {}", e);
       throw new RuntimeException(e);
     }
   }
 
   public boolean idCheck(String loginId) {
+    log.info("ID 중복 검사 시작: {}", loginId);
     boolean isExistId = userRepository.existsByLoginIdAndDeletedDateTimeNull(loginId);
     if (isExistId) {
+      log.error("ID 중복");
       throw new CustomException(ErrorCode.DUPLICATED_ID);
     }
 
+    log.info("ID 중복 검사 완료: {}", loginId);
     return true;
   }
 
   public boolean emailCheck(String email) {
+    log.info("EMAIL 중복 검사 시작: {}", email);
     boolean isExistEmail =
         userRepository.existsByEmailAndDeletedDateTimeNull(email);
     if (isExistEmail) {
+      log.error("EMAIL 중복");
       throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
     }
 
+    log.info("EMAIL 중복 검사 완료: {}", email);
     return true;
   }
 
   public boolean nickNameCheck(String nickName) {
+    log.info("별명 중복 검사 시작: {}", nickName);
     boolean isExistNickname =
         userRepository.existsByNickNameAndDeletedDateTimeNull(nickName);
     if (isExistNickname) {
+      log.error("별명 중복");
       throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
     }
 
+    log.info("별명 중복 검사 완료: {}", nickName);
     return true;
   }
 
   public void confirmEmail(
       String loginId, String email, String certificationNumber) {
+    log.info("이메일 인증 시작: {}, {}", loginId, email);
     if (!checkCertificationNumber(email, certificationNumber)) {
+      log.error("인증 번호 불일치");
       throw new CustomException(ErrorCode.NOT_MATCHED_NUMBER);
     }
 
@@ -117,24 +126,20 @@ public class UserService implements UserDetailsService {
 
     emailRepository.removeCertificationNumber(email);
     userRepository.save(user);
+    log.info("이메일 인증 완료: {}, {}", loginId, email);
   }
 
   private boolean checkCertificationNumber(
       String email, String certificationNumber) {
     boolean validatedEmail = emailRepository.hasKey(email);
     if (!validatedEmail) {
+      log.error("인증 번호 만료");
       throw new CustomException(ErrorCode.WRONG_EMAIL);
     }
 
     return emailRepository
         .getCertificationNumber(email)
         .equals(certificationNumber);
-  }
-
-  public UserDto getUserInfo(String loginId) {
-    UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    return UserDto.fromEntity(userEntity);
   }
 
   @Override
@@ -146,15 +151,18 @@ public class UserService implements UserDetailsService {
 
 
   public String findLoginId(String email) {
+    log.info("ID 찾기 시작: {}", email);
     UserEntity user =
         userRepository.findByEmailAndDeletedDateTimeNull(email)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+    log.info("ID 찾기 완료: {}", email);
     return user.getLoginId();
   }
 
   public boolean findPassword(String loginId) throws NoSuchAlgorithmException {
+    log.info("비밀번호 찾기 시작: {}", loginId);
     UserEntity user =
         userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
             .orElseThrow(
@@ -175,6 +183,7 @@ public class UserService implements UserDetailsService {
       return false;
     }
 
+    log.info("비밀번호 찾기 완료: {}", loginId);
     return true;
   }
 }

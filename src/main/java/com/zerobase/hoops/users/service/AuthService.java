@@ -58,7 +58,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
   public UserDto logInUser(LogInDto.Request request) {
-
+    log.info("로그인 시작 : {}", request.getLoginId());
     UserEntity user =
         userRepository.findByLoginIdAndDeletedDateTimeNull(request.getLoginId())
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -67,22 +67,28 @@ public class AuthService {
     String encodedPassword = user.getPassword();
     boolean isMatched = passwordEncoder.matches(password, encodedPassword);
     if (!isMatched) {
+      log.error("로그인 에러 : {}", ErrorCode.NOT_MATCHED_PASSWORD.getDescription());
       throw new CustomException(ErrorCode.NOT_MATCHED_PASSWORD);
     }
 
     if (!user.isEmailAuth()) {
+      log.error("로그인 에러 : {}", ErrorCode.USER_NOT_CONFIRM.getDescription());
       throw new CustomException(ErrorCode.USER_NOT_CONFIRM);
     }
 
+    log.info("로그인 성공 : {}", user.getLoginId());
     return UserDto.fromEntity(user);
   }
 
   public TokenDto getToken(UserDto userDto) {
+    log.info("토큰 생성 시작");
     String accessToken =
         tokenProvider.createAccessToken(userDto.getLoginId(),
             userDto.getEmail(), userDto.getRoles());
+    log.info("Access Token 생성 완료");
     String refreshToken =
         tokenProvider.createRefreshToken(userDto.getLoginId());
+    log.info("Refresh Token 생성 완료");
 
     return new TokenDto(userDto.getLoginId(), accessToken, refreshToken);
   }
@@ -91,18 +97,21 @@ public class AuthService {
   public TokenDto refreshToken(
       HttpServletRequest request, UserEntity userEntity
   ) {
+    log.info("토큰 갱신 시작");
     String refreshToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(refreshToken);
     String loginId = claims.get("sub", String.class);
 
     if (!userEntity.getLoginId().equals(loginId)) {
+      log.error("토큰 갱신 에러 : {}", ErrorCode.INVALID_TOKEN.getDescription());
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
     try {
       authRepository.findByLoginId(loginId);
     } catch (Exception e) {
+      log.error("토큰 갱신 에러 : {}", ErrorCode.NOT_FOUND_TOKEN.getDescription());
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
 
@@ -112,6 +121,7 @@ public class AuthService {
     String responseAccessToken =
         tokenProvider.createAccessToken(loginId, user.getEmail(), user.getRoles());
 
+    log.info("토큰 갱신 완료");
     return new TokenDto(loginId, responseAccessToken, refreshToken);
   }
 
@@ -120,6 +130,7 @@ public class AuthService {
     if (!ObjectUtils.isEmpty(token) && token.startsWith("Bearer ")) {
       return token.substring("Bearer ".length());
     } else {
+      log.error("토큰 없음");
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
   }
@@ -129,22 +140,28 @@ public class AuthService {
     if (!ObjectUtils.isEmpty(token)) {
       return token;
     } else {
+      log.error("토큰 없음");
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
   }
 
   public void logOutUser(
       HttpServletRequest request, UserEntity userEntity) {
+    log.info("로그아웃 시작");
     String accessToken = validateAccessTokenExistHeader(request);
+    log.info("Access Token 확인");
     String refreshToken = validateRefreshTokenExistHeader(request);
+    log.info("Refresh Token 확인");
 
     Claims claims = tokenProvider.parseClaims(accessToken);
     String loginId = claims.get("sub", String.class);
 
     if (tokenUserMatch(accessToken, refreshToken) &&
         loginId.equals(userEntity.getLoginId())) {
+      log.info("Refresh Token 삭제");
       authRepository.deleteByLoginId(loginId);
     } else {
+      log.error("로그아웃 에러 : {}", ErrorCode.INVALID_TOKEN.getDescription());
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
@@ -154,6 +171,7 @@ public class AuthService {
         String.valueOf(userEntity.getLoginId()));
 
     tokenProvider.addToLogOutList(accessToken);
+    log.info("로그아웃 완료");
   }
 
   private boolean tokenUserMatch(String accessToken, String refreshToken) {
@@ -172,6 +190,7 @@ public class AuthService {
 
   public UserDto editUserInfo(HttpServletRequest request,
       EditDto.Request editDto, UserEntity user) {
+    log.info("회원 정보 수정 시작");
     isSameLoginId(request, user);
     validateAccessTokenExistHeader(request);
 
@@ -183,6 +202,7 @@ public class AuthService {
     user.edit(editDto);
     userRepository.save(user);
 
+    log.info("회원 정보 수정 완료");
     return UserDto.fromEntity(user);
   }
 
@@ -193,12 +213,14 @@ public class AuthService {
     String loginId = claims.get("sub", String.class);
 
     if (!user.getLoginId().equals(loginId)) {
+      log.error("토큰 에러 : {}", ErrorCode.INVALID_TOKEN.getDescription());
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
   }
 
   @Transactional
   public void deactivateUser(HttpServletRequest request, UserEntity user) {
+    log.info("회원 탈퇴 시작");
     isSameLoginId(request, user);
     String accessToken = validateAccessTokenExistHeader(request);
     String refreshToken = validateRefreshTokenExistHeader(request);
@@ -209,7 +231,7 @@ public class AuthService {
 
     LocalDateTime now = LocalDateTime.now();
 
-    // 내가 생성한 경기 삭제
+    log.info("경기 테이블 삭제");
     List<GameEntity> gameList =
         gameRepository
             .findByUserIdAndDeletedDateTimeNull(user.getId());
@@ -217,7 +239,7 @@ public class AuthService {
       game.setDeletedDateTime(now);
       gameRepository.save(game);
 
-      // 내가 생성한 경기의 참가 테이블 삭제
+      log.info("참가 테이블 삭제");
       List<ParticipantGameEntity> participantList =
           participantGameRepository
               .findByGameIdAndStatusNotAndDeletedDateTimeNull(
@@ -229,7 +251,7 @@ public class AuthService {
             participantGameRepository.save(participantGame);
           });
 
-      // 내가 생성한 경기의 초대 테이블 삭제
+      log.info("초대 테이블 삭제");
       List<InviteEntity> inviteList = inviteRepository
           .findByInviteStatusAndGameId(
               InviteStatus.REQUEST, game.getId());
@@ -243,7 +265,7 @@ public class AuthService {
 
     });
 
-    // 내가 참가한 방의 참가 테이블에서 탈퇴 처리
+    log.info("참가 테이블 탈퇴");
     List<ParticipantGameEntity> participantList =
         participantGameRepository
             .findByUserIdAndStatusInAndWithdrewDateTimeNull(
@@ -255,7 +277,7 @@ public class AuthService {
           participantGameRepository.save(participantGame);
         });
 
-    // 내가 참가한 방의 초대에서 삭제
+    log.info("초대 테이블 삭제");
     List<InviteEntity> inviteList =
         inviteRepository
             .findByInviteStatusAndSenderUserIdOrReceiverUserId(
@@ -268,7 +290,7 @@ public class AuthService {
         }
     );
 
-    // 친구 목록에 있는 사람들 서로 삭제
+    log.info("친구 목록 삭제");
     List<FriendEntity> friendList =
         friendRepository
             .findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
@@ -279,11 +301,11 @@ public class AuthService {
       friendRepository.save(friend);
     });
 
-    // 로그 아웃
+    log.info("로그아웃");
     logOutUser(request, user);
 
-    // 회원 탈퇴 처리
     user.setDeletedDateTime(now);
     userRepository.save(user);
+    log.info("회원 탈퇴 완료");
   }
 }

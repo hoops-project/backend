@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
@@ -33,7 +35,9 @@ public class UserController {
   public ResponseEntity<Response> signUp(
       @RequestBody @Validated SignUpDto.Request request
   ) {
+    log.info("회원 가입 요청");
     UserDto signUpUser = userService.signUpUser(request);
+    log.info("회원 가입 성공 : {}", signUpUser.getLoginId());
     return ResponseEntity.ok(SignUpDto.Response.fromDto(signUpUser));
   }
 
@@ -45,7 +49,9 @@ public class UserController {
   public ResponseEntity<Boolean> idCheck(
       @RequestParam(name = "id") String id
   ) {
+    log.info("ID 중복 검사");
     boolean idCheck = userService.idCheck(id);
+    log.info("사용 ID : {}", id);
 
     return ResponseEntity.ok(idCheck);
   }
@@ -58,7 +64,9 @@ public class UserController {
   public ResponseEntity<Boolean> emailCheck(
       @RequestParam(name = "email") String email
   ) {
+    log.info("EMAIL 중복 검사");
     boolean idCheck = userService.emailCheck(email);
+    log.info("사용 EMAIL : {}", email);
 
     return ResponseEntity.ok(idCheck);
   }
@@ -71,7 +79,9 @@ public class UserController {
   public ResponseEntity<Boolean> nickNameCheck(
       @RequestParam(name = "nickName") String nickName
   ) {
+    log.info("별명 중복 검사");
     boolean nickNameCheck = userService.nickNameCheck(nickName);
+    log.info("사용 별명 : {}", nickName);
 
     return ResponseEntity.ok(nickNameCheck);
   }
@@ -86,7 +96,9 @@ public class UserController {
       @RequestParam(name = "email") String email,
       @RequestParam(name = "certificationNumber") String certificationNumber
   ) {
+    log.info("이메일 인증 요청");
     userService.confirmEmail(loginId, email, certificationNumber);
+    log.info("이메일 인증 성공");
 
     return ResponseEntity.ok("인증이 성공적으로 완료되었습니다.");
   }
@@ -99,7 +111,9 @@ public class UserController {
   public ResponseEntity<String> findLoginId(
       @RequestParam(name = "email") String email
   ) {
+    log.info("아이디 찾기 요청");
     String loginId = userService.findLoginId(email);
+    log.info("찾은 아이디 : {}", loginId);
 
     return ResponseEntity.ok(loginId);
   }
@@ -112,7 +126,9 @@ public class UserController {
   public ResponseEntity<Boolean> findPassword(
       @RequestParam(name = "loginId") String loginId
   ) throws NoSuchAlgorithmException {
+    log.info("비밀번호 찾기 요청");
     boolean success = userService.findPassword(loginId);
+    log.info("비밀번호 찾기 성공");
 
     return ResponseEntity.ok(success);
   }

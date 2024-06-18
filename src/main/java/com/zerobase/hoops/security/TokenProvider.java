@@ -46,24 +46,20 @@ public class TokenProvider {
   @Value("${spring.jwt.secret}")
   private String secretKey;
 
-  /**
-   * AccessToken 생성
-   */
   public String createAccessToken(String loginId, String email,
       List<String> role) {
+    log.info("Access Token 생성 시작");
     return generateAccessToken(loginId, email, role, ACCESS_TOKEN_EXPIRE_TIME);
   }
 
-  /**
-   * RefreshToken 생성
-   */
   public String createRefreshToken(String loginId) {
-
+    log.info("Refresh Token 생성 시작");
     String refreshToken =
         generateRefreshToken(loginId, REFRESH_TOKEN_EXPIRE_TIME);
 
     authRepository.saveRefreshToken(
         loginId, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
+    log.info("Refresh Token 저장 완료");
     return refreshToken;
   }
 
@@ -129,29 +125,29 @@ public class TokenProvider {
       checkLogOut(token);
       return !claims.getBody().getExpiration().before(new Date());
     } catch (IllegalArgumentException e) {
-      log.info("IllegalArgumentException!!");
+      log.error("IllegalArgumentException!!");
       throw new JwtException(ErrorCode.NOT_FOUND_TOKEN.getDescription());
     } catch (MalformedJwtException e) {
-      log.info("MalformedJwtException!!");
+      log.error("MalformedJwtException!!");
       throw new JwtException(ErrorCode.UNSUPPORTED_TOKEN.getDescription());
     } catch (ExpiredJwtException e) {
-      log.info("ExpiredJwtException!!");
+      log.error("ExpiredJwtException!!");
       throw new JwtException(ErrorCode.EXPIRED_TOKEN.getDescription());
     } catch (JwtException e) {
-      log.info("JwtException!!");
+      log.error("JwtException!!");
       throw new JwtException(ErrorCode.INVALID_TOKEN.getDescription());
     } catch (CustomException e) {
       if(e.getErrorCode().equals(ErrorCode.ALREADY_LOGOUT)){
-        log.info("CustomException!!");
+        log.error("CustomException!!");
         throw new JwtException(ErrorCode.ALREADY_LOGOUT.getDescription());
       } else if (e.getErrorCode().equals(ErrorCode.BAN_FOR_10DAYS)) {
-        log.info("CustomException!!");
+        log.error("CustomException!!");
         throw new JwtException(ErrorCode.BAN_FOR_10DAYS.getDescription());
       } else if (e.getErrorCode().equals(ErrorCode.EXPIRED_REFRESH_TOKEN)) {
-        log.info("CustomException!!");
+        log.error("CustomException!!");
         throw new JwtException(ErrorCode.EXPIRED_REFRESH_TOKEN.getDescription());
       } else {
-        log.info("CustomException!!");
+        log.error("CustomException!!");
         throw new JwtException(ErrorCode.ACCESS_DENIED.getDescription());
       }
     }

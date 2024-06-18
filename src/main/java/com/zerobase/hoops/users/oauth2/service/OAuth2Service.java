@@ -16,6 +16,7 @@ import com.zerobase.hoops.users.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OAuth2Service {
 
@@ -46,6 +48,7 @@ public class OAuth2Service {
   String adminId;
 
   public String responseUrl() {
+    log.info("카카오 로그인 요청");
     return authorizationUri + "?client_id=" + clientId +
         "&redirect_uri=https://hoops-frontend-jet.vercel.app/kakao/callback"
         + "&response_type=code";
@@ -53,11 +56,13 @@ public class OAuth2Service {
 
   public UserDto kakaoLogin(String code)
       throws IOException {
+    log.info("카카오 유저 정보 가져오기");
     KakaoUserInfoDto kakaoUser = getKakaoUserInfoDto(code);
     Properties properties = kakaoUser.getProperties();
     KakaoAccount kakaoAccount = kakaoUser.getKakao_account();
     String id = "kakao_" + kakaoUser.getId().toString();
 
+    log.info("카카오 유저 정보 등록");
     if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() == null
         && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
@@ -94,16 +99,22 @@ public class OAuth2Service {
 
       userRepository.save(KakaoDto.Request.toEntity(user));
     }
+    log.info("카카오 유저 정보 등록 성공");
     LogInDto.Request logInDto = kakaoUserLogin(id);
+    log.info("카카오 로그인 성공");
     return authService.logInUser(logInDto);
   }
 
   private KakaoUserInfoDto getKakaoUserInfoDto(String code)
       throws JsonProcessingException {
+    log.info("카카오 토큰 요청");
     ResponseEntity<String> accessTokenResponse = requestAccessToken(code);
+    log.info("카카오 토큰 요청 성공");
     KakaoOAuthTokenDto kakaoOAuthTokenDto = getAccessToken(accessTokenResponse);
+    log.info("카카오 유저 정보 요청");
     ResponseEntity<String> userInfoResponse =
         requestUserInfo(kakaoOAuthTokenDto);
+    log.info("카카오 유저 정보 요청 성공");
 
     return getUserInfo(userInfoResponse);
   }
