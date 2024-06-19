@@ -17,11 +17,10 @@ import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
-import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
-import com.zerobase.hoops.gameCreator.dto.GameDto.DeleteRequest;
-import com.zerobase.hoops.gameCreator.dto.GameDto.DetailResponse;
-import com.zerobase.hoops.gameCreator.dto.GameDto.ParticipantUser;
-import com.zerobase.hoops.gameCreator.dto.GameDto.UpdateRequest;
+import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
+import com.zerobase.hoops.gameCreator.dto.DeleteGameDto;
+import com.zerobase.hoops.gameCreator.dto.DetailGameDto;
+import com.zerobase.hoops.gameCreator.dto.UpdateGameDto;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -201,7 +200,7 @@ class GameServiceTest {
   @DisplayName("경기 생성 성공")
   public void testCreateGameSuccess() {
     // Given
-    CreateRequest createRequest = CreateRequest.builder()
+    CreateGameDto.Request createRequest = CreateGameDto.Request.builder()
         .title("테스트제목")
         .content("테스트내용")
         .headCount(10L)
@@ -222,7 +221,7 @@ class GameServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    GameEntity game = CreateRequest.toEntity(createRequest, requestUser);
+    GameEntity game = createRequest.toEntity(createRequest, requestUser);
 
     ParticipantGameEntity participantGame =
         ParticipantGameEntity.toGameCreatorEntity(game, requestUser, clock);
@@ -285,12 +284,10 @@ class GameServiceTest {
   @DisplayName("경기 생성 실패: 해당 시간 범위에 이미 경기가 존재")
   public void testCreateGameFailIfGameExistsInTimeRange() {
     // given
-    CreateRequest createRequest = CreateRequest.builder()
+    CreateGameDto.Request createRequest = CreateGameDto.Request.builder()
         .startDateTime(LocalDateTime.now().plusHours(1))
         .address("테스트 주소")
         .build();
-
-    
 
     //해당 시간 범위에 이미 경기가 존재한다고 가정
     checkGame(createRequest.getStartDateTime(), createRequest.getAddress(),
@@ -309,7 +306,7 @@ class GameServiceTest {
   @DisplayName("경기 생성 실패: 경기 시작 시간은 현재 시간으로부터 최소 30분 이후여야 합니다.")
   public void testCreateGameFailIfStartTimeLessThan30MinutesAhead() {
     // Given
-    CreateRequest createRequest = CreateRequest.builder()
+    CreateGameDto.Request createRequest = CreateGameDto.Request.builder()
         .startDateTime(LocalDateTime.now().plusMinutes(15))
         .address("테스트 주소")
         .build();
@@ -333,7 +330,7 @@ class GameServiceTest {
   @DisplayName("경기 생성 실패: 3:3 경기에 6~9명 설정을 하지 않았을때")
   public void testCreateGameFailWhenThreeOnThreeHeadCountNotInRange() {
     // given
-    CreateRequest createRequest = CreateRequest.builder()
+    CreateGameDto.Request createRequest = CreateGameDto.Request.builder()
         .startDateTime(LocalDateTime.now().plusHours(1))
         .headCount(5L)
         .matchFormat(MatchFormat.THREEONTHREE)
@@ -359,7 +356,7 @@ class GameServiceTest {
   @DisplayName("경기 생성 실패: 5:5 경기에 10~15명 설정을 하지 않았을때")
   public void testCreateGameFailWhenFiveOnFiveHeadCountNotInRange() {
     // given
-    CreateRequest createRequest = CreateRequest.builder()
+    CreateGameDto.Request createRequest = CreateGameDto.Request.builder()
         .startDateTime(LocalDateTime.now().plusHours(1))
         .headCount(5L)
         .matchFormat(MatchFormat.FIVEONFIVE)
@@ -389,11 +386,13 @@ class GameServiceTest {
     List<ParticipantGameEntity> participantGameEntityList =
         List.of(expectedCreatorParticipantGame);
 
-    List<ParticipantUser> participantUserList =
-        participantGameEntityList.stream().map(ParticipantUser::toDto).toList();
+    List<DetailGameDto.ParticipantUser> participantUserList =
+        participantGameEntityList.stream()
+            .map(DetailGameDto.ParticipantUser::toDto).toList();
 
-    DetailResponse expectedDetailResponse = DetailResponse.toDto
-        (expectedCreatedGame, participantUserList);
+    DetailGameDto.Response expectedDetailResponse =
+        new DetailGameDto.Response()
+            .toDto(expectedCreatedGame, participantUserList);
 
     when(gameRepository.findByIdAndDeletedDateTimeNull(gameId))
         .thenReturn(Optional.of(expectedCreatedGame));
@@ -405,7 +404,7 @@ class GameServiceTest {
         .thenReturn(participantGameEntityList);
 
     // when
-    DetailResponse detailResponse = gameService.validGetGameDetail(gameId);
+    DetailGameDto.Response detailResponse = gameService.validGetGameDetail(gameId);
 
     // Then
     assertEquals(expectedDetailResponse, detailResponse);
@@ -415,7 +414,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 성공")
   void updateGameSuccess() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .title("수정테스트제목")
         .content("수정테스트내용")
@@ -431,7 +430,8 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
-    GameEntity game = UpdateRequest.toEntity(updateRequest, expectedCreatedGame);
+    GameEntity game = updateRequest
+        .toEntity(updateRequest, expectedCreatedGame);
     
     // 경기 조회
     getGame(updateRequest.getGameId(), expectedCreatedGame);
@@ -457,7 +457,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 자신이 만든 경기가 아닐때")
   void updateGameFailIfNotMyCreatedGame() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(2L)
         .startDateTime(LocalDateTime.now().plusHours(1))
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
@@ -480,7 +480,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 해당 시간 범위에 이미 경기가 존재")
   void updateGameFailIfGameExistsInTimeRange() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .startDateTime(LocalDateTime.now().plusHours(1))
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
@@ -506,7 +506,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 경기 시작 시간은 현재 시간으로부터 최소 30분 이후여야 합니다.")
   void updateGameFailIfStartTimeLessThan30MinutesAhead() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .startDateTime(LocalDateTime.now().plusMinutes(15))
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
@@ -532,7 +532,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 변경 하려는 인원수가 팀원 수보다 작게 설정")
   void updateGameFailWhenParticipantCountIsTooLow() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .headCount(6L)
         .startDateTime(LocalDateTime.now().plusHours(1))
@@ -562,7 +562,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 팀원 중 남성이 있을 때 경기 성별을 여성으로 변경하려고 할 때")
   void updateGameFailWhenChangingGenderToFemaleWithMaleParticipants() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .headCount(10L)
         .startDateTime(LocalDateTime.now().plusHours(1))
@@ -597,7 +597,7 @@ class GameServiceTest {
   @DisplayName("경기 수정 실패 : 팀원 중 여성이 있을 때 경기 성별을 남성으로 변경하려고 할 때")
   void updateGameFailWhenChangingGenderToMaleWithFemaleParticipants() {
     // Given
-    UpdateRequest updateRequest = UpdateRequest.builder()
+    UpdateGameDto.Request updateRequest = UpdateGameDto.Request.builder()
         .gameId(1L)
         .headCount(10L)
         .startDateTime(LocalDateTime.now().plusHours(1))
@@ -632,7 +632,7 @@ class GameServiceTest {
   @DisplayName("경기 삭제 성공 : 경기 개설자가 삭제")
   void deleteGame_successGameCreator() {
     //Given
-    DeleteRequest deleteRequest = DeleteRequest.builder()
+    DeleteGameDto.Request deleteRequest = DeleteGameDto.Request.builder()
         .gameId(1L)
         .build();
 
@@ -747,7 +747,7 @@ class GameServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    GameEntity game = DeleteRequest.toEntity(expectedCreatedGame, clock);
+    GameEntity game = deleteRequest.toEntity(expectedCreatedGame, clock);
 
     when(gameRepository.save(game)).thenReturn(game);
 
@@ -765,7 +765,7 @@ class GameServiceTest {
   @DisplayName("경기 삭제 성공 : 팀원이 삭제")
   void deleteGame_successGameUser() {
     //Given
-    DeleteRequest deleteRequest = DeleteRequest.builder()
+    DeleteGameDto.Request deleteRequest = DeleteGameDto.Request.builder()
         .gameId(1L)
         .build();
 
@@ -800,7 +800,7 @@ class GameServiceTest {
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     ParticipantGameEntity withdrewPartEntity =
-        ParticipantGameEntity.setWithdraw(otherParticipantEntity, clock);
+        new ParticipantGameEntity().setWithdraw(otherParticipantEntity, clock);
 
     // 경기 조회
     getGame(deleteRequest.getGameId(), expectedCreatedGame);
@@ -825,7 +825,7 @@ class GameServiceTest {
   @DisplayName("경기 삭제 실패 : 경기 시작 30분 전에만 삭제 가능")
   void deleteGame_fail() {
     //Given
-    DeleteRequest deleteRequest = DeleteRequest.builder()
+    DeleteGameDto.Request deleteRequest = DeleteGameDto.Request.builder()
         .gameId(1L)
         .build();
 

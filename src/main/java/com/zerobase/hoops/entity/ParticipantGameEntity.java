@@ -115,7 +115,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setWithdraw(ParticipantGameEntity entity,
+  public ParticipantGameEntity setWithdraw(ParticipantGameEntity entity,
       Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
