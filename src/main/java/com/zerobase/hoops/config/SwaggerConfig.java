@@ -1,5 +1,9 @@
 package com.zerobase.hoops.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.core.converter.ModelConverters;
+import io.swagger.v3.core.jackson.ModelResolver;
+import io.swagger.v3.core.jackson.TypeNameResolver;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -9,6 +13,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,11 +39,33 @@ import org.springframework.context.annotation.Configuration;
         @Tag(name = "FRIEND", description = "친구 기능"),
         @Tag(name = "INVITE", description = "초대 기능"),
         @Tag(name = "ALARM", description = "알람 기능"),
-        @Tag(name = "MANAGER", description = "관리자 기능"),
+        @Tag(name = "MANAGER", description = "관리자 기능")
     }
 )
 @Configuration
 public class SwaggerConfig {
+
+  private final ObjectMapper objectMapper;
+
+  public SwaggerConfig(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
+
+  @PostConstruct
+  public void initialize() {
+    // 커스텀 타입 이름 해결을 위한 설정
+    TypeNameResolver innerClassAwareTypeNameResolver = new TypeNameResolver() {
+      @Override
+      public String getNameOfClass(Class<?> cls) {
+        String className = cls.getName();
+        int lastDotIndex = className.lastIndexOf('.');
+        return className.substring(lastDotIndex + 1).replace("$", ".");
+      }
+    };
+
+    ModelConverters.getInstance().addConverter(new ModelResolver(objectMapper, innerClassAwareTypeNameResolver));
+  }
+
 
   @Bean
   public OpenAPI openAPI() {
