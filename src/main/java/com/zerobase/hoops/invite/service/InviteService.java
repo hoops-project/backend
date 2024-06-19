@@ -23,9 +23,9 @@ import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
-import com.zerobase.hoops.invite.dto.InviteDto.CommonRequest;
-import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
-import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
+import com.zerobase.hoops.invite.dto.CommonInviteDto;
+import com.zerobase.hoops.invite.dto.RequestInviteDto;
+import com.zerobase.hoops.invite.dto.RequestInviteListDto;
 import com.zerobase.hoops.invite.repository.InviteRepository;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -59,10 +59,10 @@ public class InviteService {
   /**
    * 경기 초대 요청 전 validation
    */
-  public String validRequestInvite(CreateRequest request, UserEntity user) {
+  public CommonInviteDto.Response validRequestInvite(RequestInviteDto.Request request, UserEntity user) {
     log.info("loginId = {} validRequestInvite start", user.getLoginId());
 
-    String message = "";
+    CommonInviteDto.Response response = null;
 
     try {
       GameEntity game = getGame(request.getGameId());
@@ -101,7 +101,7 @@ public class InviteService {
       // 해당 경기에 이미 참가 하거나 요청한 경우 막음
       checkAcceptOrApplyGame(game, receiverUser);
 
-      message = requestInvite(user, receiverUser, game);
+      response = requestInvite(user, receiverUser, game);
 
     } catch (CustomException e) {
       log.warn("loginId = {} validRequestInvite CustomException message = {}",
@@ -114,32 +114,32 @@ public class InviteService {
     }
 
     log.info("loginId = {} validRequestInvite end", user.getLoginId());
-    return message;
+    return response;
   }
 
   /**
    * 경기 초대 요청
    */
-  private String requestInvite(UserEntity user, UserEntity receiverUser,
+  private CommonInviteDto.Response requestInvite(UserEntity user, UserEntity receiverUser,
       GameEntity game) {
 
-    InviteEntity inviteEntity = CreateRequest
+    InviteEntity inviteEntity = new RequestInviteDto.Request()
         .toEntity(user, receiverUser, game);
 
     inviteRepository.save(inviteEntity);
     log.info("loginId = {} invite requested ", user.getLoginId());
 
-    return game.getTitle() + "에 " + receiverUser.getNickName() + "을 초대 요청 "
-        + "했습니다.";
+    return new CommonInviteDto.Response().toDto(game.getTitle() + "에 " +
+        receiverUser.getNickName() + "을 초대 요청 했습니다.");
   }
 
   /**
    * 경기 초대 요청 취소 전 validation
    */
-  public String validCancelInvite(CommonRequest request, UserEntity user) {
+  public CommonInviteDto.Response validCancelInvite(CommonInviteDto.Request request, UserEntity user) {
     log.info("loginId = {} validCancelInvite start", user.getLoginId());
 
-    String message = "";
+    CommonInviteDto.Response response = null;
 
     try {
       InviteEntity inviteEntity = getInvite(request.getInviteId());
@@ -149,7 +149,7 @@ public class InviteService {
         throw new CustomException(NOT_SELF_REQUEST);
       }
 
-      message = cancelInvite(inviteEntity, user);
+      response = cancelInvite(inviteEntity, user);
 
     } catch (CustomException e) {
       log.warn("loginId = {} validCancelInvite CustomException message = {}",
@@ -162,28 +162,28 @@ public class InviteService {
     }
 
     log.info("loginId = {} validCancelInvite end", user.getLoginId());
-    return message;
+    return response;
   }
 
   /**
    * 경기 초대 요청 취소
    */
-  private String cancelInvite(InviteEntity inviteEntity, UserEntity user) {
+  private CommonInviteDto.Response cancelInvite(InviteEntity inviteEntity, UserEntity user) {
     InviteEntity result = InviteEntity.toCancelEntity(inviteEntity, clock);
 
     inviteRepository.save(result);
     log.info("loginId = {} invite canceled ", user.getLoginId());
 
-    return "초대 요청을 취소 했습니다.";
+    return new CommonInviteDto.Response().toDto("초대 요청을 취소 했습니다.");
   }
 
   /**
    * 경기 초대 요청 수락 전 validation
    */
-  public String validAcceptInvite(CommonRequest request, UserEntity user) {
+  public CommonInviteDto.Response validAcceptInvite(CommonInviteDto.Request request, UserEntity user) {
     log.info("loginId = {} validAcceptInvite start", user.getLoginId());
 
-    String message = "";
+    CommonInviteDto.Response response = null;
 
     try {
 
@@ -216,7 +216,7 @@ public class InviteService {
       // 해당 경기에 이미 참가 하거나 요청한 경우 막음
       checkAcceptOrApplyGame(game, user);
 
-      message = acceptInvite(inviteEntity, user);
+      response = acceptInvite(inviteEntity, user);
 
     } catch (CustomException e) {
       log.warn("loginId = {} validAcceptInvite CustomException message = {}",
@@ -229,13 +229,13 @@ public class InviteService {
     }
 
     log.info("loginId = {} validAcceptInvite end", user.getLoginId());
-    return message;
+    return response;
   }
 
   /**
    * 경기 초대 요청 수락
    */
-  private String acceptInvite(InviteEntity inviteEntity, UserEntity user) {
+  private CommonInviteDto.Response acceptInvite(InviteEntity inviteEntity, UserEntity user) {
 
     LocalDateTime nowDateTime = LocalDateTime.now(clock);
 
@@ -243,40 +243,43 @@ public class InviteService {
     inviteRepository.save(result);
     log.info("loginId = {} invite accpeted ", user.getLoginId());
 
-    String message = "";
+    CommonInviteDto.Response response = null;
 
     // 경기 개설자가 초대 한 경우 수락 -> 경기 참가
     if(Objects.equals(inviteEntity.getGame().getUser().getId(),
         inviteEntity.getSenderUser().getId())) {
 
       ParticipantGameEntity gameCreatorInvite =
-          ParticipantGameEntity.gameCreatorInvite(inviteEntity, nowDateTime);
+          new ParticipantGameEntity().gameCreatorInvite
+              (inviteEntity, nowDateTime);
 
       participantGameRepository.save(gameCreatorInvite);
       log.info("loginId = {} participant accpeted ", user.getLoginId());
 
-      message = "경기 개설자가 초대 했으므로 경기에 바로 참가합니다.";
+      response = new CommonInviteDto.Response()
+          .toDto("경기 개설자가 초대 했으므로 경기에 바로 참가합니다.");
 
     } else { // 경기 개설자가 아닌 팀원이 초대 한 경우 -> 경기 개설자가 수락,거절 진행
       ParticipantGameEntity gameUserInvite =
-          ParticipantGameEntity.gameUserInvite(inviteEntity);
+          new ParticipantGameEntity().gameUserInvite(inviteEntity);
 
       participantGameRepository.save(gameUserInvite);
       log.info("loginId = {} participant applyed ", user.getLoginId());
 
-      message = "참가자가 초대 했으므로 경기 개설자가 수락하면 경기에 참가할수 있습니다.";
+      response = new CommonInviteDto.Response()
+          .toDto("참가자가 초대 했으므로 경기 개설자가 수락하면 경기에 참가할수 있습니다.");
     }
 
-    return message;
+    return response;
   }
 
   /**
    * 경기 초대 요청 거절 전 validation
    */
-  public String validRejectInvite(CommonRequest request, UserEntity user) {
+  public CommonInviteDto.Response validRejectInvite(CommonInviteDto.Request request, UserEntity user) {
     log.info("loginId = {} validRejectInvite start", user.getLoginId());
 
-    String message = "";
+    CommonInviteDto.Response response = null;
 
     try {
 
@@ -285,7 +288,7 @@ public class InviteService {
       // 본인이 받은 초대 요청만 거절 가능
       checkMyReceiveInvite(inviteEntity, user);
 
-      message = rejectInvite(inviteEntity, user);
+      response = rejectInvite(inviteEntity, user);
 
     } catch (CustomException e) {
       log.warn("loginId = {} validRejectInvite CustomException message = {}",
@@ -298,28 +301,29 @@ public class InviteService {
     }
 
     log.info("loginId = {} validRejectInvite end", user.getLoginId());
-    return message;
+    return response;
   }
 
   /**
    * 경기 초대 요청 거절
    */
-  private String rejectInvite(InviteEntity inviteEntity, UserEntity user) {
+  private CommonInviteDto.Response rejectInvite(InviteEntity inviteEntity, UserEntity user) {
     InviteEntity result = InviteEntity.toRejectEntity(inviteEntity, clock);
 
     inviteRepository.save(result);
     log.info("loginId = {} invite rejected", user.getLoginId());
 
-    return "경기 초대 요청을 거절 했습니다.";
+    return new CommonInviteDto.Response()
+        .toDto("경기 초대 요청을 거절 했습니다.");
   }
 
   /**
    * 내가 초대 요청 받은 리스트 조회 전 validation
    */
-  public List<InviteMyListResponse> validGetRequestInviteList(Pageable pageable, UserEntity user) {
+  public List<RequestInviteListDto.Response> validGetRequestInviteList(Pageable pageable, UserEntity user) {
     log.info("loginId = {} validGetRequestInviteList start", user.getLoginId());
 
-    List<InviteMyListResponse> result = null;
+    List<RequestInviteListDto.Response> result = null;
 
     try {
 
@@ -342,7 +346,7 @@ public class InviteService {
   /**
    * 내가 초대 요청 받은 리스트 조회
    */
-  private List<InviteMyListResponse> getRequestInviteList(UserEntity user,
+  private List<RequestInviteListDto.Response> getRequestInviteList(UserEntity user,
       Pageable pageable) {
     Page<InviteEntity> inviteEntityList =
         inviteRepository.findByInviteStatusAndReceiverUserId
@@ -351,7 +355,7 @@ public class InviteService {
     log.info("loginId = {} requestInviteList got", user.getLoginId());
 
     return inviteEntityList.stream()
-        .map(InviteMyListResponse::toDto)
+        .map(RequestInviteListDto.Response::toDto)
         .toList();
   }
 

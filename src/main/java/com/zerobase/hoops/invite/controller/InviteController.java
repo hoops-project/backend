@@ -1,9 +1,9 @@
 package com.zerobase.hoops.invite.controller;
 
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.invite.dto.InviteDto.CommonRequest;
-import com.zerobase.hoops.invite.dto.InviteDto.CreateRequest;
-import com.zerobase.hoops.invite.dto.InviteDto.InviteMyListResponse;
+import com.zerobase.hoops.invite.dto.CommonInviteDto;
+import com.zerobase.hoops.invite.dto.RequestInviteDto;
+import com.zerobase.hoops.invite.dto.RequestInviteListDto;
 import com.zerobase.hoops.invite.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
@@ -34,61 +34,65 @@ public class InviteController {
   @Operation(summary = "경기 초대 요청")
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/request")
-  public ResponseEntity<Map<String, String>> requestInvite(
-      @RequestBody @Validated CreateRequest request,
+  public ResponseEntity<CommonInviteDto.Response> requestInvite(
+      @RequestBody @Validated RequestInviteDto.Request request,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} requestInvite start", user.getLoginId());
-    String message = inviteService.validRequestInvite(request, user);
+    CommonInviteDto.Response result = inviteService.validRequestInvite
+        (request, user);
     log.info("loginId = {} requestInvite end", user.getLoginId());
-    return ResponseEntity.ok(Map.of("message", message));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 초대 요청 취소")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/cancel")
-  public ResponseEntity<Map<String, String>> cancelInvite(
-      @RequestBody @Validated CommonRequest request,
+  public ResponseEntity<CommonInviteDto.Response> cancelInvite(
+      @RequestBody @Validated CommonInviteDto.Request request,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} cancelInvite start", user.getLoginId());
-    String message = inviteService.validCancelInvite(request, user);
+    CommonInviteDto.Response result = inviteService.validCancelInvite
+        (request, user);
     log.info("loginId = {} cancelInvite end", user.getLoginId());
-    return ResponseEntity.ok(Map.of("message", message));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 초대 요청 수락")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/accept")
-  public ResponseEntity<Map<String, String>> acceptInvite(
-      @RequestBody @Validated CommonRequest request,
+  public ResponseEntity<CommonInviteDto.Response> acceptInvite(
+      @RequestBody @Validated CommonInviteDto.Request request,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} acceptInvite start", user.getLoginId());
-    String message = inviteService.validAcceptInvite(request, user);
+    CommonInviteDto.Response result = inviteService.validAcceptInvite
+        (request, user);
     log.info("loginId = {} acceptInvite end", user.getLoginId());
-    return ResponseEntity.ok(Map.of("message", message));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 초대 요청 거절")
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/receive/reject")
-  public ResponseEntity<Map<String, String>> rejectInvite(
-      @RequestBody @Validated CommonRequest request,
+  public ResponseEntity<CommonInviteDto.Response> rejectInvite(
+      @RequestBody @Validated CommonInviteDto.Request request,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} rejectInvite start", user.getLoginId());
-    String message = inviteService.validRejectInvite(request, user);
+    CommonInviteDto.Response result = inviteService.validRejectInvite
+        (request, user);
     log.info("loginId = {} rejectInvite end", user.getLoginId());
-    return ResponseEntity.ok(Map.of("message", message));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "내가 초대 요청 받은 리스트 조회")
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myList")
-  public ResponseEntity<Map<String, List<InviteMyListResponse>>> getInviteRequestList(
+  public ResponseEntity<Map<String, List<RequestInviteListDto.Response>>> getInviteRequestList(
       @PageableDefault(page = 0, size = 10,
           sort = "requestedDateTime", direction = Direction.ASC) Pageable pageable,
       @AuthenticationPrincipal UserEntity user
   ) {
     log.info("loginId = {} getInviteRequestList start", user.getLoginId());
-    List<InviteMyListResponse> result =
+    List<RequestInviteListDto.Response> result =
         inviteService.validGetRequestInviteList(pageable, user);
     log.info("loginId = {} getInviteRequestList end", user.getLoginId());
     return ResponseEntity.ok(Map.of("inviteList", result));
