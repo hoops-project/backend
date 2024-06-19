@@ -224,7 +224,8 @@ class GameServiceTest {
     GameEntity game = createRequest.toEntity(createRequest, requestUser);
 
     ParticipantGameEntity participantGame =
-        ParticipantGameEntity.toGameCreatorEntity(game, requestUser, clock);
+        new ParticipantGameEntity().toGameCreatorEntity
+            (game, requestUser, clock);
 
     ChatRoomEntity createdChatRoom = ChatRoomEntity.builder()
         .gameEntity(game)
@@ -726,7 +727,7 @@ class GameServiceTest {
 
     participantGameList.forEach(participantGame -> {
       ParticipantGameEntity entity =
-          ParticipantGameEntity.setDelete(participantGame, clock);
+          new ParticipantGameEntity().setDelete(participantGame, clock);
       deletedParticipantGameList.add(entity);
       when(participantGameRepository.save(entity)).thenReturn(entity);
     });

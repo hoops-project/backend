@@ -16,8 +16,8 @@ import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.CommonRequest;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.ListResponse;
+import com.zerobase.hoops.gameCreator.dto.CommonParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.ParticipantListDto;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -198,8 +198,8 @@ class ParticipantGameServiceTest {
     Page<ParticipantGameEntity> expectedPage =
         new PageImpl<>(applyParticipantGameList, pageable, applyParticipantGameList.size());
 
-    List<ListResponse> expectedList = expectedPage.stream()
-        .map(ListResponse::toDto)
+    List<ParticipantListDto.Response> expectedList = expectedPage.stream()
+        .map(ParticipantListDto.Response::toDto)
         .toList();
 
     getGame(gameId, expectedCreatedGame);
@@ -207,7 +207,7 @@ class ParticipantGameServiceTest {
     getParticipantPage(APPLY, gameId, pageable, expectedPage);
 
     // when
-    List<ListResponse> result = participantGameService
+    List<ParticipantListDto.Response> result = participantGameService
         .validApplyParticipantList(gameId, pageable, createdUser);
 
     // Then
@@ -256,8 +256,8 @@ class ParticipantGameServiceTest {
     Page<ParticipantGameEntity> expectedPage =
         new PageImpl<>(acceptParticipantGameList, pageable, acceptParticipantGameList.size());
 
-    List<ListResponse> expectedList = expectedPage.stream()
-        .map(ListResponse::toDto)
+    List<ParticipantListDto.Response> expectedList = expectedPage.stream()
+        .map(ParticipantListDto.Response::toDto)
         .toList();
     
     getGame(gameId, expectedCreatedGame);
@@ -265,7 +265,7 @@ class ParticipantGameServiceTest {
     getParticipantPage(ACCEPT, gameId, pageable, expectedPage);
 
     // when
-    List<ListResponse> result = participantGameService
+    List<ParticipantListDto.Response> result = participantGameService
         .validAcceptParticipantList(gameId, pageable, createdUser);
 
     // Then
@@ -276,7 +276,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 수락 성공")
   void testAcceptParticipantSuccess() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -287,7 +287,8 @@ class ParticipantGameServiceTest {
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     ParticipantGameEntity acceptParticipantGame =
-        ParticipantGameEntity.setAccept(expectedApplyParticipantGame, clock);
+        new ParticipantGameEntity().setAccept
+            (expectedApplyParticipantGame, clock);
 
     
 
@@ -315,7 +316,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 수락 실패 : 경기 개설자 참가 정보를 조회 했을때")
   void testAcceptParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -344,7 +345,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 수락 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
   void testAcceptParticipantFailIfNotGameCreator() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -377,7 +378,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 수락 실패 : 경기가 이미 시작 함")
   void testAcceptParticipantFailIfGameAlreadyStarted() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -409,7 +410,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 수락 실패 : 해당 경기에 참가자가 다 참")
   void testAcceptParticipantFailIfGameAlreadyFull() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -438,7 +439,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 거절 성공")
   void testRejectParticipantSuccess() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -459,7 +460,8 @@ class ParticipantGameServiceTest {
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     ParticipantGameEntity rejectParticipantGame =
-        ParticipantGameEntity.setReject(expectedApplyParticipantGame, clock);
+        new ParticipantGameEntity().setReject
+            (expectedApplyParticipantGame, clock);
 
     
 
@@ -484,7 +486,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 거절 실패 : 경기 개설자 참가 정보 조회 할때")
   void testRejectParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -513,7 +515,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 거절 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
   void testRejectParticipantFailIfNotGameCreator() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -546,7 +548,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 참가자 강퇴 성공")
   void testKickoutParticipantSuccess() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -568,7 +570,8 @@ class ParticipantGameServiceTest {
         .build();
 
     ParticipantGameEntity kickoutParticipantGame =
-        ParticipantGameEntity.setKickout(expectedAcceptParticipantGame, clock);
+        new ParticipantGameEntity().setKickout
+            (expectedAcceptParticipantGame, clock);
 
     
 
@@ -593,7 +596,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 강퇴 실패 : 경기 개설자 참가 정보 조회 할때")
   void testKickoutParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -622,7 +625,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 강퇴 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
   void testKickoutParticipantFailIfNotGameCreator() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
@@ -656,7 +659,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 참가자 강퇴 실패 : 경기가 이미 시작 함")
   void testKickoutParticipantFailIfGameAlreadyStarted() {
     // Given
-    CommonRequest request = CommonRequest.builder()
+    CommonParticipantDto.Request request = CommonParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 

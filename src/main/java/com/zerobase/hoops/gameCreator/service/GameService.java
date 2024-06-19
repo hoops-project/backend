@@ -104,7 +104,7 @@ public class GameService {
 
     // 경기 개설자는 경기에 참가인 상태로 있어야 함
     ParticipantGameEntity participantGame =
-        ParticipantGameEntity.toGameCreatorEntity(game, user, clock);
+        new ParticipantGameEntity().toGameCreatorEntity(game, user, clock);
     log.info("loginId = {} participantGame created ", user.getLoginId());
 
     participantGameRepository.save(participantGame);
@@ -294,7 +294,7 @@ public class GameService {
 
     participantGameEntityList.forEach(participantGame -> {
       ParticipantGameEntity entity =
-          ParticipantGameEntity.setDelete(participantGame, clock);
+          new ParticipantGameEntity().setDelete(participantGame, clock);
       participantGameRepository.save(entity);
     });
     log.info("loginId = {} participantGame deleted ", user.getLoginId());

@@ -66,7 +66,7 @@ public class ParticipantGameEntity {
   @JoinColumn(nullable = false)
   private UserEntity user;
 
-  public static ParticipantGameEntity toGameCreatorEntity(
+  public ParticipantGameEntity toGameCreatorEntity(
       GameEntity gameEntity,
       UserEntity userEntity,
       Clock clock) {
@@ -78,7 +78,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setAccept(ParticipantGameEntity entity,
+  public ParticipantGameEntity setAccept(ParticipantGameEntity entity,
       Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
@@ -90,7 +90,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setReject(ParticipantGameEntity entity,
+  public ParticipantGameEntity setReject(ParticipantGameEntity entity,
       Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
@@ -102,7 +102,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setKickout(ParticipantGameEntity entity,
+  public ParticipantGameEntity setKickout(ParticipantGameEntity entity,
       Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
@@ -128,7 +128,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity setDelete(ParticipantGameEntity entity,
+  public ParticipantGameEntity setDelete(ParticipantGameEntity entity,
       Clock clock) {
     return ParticipantGameEntity.builder()
         .id(entity.getId())
@@ -141,7 +141,7 @@ public class ParticipantGameEntity {
         .build();
   }
 
-  public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity,
+  public ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity,
       LocalDateTime nowDateTime) {
     return ParticipantGameEntity.builder()
             .status(ParticipantGameStatus.ACCEPT)
@@ -152,7 +152,7 @@ public class ParticipantGameEntity {
             .build();
   }
 
-  public static ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
+  public ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.APPLY)
         .game(inviteEntity.getGame())

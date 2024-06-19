@@ -1,14 +1,10 @@
 package com.zerobase.hoops.gameCreator.dto;
 
 import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,14 +12,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-public class ParticipantDto {
+public class ParticipantListDto {
 
   @Getter
   @ToString
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class ListResponse {
+  public static class Response {
     private Long participantId;
 
     private LocalDate birthday;
@@ -38,9 +34,8 @@ public class ParticipantDto {
 
     private String mannerPoint;
 
-    public static ListResponse toDto(
-        ParticipantGameEntity participantGameEntity){
-      return ListResponse.builder()
+    public static Response toDto(ParticipantGameEntity participantGameEntity){
+      return Response.builder()
           .participantId(participantGameEntity.getId())
           .birthday(participantGameEntity.getUser().getBirthday())
           .gender(participantGameEntity.getUser().getGender())
@@ -55,7 +50,7 @@ public class ParticipantDto {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      ListResponse that = (ListResponse) o;
+      Response that = (Response) o;
       return Objects.equals(participantId, that.participantId) &&
           Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&
@@ -71,17 +66,6 @@ public class ParticipantDto {
           playStyle, ability, mannerPoint);
     }
 
-  }
-
-  @Getter
-  @ToString
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class CommonRequest {
-    @NotNull(message = "참가 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long participantId;
   }
 
 }
