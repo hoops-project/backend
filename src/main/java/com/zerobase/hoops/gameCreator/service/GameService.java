@@ -27,6 +27,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.dto.CommonGameDto;
 import com.zerobase.hoops.gameCreator.dto.CommonGameDto.Response;
+import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto.Request;
 import com.zerobase.hoops.gameCreator.dto.DeleteGameDto;
 import com.zerobase.hoops.gameCreator.dto.DetailGameDto;
@@ -65,7 +66,8 @@ public class GameService {
   /**
    * 경기 생성 전 validation
    */
-  public CommonGameDto.Response validCreateGame(Request request, UserEntity user) {
+  public CommonGameDto.Response validCreateGame(
+      CreateGameDto.Request request, UserEntity user) {
     log.info("loginId = {} validCreateGame start", user.getLoginId());
 
     Response response = null;
@@ -97,7 +99,7 @@ public class GameService {
    */
   private CommonGameDto.Response createGame(Request request, UserEntity user) {
     // 경기 생성
-    GameEntity game = request.toEntity(request, user);
+    GameEntity game = new CreateGameDto.Request().toEntity(request, user);
 
     gameRepository.save(game);
     log.info("loginId = {} game created", user.getLoginId());
@@ -231,7 +233,7 @@ public class GameService {
    */
   private CommonGameDto.Response updateGame(UpdateGameDto.Request request,
       GameEntity game, UserEntity user) {
-    GameEntity updateGame = request.toEntity(request, game);
+    GameEntity updateGame = new UpdateGameDto.Request().toEntity(request, game);
     gameRepository.save(updateGame);
     log.info("loginId = {} game updated ", user.getLoginId());
 
@@ -261,7 +263,7 @@ public class GameService {
 
       // 경기 개최자가 삭제 시 -> 경기 삭제
       if(Objects.equals(user.getId(), game.getUser().getId())) {
-        response = deleteGame(request, game, user);
+        response = deleteGame(game, user);
       } else { // 팀원이 삭제 시 -> 팀원 탈퇴
         response = withdrewGame(game, user);
       }
@@ -284,8 +286,7 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  private CommonGameDto.Response deleteGame(DeleteGameDto.Request request,
-      GameEntity game, UserEntity user) {
+  private CommonGameDto.Response deleteGame(GameEntity game, UserEntity user) {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 조회
     List<ParticipantGameEntity> participantGameEntityList =
@@ -311,7 +312,7 @@ public class GameService {
     log.info("loginId = {} invite deleted ", user.getLoginId());
 
     // 경기 삭제
-    GameEntity gameEntity = request.toEntity(game, clock);
+    GameEntity gameEntity = new DeleteGameDto.Request().toEntity(game, clock);
     gameRepository.save(gameEntity);
     log.info("loginId = {} game deleted ", user.getLoginId());
 
@@ -329,7 +330,7 @@ public class GameService {
             .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
     ParticipantGameEntity result
-        = participantGameEntity.setWithdraw(participantGameEntity, clock);
+        = new ParticipantGameEntity().setWithdraw(participantGameEntity, clock);
 
     participantGameRepository.save(result);
 

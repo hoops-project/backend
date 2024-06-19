@@ -221,7 +221,8 @@ class GameServiceTest {
     when(clock.instant()).thenReturn(fixedInstant);
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    GameEntity game = createRequest.toEntity(createRequest, requestUser);
+    GameEntity game = new CreateGameDto.Request().toEntity
+        (createRequest, requestUser);
 
     ParticipantGameEntity participantGame =
         new ParticipantGameEntity().toGameCreatorEntity
@@ -431,8 +432,8 @@ class GameServiceTest {
         .matchFormat(MatchFormat.FIVEONFIVE)
         .build();
 
-    GameEntity game = updateRequest
-        .toEntity(updateRequest, expectedCreatedGame);
+    GameEntity game = new UpdateGameDto.Request().toEntity
+        (updateRequest, expectedCreatedGame);
     
     // 경기 조회
     getGame(updateRequest.getGameId(), expectedCreatedGame);
@@ -631,7 +632,7 @@ class GameServiceTest {
 
   @Test
   @DisplayName("경기 삭제 성공 : 경기 개설자가 삭제")
-  void deleteGame_successGameCreator() {
+  void deleteGameSuccessGameCreator() {
     //Given
     DeleteGameDto.Request deleteRequest = DeleteGameDto.Request.builder()
         .gameId(1L)
@@ -717,7 +718,8 @@ class GameServiceTest {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버가 자기 자신만 있다고 가정
     when(participantGameRepository.findByStatusInAndGameId
-        (List.of(ACCEPT, APPLY), gameId)).thenReturn(participantGameList);
+        (List.of(ACCEPT, APPLY), expectedCreatedGame.getId()))
+        .thenReturn(participantGameList);
 
     Instant fixedInstant = fixedDeletedDateTime.atZone(ZoneId.systemDefault())
         .toInstant();
@@ -764,7 +766,7 @@ class GameServiceTest {
 
   @Test
   @DisplayName("경기 삭제 성공 : 팀원이 삭제")
-  void deleteGame_successGameUser() {
+  void deleteGameSuccessGameUser() {
     //Given
     DeleteGameDto.Request deleteRequest = DeleteGameDto.Request.builder()
         .gameId(1L)
