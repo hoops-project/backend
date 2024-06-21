@@ -82,6 +82,8 @@ public class ParticipantGameController {
   }
 
   @Operation(summary = "경기 지원자 수락")
+  @ApiResponse(responseCode = "200", description = "경기 참가자 리스트 조회 성공",
+      content = @Content(schema = @Schema(implementation = AcceptParticipantDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/accept")
   public ResponseEntity<AcceptParticipantDto.Response> acceptParticipant(
@@ -95,6 +97,8 @@ public class ParticipantGameController {
   }
 
   @Operation(summary = "경기 지원자 거절")
+  @ApiResponse(responseCode = "200", description = "경기 참가자 리스트 조회 성공",
+      content = @Content(schema = @Schema(implementation = RejectParticipantDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/reject")
   public ResponseEntity<RejectParticipantDto.Response> rejectParticipant(
@@ -108,6 +112,8 @@ public class ParticipantGameController {
   }
 
   @Operation(summary = "경기 참가자 강퇴")
+  @ApiResponse(responseCode = "200", description = "경기 참가자 리스트 조회 성공",
+      content = @Content(schema = @Schema(implementation = KickoutParticipantDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @PatchMapping("/kickout")
   public ResponseEntity<KickoutParticipantDto.Response> kickoutParticipant(
