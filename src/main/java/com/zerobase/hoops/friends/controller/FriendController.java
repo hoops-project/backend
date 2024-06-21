@@ -196,7 +196,7 @@ public class FriendController {
   }
 
   @Operation(summary = "내가 친구 요청 받은 리스트 조회")
-  @ApiResponse(responseCode = "200", description = "경기 초대 친구 리스트 성공",
+  @ApiResponse(responseCode = "200", description = "내가 친구 요청 받은 리스트 성공",
       content = @Content(schema = @Schema(implementation = RequestFriendListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/requestFriendList")

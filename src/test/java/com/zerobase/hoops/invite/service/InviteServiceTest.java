@@ -22,7 +22,9 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
-import com.zerobase.hoops.invite.dto.CommonInviteDto;
+import com.zerobase.hoops.invite.dto.AcceptInviteDto;
+import com.zerobase.hoops.invite.dto.CancelInviteDto;
+import com.zerobase.hoops.invite.dto.RejectInviteDto;
 import com.zerobase.hoops.invite.dto.RequestInviteDto;
 import com.zerobase.hoops.invite.dto.RequestInviteListDto;
 import com.zerobase.hoops.invite.repository.InviteRepository;
@@ -96,7 +98,6 @@ class InviteServiceTest {
   private LocalDateTime fixedRejectedDateTime;
 
   private RequestInviteDto.Request request;
-  private CommonInviteDto.Request commonRequest;
 
   private InviteEntity requestInviteEntity;
   private InviteEntity cancelInviteEntity;
@@ -115,9 +116,6 @@ class InviteServiceTest {
     request = RequestInviteDto.Request.builder()
         .gameId(1L)
         .receiverUserId(2L)
-        .build();
-    commonRequest = CommonInviteDto.Request.builder()
-        .inviteId(1L)
         .build();
     requestUser = UserEntity.builder()
         .id(1L)
@@ -246,7 +244,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 성공")
-  public void requestInviteGame_success() {
+  public void requestInviteGameSuccess() {
     //Given
     
     // 해당 경기 조회
@@ -297,7 +295,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 해당 경기가 초대 불가능일 때")
-  public void requestInviteGame_failIfGameInviteNo() {
+  public void requestInviteGameFailIfGameInviteNo() {
     //Given
     createdGame1.setInviteYn(false);
 
@@ -315,7 +313,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 경기가 이미 시작이 되었을 때")
-  public void requestInviteGame_failIfGameStarted() {
+  public void requestInviteGameFailIfGameStarted() {
     //Given
     createdGame1.setStartDateTime(LocalDateTime.now().minusMinutes(1));
 
@@ -334,7 +332,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 해당 경기에 참가해 있지 않은 사람이 초대를 할 경우")
-  public void requestInviteGame_failIfNotParticipantUserRequestGameInvite() {
+  public void requestInviteGameFailIfNotParticipantUserRequestGameInvite() {
     //Given
 
     // 해당 경기 조회
@@ -355,7 +353,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 해당 경기 인원이 다 찰 경우")
-  public void requestInviteGame_failIfFulledGame() {
+  public void requestInviteGameFailIfFulledGame() {
     //Given
 
     // 해당 경기 조회
@@ -379,7 +377,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 친구가 아닌 사람이 요청할 때")
-  public void requestInviteGame_failIfNotFriendRequestInvite() {
+  public void requestInviteGameFailIfNotFriendRequestInvite() {
     //Given
 
     // 해당 경기 조회
@@ -409,7 +407,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 해당 경기에 이미 초대 요청 되어 있을 때")
-  public void requestInviteGame_failIfAlreadyRequestGameInvite() {
+  public void requestInviteGameFailIfAlreadyRequestGameInvite() {
     //Given
 
     // 해당 경기 조회
@@ -443,7 +441,7 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 실패 : 해당 경기에 이미 참가 하거나 요청한 경우")
-  public void requestInviteGame_failIfAlreadyAcceptOrApplyGame() {
+  public void requestInviteGameFailIfAlreadyAcceptOrApplyGame() {
     //Given
 
     // 해당 경기 조회
@@ -481,8 +479,12 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 취소 성공")
-  public void cancelInvitation_success() {
+  public void cancelInvitationSuccess() {
     //Given
+    CancelInviteDto.Request request = CancelInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     InviteEntity expectedcancelInviteEntity = InviteEntity.builder()
         .id(1L)
         .inviteStatus(InviteStatus.CANCEL)
@@ -500,7 +502,7 @@ class InviteServiceTest {
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     cancelInviteEntity = InviteEntity.toCancelEntity(
         expectedGameCreatorRequestInviteEntity, clock);
@@ -508,7 +510,7 @@ class InviteServiceTest {
     when(inviteRepository.save(cancelInviteEntity)).thenReturn(cancelInviteEntity);
 
     // when
-    inviteService.validCancelInvite(commonRequest, requestUser);
+    inviteService.validCancelInvite(request, requestUser);
 
     // Then
     assertEquals(expectedcancelInviteEntity, cancelInviteEntity);
@@ -516,16 +518,20 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 취소 실패 : 본인이 경기 초대 요청한 것이 아닐때")
-  public void cancelInvitation_failIfNotMyRequestInvitationToGame() {
+  public void cancelInvitationFailIfNotMyRequestInvitationToGame() {
     //Given
+    CancelInviteDto.Request request = CancelInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     expectedGameCreatorRequestInviteEntity.assignSenderUser(receiverUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validCancelInvite(commonRequest, requestUser);
+      inviteService.validCancelInvite(request, requestUser);
     });
 
     // then
@@ -534,8 +540,12 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 수락 성공 : 경기 개설자가 요청할 때")
-  public void acceptInvitation_successIfRequestByGameCreator() {
+  public void acceptInvitationSuccessIfRequestByGameCreator() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     Instant fixedInstant = fixedAcceptedDateTime.atZone(ZoneId.systemDefault())
         .toInstant();
 
@@ -562,7 +572,7 @@ class InviteServiceTest {
             (expectedGameCreatorRequestInviteEntity, nowDateTime);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -594,7 +604,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.validAcceptInvite(commonRequest, receiverUser);
+    inviteService.validAcceptInvite(request, receiverUser);
 
     // Then
     verify(participantGameRepository)
@@ -610,8 +620,12 @@ class InviteServiceTest {
 
   @Test
   @DisplayName("경기 초대 요청 수락 성공 : 팀원이 초대한 경우")
-  public void acceptInvitation_successIfRequestByGameParticipant() {
+  public void acceptInvitationSuccessIfRequestByGameParticipant() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     Instant fixedInstant = fixedAcceptedDateTime.atZone(ZoneId.systemDefault())
         .toInstant();
 
@@ -638,7 +652,7 @@ class InviteServiceTest {
 
 
     // 해당 초대 정보 조회
-    getGameParticipantRequestInviteEntity(commonRequest.getInviteId());
+    getGameParticipantRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(otherUser.getId(),
@@ -670,7 +684,7 @@ class InviteServiceTest {
         ArgumentCaptor.forClass(ParticipantGameEntity.class);
 
     // when
-    inviteService.validAcceptInvite(commonRequest, otherUser);
+    inviteService.validAcceptInvite(request, otherUser);
 
     // Then
     verify(participantGameRepository)
@@ -688,15 +702,19 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 본인이 받은 초대 요청이 아닐때")
   public void acceptInvitation_failIfNotMyRequestInvite() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     expectedGameCreatorRequestInviteEntity.assignReceiverUser(requestUser);
 
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest, receiverUser);
+      inviteService.validAcceptInvite(request, receiverUser);
     });
 
     // then
@@ -707,9 +725,12 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 친구가 아닌 사람이 초대 요청 했을때")
   public void acceptInvitation_failIfNotFriendRequestInvite() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구가 아니 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -717,7 +738,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest, receiverUser);
+      inviteService.validAcceptInvite(request, receiverUser);
     });
 
     // then
@@ -728,9 +749,12 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 초대한 사람이 해당 경기에 참가해 있지 않을 때")
   public void acceptInvitation_failIfSenderUserNotParticipantGame() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -742,7 +766,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest, receiverUser);
+      inviteService.validAcceptInvite(request, receiverUser);
     });
 
     // then
@@ -753,9 +777,12 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 해당 경기에 인원이 다 찼을 때")
   public void acceptInvitation_failIfFulledGame() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -770,7 +797,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest, receiverUser);
+      inviteService.validAcceptInvite(request, receiverUser);
     });
 
     // then
@@ -781,9 +808,12 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 수락 실패 : 수락 하는 사람이 해당 경기에 참가 및 요청 했을 때")
   public void acceptInvitation_failIfApplyOrAcceptGame() {
     //Given
+    AcceptInviteDto.Request request = AcceptInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // 초대 한 사람이 친구 라고 가정
     checkFriendUser(receiverUser.getId(),
@@ -802,7 +832,7 @@ class InviteServiceTest {
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validAcceptInvite(commonRequest, receiverUser);
+      inviteService.validAcceptInvite(request, receiverUser);
     });
 
     // then
@@ -813,6 +843,10 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 거절 성공")
   public void rejectInvitation_success() {
     //Given
+    RejectInviteDto.Request request = RejectInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     Instant fixedInstant = fixedRejectedDateTime.atZone(ZoneId.systemDefault())
         .toInstant();
 
@@ -820,7 +854,7 @@ class InviteServiceTest {
     when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     InviteEntity rejectEntity = InviteEntity.toRejectEntity
         (expectedGameCreatorRequestInviteEntity, clock);
@@ -830,7 +864,7 @@ class InviteServiceTest {
         .thenReturn(rejectEntity);
 
     // when
-    inviteService.validRejectInvite(commonRequest, receiverUser);
+    inviteService.validRejectInvite(request, receiverUser);
 
     // Then
     assertEquals(expectedGameCreatorRejectInviteEntity ,rejectEntity);
@@ -840,14 +874,18 @@ class InviteServiceTest {
   @DisplayName("경기 초대 요청 거절 실패 : 본인이 받은 초대 요청이 아닐때")
   public void rejectInvitation_failIfNotMyRequestInvitation() {
     //Given
+    RejectInviteDto.Request request = RejectInviteDto.Request.builder()
+        .inviteId(1L)
+        .build();
+
     expectedGameCreatorRequestInviteEntity.assignReceiverUser(requestUser);
 
     // 해당 초대 정보 조회
-    getGameCreatorRequestInviteEntity(commonRequest.getInviteId());
+    getGameCreatorRequestInviteEntity(request.getInviteId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
-      inviteService.validRejectInvite(commonRequest, receiverUser);
+      inviteService.validRejectInvite(request, receiverUser);
     });
 
     // then
