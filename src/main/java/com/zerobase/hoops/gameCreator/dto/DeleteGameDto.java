@@ -1,6 +1,8 @@
 package com.zerobase.hoops.gameCreator.dto;
 
 import com.zerobase.hoops.entity.GameEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -19,6 +21,10 @@ public class DeleteGameDto {
   @Builder
   public static class Request {
 
+    @Schema(
+        description = "경기 pk",
+        defaultValue = "1",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;
 
@@ -41,6 +47,22 @@ public class DeleteGameDto {
           .cityName(game.getCityName())
           .matchFormat(game.getMatchFormat())
           .user(game.getUser())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class Response {
+
+    String message;
+
+    public DeleteGameDto.Response toDto(String message) {
+      return DeleteGameDto.Response.builder()
+          .message(message)
           .build();
     }
   }

@@ -66,11 +66,11 @@ public class GameService {
   /**
    * 경기 생성 전 validation
    */
-  public CommonGameDto.Response validCreateGame(
+  public CreateGameDto.Response validCreateGame(
       CreateGameDto.Request request, UserEntity user) {
     log.info("loginId = {} validCreateGame start", user.getLoginId());
 
-    Response response = null;
+    CreateGameDto.Response response = null;
 
     try {
       validCreateAndUpdateGame(request.getHeadCount(),
@@ -97,7 +97,7 @@ public class GameService {
   /**
    * 경기 생성
    */
-  private CommonGameDto.Response createGame(Request request, UserEntity user) {
+  private CreateGameDto.Response createGame(Request request, UserEntity user) {
     // 경기 생성
     GameEntity game = new CreateGameDto.Request().toEntity(request, user);
 
@@ -117,7 +117,8 @@ public class GameService {
     chatRoomRepository.save(chatRoom);
     log.info("loginId = {} chatRoom created ", user.getLoginId());
 
-    return new Response().toDto(game.getTitle() + " 경기가 생성되었습니다.");
+    return new CreateGameDto.Response().toDto(
+        game.getTitle() + " 경기가 생성되었습니다.");
   }
 
   /**
@@ -158,10 +159,10 @@ public class GameService {
   /**
    * 경기 수정 전 validation 체크
    */
-  public CommonGameDto.Response validUpdateGame(
+  public UpdateGameDto.Response validUpdateGame(
       UpdateGameDto.Request request, UserEntity user) {
     log.info("loginId = {} validUpdateGame start", user.getLoginId());
-    CommonGameDto.Response response = null;
+    UpdateGameDto.Response response = null;
 
     try {
       // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
@@ -231,22 +232,23 @@ public class GameService {
   /**
    * 경기 수정
    */
-  private CommonGameDto.Response updateGame(UpdateGameDto.Request request,
+  private UpdateGameDto.Response updateGame(UpdateGameDto.Request request,
       GameEntity game, UserEntity user) {
     GameEntity updateGame = new UpdateGameDto.Request().toEntity(request, game);
     gameRepository.save(updateGame);
     log.info("loginId = {} game updated ", user.getLoginId());
 
-    return new Response().toDto(updateGame.getTitle() + " 경기가 수정되었습니다.");
+    return new UpdateGameDto.Response().toDto(
+        updateGame.getTitle() + " 경기가 수정되었습니다.");
   }
 
   /**
    * 경기 삭제 전 validation 체크
    */
-  public CommonGameDto.Response validDeleteGame(DeleteGameDto.Request request, UserEntity user) {
+  public DeleteGameDto.Response validDeleteGame(DeleteGameDto.Request request, UserEntity user) {
     log.info("loginId = {} validDeleteGame start", user.getLoginId());
 
-    CommonGameDto.Response response = null;
+    DeleteGameDto.Response response = null;
 
     try {
 
@@ -286,7 +288,7 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  private CommonGameDto.Response deleteGame(GameEntity game, UserEntity user) {
+  private DeleteGameDto.Response deleteGame(GameEntity game, UserEntity user) {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 조회
     List<ParticipantGameEntity> participantGameEntityList =
@@ -316,13 +318,14 @@ public class GameService {
     gameRepository.save(gameEntity);
     log.info("loginId = {} game deleted ", user.getLoginId());
 
-    return new Response().toDto(game.getTitle() + " 경기가 삭제되었습니다.");
+    return new DeleteGameDto.Response().toDto(
+        game.getTitle() + " 경기가 삭제되었습니다.");
   }
 
   /**
    * 경기 팀원 탈퇴
    */
-  private CommonGameDto.Response withdrewGame(GameEntity game, UserEntity user) {
+  private DeleteGameDto.Response withdrewGame(GameEntity game, UserEntity user) {
 
     ParticipantGameEntity participantGameEntity =
         participantGameRepository.findByStatusAndGameIdAndUserId
@@ -334,7 +337,7 @@ public class GameService {
 
     participantGameRepository.save(result);
 
-    return new Response().toDto(game.getTitle() + " 경기에 탈퇴했습니다.");
+    return new DeleteGameDto.Response().toDto(game.getTitle() + " 경기에 탈퇴했습니다.");
   }
 
   /**

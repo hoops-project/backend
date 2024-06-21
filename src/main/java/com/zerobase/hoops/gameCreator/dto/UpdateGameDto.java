@@ -6,6 +6,8 @@ import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.validation.ValidStartTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,46 +27,92 @@ public class UpdateGameDto {
   @Builder
   public static class Request{
 
+    @Schema(
+        description = "경기 pk",
+        defaultValue = "1",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
     private Long gameId;
 
+    @Schema(
+        description = "제목",
+        defaultValue = "노량진근린공원에서 3:3할사람 모여라",
+        maxLength = 50,
+        requiredMode = RequiredMode.REQUIRED)
     @NotBlank(message = "제목은 필수 입력 값 입니다.")
     @Size(max = 50, message = "제목은 최대 50자 입니다.")
     private String title;
 
+    @Schema(
+        description = "규칙",
+        defaultValue = "경기 시간: 단축된 시간 내에서 빠른 게임을 진행하기 위해 경기 시간을 10분으로 제한합니다.",
+        maxLength = 300,
+        requiredMode = RequiredMode.REQUIRED)
     @NotBlank(message = "내용은 필수 입력 값 입니다.")
     @Size(max = 300, message = "내용은 최대 300자 입니다.")
     private String content;
 
+    @Schema(description = "인원수",
+        defaultValue = "6",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "인원 수는 필수 입력 값 입니다.")
     private Long headCount;
 
+    @Schema(description = "실내외",
+        defaultValue = "OUTDOOR",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "실내외는 필수 입력 값 입니다.")
     private FieldStatus fieldStatus;
 
+    @Schema(description = "성별",
+        defaultValue = "ALL",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "성별은 필수 입력 값 입니다.")
     private Gender gender;
 
+    @Schema(description = "시작날짜",
+        defaultValue = "2026-01-01T10:00:00",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "시작 날짜는 필수 입력 값 입니다.")
     @ValidStartTime
     private LocalDateTime startDateTime;
 
+    @Schema(description = "친구 초대 여부",
+        defaultValue = "true",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "친구 초대 여부는 필수 입력 값 입니다.")
     private Boolean inviteYn;
 
+    @Schema(description = "주소",
+        defaultValue = "서울 동작구 매봉로6길 16",
+        maxLength = 200,
+        requiredMode = RequiredMode.REQUIRED)
     @NotBlank(message = "주소는 필수 입력 값 입니다.")
     @Size(max = 200, message = "주소는 최대 200자 입니다.")
     private String address;
 
+    @Schema(description = "위치명",
+        defaultValue = "노량진근린공원 농구장",
+        maxLength = 100,
+        requiredMode = RequiredMode.REQUIRED)
     @NotBlank(message = "위치명 필수 입력 값 입니다.")
     private String placeName;
 
+    @Schema(description = "위도",
+        defaultValue = "37.508265883367905",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "위도는 필수 입력 값 입니다.")
     private Double latitude;
 
+    @Schema(description = "경도",
+        defaultValue = "126.95456123655546",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "경도는 필수 입력 값 입니다.")
     private Double longitude;
 
+    @Schema(description = "경기 형식",
+        defaultValue = "THREEONTHREE",
+        requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
@@ -86,6 +134,23 @@ public class UpdateGameDto {
           .cityName(CityName.getCityName(request.getAddress()))
           .matchFormat(request.getMatchFormat())
           .user(game.getUser())
+          .build();
+    }
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class Response {
+
+    @Schema(description = "메세지", example = "노량진근린공원에서 3:3할사람 모여라 경기가 수정되었습니다.")
+    String message;
+
+    public UpdateGameDto.Response toDto(String message) {
+      return UpdateGameDto.Response.builder()
+          .message(message)
           .build();
     }
   }
