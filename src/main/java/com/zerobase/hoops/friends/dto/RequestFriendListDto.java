@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-public class FriendListDto {
+public class RequestFriendListDto {
 
   @Getter
   @ToString
@@ -22,25 +22,25 @@ public class FriendListDto {
   @Builder
   public static class Response {
 
-    @Schema(description = "친구 리스트 조회 유저 pk", example = "3")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 pk", example = "2")
     private Long userId;
 
-    @Schema(description = "친구 리스트 조회 유저 생년월일", example = "1999-01-01")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 생년월일", example = "1995-01-01")
     private LocalDate birthday;
 
-    @Schema(description = "친구 리스트 조회 유저 성별", example = "MALE")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 성별", example = "MALE")
     private GenderType gender;
 
-    @Schema(description = "친구 리스트 유저 닉네임", example = "파브리")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 닉네임", example = "구름")
     private String nickName;
 
-    @Schema(description = "친구 리스트 유저 플레이스타일", example = "BALANCE")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 플레이스타일", example = "BALANCE")
     private PlayStyleType playStyle;
 
-    @Schema(description = "친구 리스트 유저 능력", example = "SPEED")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 능력", example = "SPEED")
     private AbilityType ability;
 
-    @Schema(description = "친구 리스트 유저 매너점수", example = "3.5")
+    @Schema(description = "내가 친구 요청 받은 리스트 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
     @Schema(description = "친구 pk", example = "1")
@@ -48,13 +48,13 @@ public class FriendListDto {
 
     public static Response toDto(FriendEntity friendEntity) {
       return Response.builder()
-          .userId(friendEntity.getFriendUser().getId())
-          .birthday(friendEntity.getFriendUser().getBirthday())
-          .gender(friendEntity.getFriendUser().getGender())
-          .nickName(friendEntity.getFriendUser().getNickName())
-          .playStyle(friendEntity.getFriendUser().getPlayStyle())
-          .ability(friendEntity.getFriendUser().getAbility())
-          .mannerPoint(friendEntity.getFriendUser().getStringAverageRating())
+          .userId(friendEntity.getUser().getId())
+          .birthday(friendEntity.getUser().getBirthday())
+          .gender(friendEntity.getUser().getGender())
+          .nickName(friendEntity.getUser().getNickName())
+          .playStyle(friendEntity.getUser().getPlayStyle())
+          .ability(friendEntity.getUser().getAbility())
+          .mannerPoint(friendEntity.getUser().getStringAverageRating())
           .friendId(friendEntity.getId())
           .build();
     }

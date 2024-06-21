@@ -18,10 +18,15 @@ import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.friends.dto.AcceptFriendDto;
 import com.zerobase.hoops.friends.dto.ApplyFriendDto;
-import com.zerobase.hoops.friends.dto.CommonFriendDto;
+import com.zerobase.hoops.friends.dto.CancelFriendDto;
+import com.zerobase.hoops.friends.dto.DeleteFriendDto;
 import com.zerobase.hoops.friends.dto.FriendListDto;
 import com.zerobase.hoops.friends.dto.InviteFriendListDto;
+import com.zerobase.hoops.friends.dto.RejectFriendDto;
+import com.zerobase.hoops.friends.dto.RequestFriendListDto;
+import com.zerobase.hoops.friends.dto.SearchFriendListDto;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
@@ -289,7 +294,7 @@ class FriendServiceTest {
   @DisplayName("친구 신청 취소 성공")
   void testCancelFriendSuccess() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    CancelFriendDto.Request request = CancelFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -327,7 +332,7 @@ class FriendServiceTest {
   @DisplayName("친구 신청 취소 실패 : 자기 자신이 한 친구 신청이 아님")
   void testCancelFriendFailIfNotSelfFriendApply() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    CancelFriendDto.Request request = CancelFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -352,7 +357,7 @@ class FriendServiceTest {
   @DisplayName("친구 수락 성공")
   void testAcceptFriendSuccess() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -427,7 +432,7 @@ class FriendServiceTest {
   @DisplayName("친구 수락 실패 : 자신이 받은 친구 신청이 아님")
   void testAcceptFriendFailIfNotSelfReceiveFriendApply() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -452,7 +457,7 @@ class FriendServiceTest {
   @DisplayName("친구 수락 실패 : 자신 친구 목록이 30명 일때")
   void testAcceptFriendFailIfMyFriendFull() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -475,7 +480,7 @@ class FriendServiceTest {
   @DisplayName("친구 수락 실패 : 상대방 친구 목록이 30명 일때")
   void testAcceptFriendFailIfOtherFriendFull() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -502,7 +507,7 @@ class FriendServiceTest {
   @DisplayName("친구 거절 성공")
   void testRejectFriendSuccess() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    RejectFriendDto.Request request = RejectFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -540,7 +545,7 @@ class FriendServiceTest {
   @DisplayName("친구 거절 실패 : 자신이 받은 친구 신청이 아님")
   void testRejectFriendFailIfNotSelfReceiveFriendApply() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    RejectFriendDto.Request request = RejectFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -565,7 +570,7 @@ class FriendServiceTest {
   @DisplayName("친구 삭제 성공")
   void testDeleteFriendSuccess() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    DeleteFriendDto.Request request = DeleteFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -642,7 +647,7 @@ class FriendServiceTest {
   @DisplayName("친구 삭제 실패 : 내가 받은 친구가 아닐때")
   void testDeleteFriendFailIfNotMyReceiveFriendAccept() {
     // Given
-    CommonFriendDto.Request request = CommonFriendDto.Request.builder()
+    DeleteFriendDto.Request request = DeleteFriendDto.Request.builder()
         .friendId(1L)
         .build();
 
@@ -674,7 +679,7 @@ class FriendServiceTest {
     String nickName = "test";
     Pageable pageable = PageRequest.of(0, 4);
 
-    FriendListDto.Response friendListResponse1 = FriendListDto.Response.builder()
+    SearchFriendListDto.Response friendListResponse1 = SearchFriendListDto.Response.builder()
         .userId(2L)
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test1")
@@ -683,7 +688,7 @@ class FriendServiceTest {
         .friendId(1L)
         .build();
 
-    FriendListDto.Response friendListResponse2 = FriendListDto.Response.builder()
+    SearchFriendListDto.Response friendListResponse2 = SearchFriendListDto.Response.builder()
         .userId(3L)
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test2")
@@ -692,17 +697,17 @@ class FriendServiceTest {
         .friendId(null)
         .build();
 
-    List<FriendListDto.Response> listResponseFriendList =
+    List<SearchFriendListDto.Response> listResponseFriendList =
         List.of(friendListResponse1, friendListResponse2);
 
-    Page<FriendListDto.Response> searchResponsePage =
+    Page<SearchFriendListDto.Response> searchResponsePage =
         new PageImpl<>(listResponseFriendList, pageable, 2);
 
     when(friendCustomRepository.findBySearchFriendList
         (user.getId(), nickName, pageable)).thenReturn(searchResponsePage);
 
     // when
-    Page<FriendListDto.Response> result =
+    Page<SearchFriendListDto.Response> result =
         friendService.validSearchFriend(nickName, pageable, user);
 
     // Then
@@ -823,9 +828,9 @@ class FriendServiceTest {
     Page<FriendEntity> friendEntityPage =
         new PageImpl<>(friendEntityList, pageable, 1);
 
-    List<FriendListDto.Response> expectedRequestFriendList
+    List<RequestFriendListDto.Response> expectedRequestFriendList
         = friendEntityList.stream()
-        .map(FriendListDto.Response::toRequestFriendListDto)
+        .map(RequestFriendListDto.Response::toDto)
         .toList();
 
     when(friendRepository.findByStatusAndFriendUserId
@@ -833,7 +838,7 @@ class FriendServiceTest {
         .thenReturn(friendEntityPage);
 
     // when
-    List<FriendListDto.Response> requestFriendList
+    List<RequestFriendListDto.Response> requestFriendList
         = friendService.validGetRequestFriendList(pageable, user);
 
     // Then

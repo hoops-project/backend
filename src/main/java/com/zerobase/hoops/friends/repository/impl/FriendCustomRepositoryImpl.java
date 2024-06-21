@@ -9,6 +9,7 @@ import com.zerobase.hoops.entity.QParticipantGameEntity;
 import com.zerobase.hoops.entity.QUserEntity;
 import com.zerobase.hoops.friends.dto.FriendListDto;
 import com.zerobase.hoops.friends.dto.InviteFriendListDto;
+import com.zerobase.hoops.friends.dto.SearchFriendListDto;
 import com.zerobase.hoops.friends.repository.FriendCustomRepository;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
@@ -31,7 +32,7 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
   }
 
   @Override
-  public Page<FriendListDto.Response> findBySearchFriendList
+  public Page<SearchFriendListDto.Response> findBySearchFriendList
       (Long userId, String nickName, Pageable pageable) {
     QUserEntity user = QUserEntity.userEntity;
     QFriendEntity friend = QFriendEntity.friendEntity;
@@ -72,8 +73,8 @@ public class FriendCustomRepositoryImpl implements FriendCustomRepository {
     int pageSize = pageable.getPageSize();
 
     // 결과 쿼리 생성
-    List<FriendListDto.Response> result = jpaQueryFactory
-        .select(Projections.constructor(FriendListDto.Response.class, user.id,
+    List<SearchFriendListDto.Response> result = jpaQueryFactory
+        .select(Projections.constructor(SearchFriendListDto.Response.class, user.id,
             user.birthday,
                 user.gender, user.nickName, user.playStyle, user.ability,
                 user.stringAverageRating, friend.id))

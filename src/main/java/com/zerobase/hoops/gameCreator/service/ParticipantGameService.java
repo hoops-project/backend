@@ -193,7 +193,7 @@ public class ParticipantGameService {
         result.getGame().getTitle() + "에 참가가 수락되었습니다.");
 
     return new AcceptParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 수락 했습니다.");
+        result.getUser().getNickName() + "을(를) 경기에 수락 했습니다.");
 
   }
 
@@ -249,7 +249,7 @@ public class ParticipantGameService {
     log.info("kickoutParticipant end");
 
     return new RejectParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 거절 했습니다.");
+        result.getUser().getNickName() + "을(를) 경기에 거절 했습니다.");
   }
 
 
@@ -305,7 +305,7 @@ public class ParticipantGameService {
         , result.getGame().getTitle() + "에서 강퇴당하였습니다.");
 
     return new KickoutParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 강퇴 했습니다.");
+        result.getUser().getNickName() + "을(를) 경기에 강퇴 했습니다.");
   }
 
   // 리스트 조회

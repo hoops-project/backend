@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/game-creator/participant")
 @RequiredArgsConstructor
-@Tag(name = "PARTICIPANT", description = "경기 개설자 API")
+@Tag(name = "PARTICIPANT", description = "경기 참여 API")
 public class ParticipantGameController {
 
   private final ParticipantGameService participantGameService;
@@ -50,23 +50,18 @@ public class ParticipantGameController {
   @GetMapping("/apply/list")
   public ResponseEntity<Map<String, List<ApplyParticipantListDto.Response>>> getApplyParticipantList(
       @RequestParam("gameId")
-      @Parameter(name = "gameId", description = "경기 아이디",
+      @Parameter(name = "gameId", description = "경기 pk",
           example = "1", required = true) Long gameId,
-      @Parameter(name = "page", description = "페이지 번호", example = "0", required = true)
+      @Parameter(name = "page", description = "페이지 번호", example = "0",
+          required = true)
       @RequestParam(defaultValue = "0") int page,
-
-      @Parameter(name = "size", description = "페이지 크기", example = "10", required = true)
+      @Parameter(name = "size", description = "페이지 크기", example = "10",
+          required = true)
       @RequestParam(defaultValue = "10") int size,
-
-      @Parameter(name = "sort", description = "정렬 기준", example = "createdDateTime", required = true)
-      @RequestParam(defaultValue = "createdDateTime") String sort,
-
-      @Parameter(name = "direction", description = "정렬 방향", example = "ASC", required = true)
-      @RequestParam(defaultValue = "ASC") Direction direction,
-
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} getApplyParticipantList start", user.getLoginId());
-    Pageable pageable = PageRequest.of(page, size, direction, sort);
+    Pageable pageable = PageRequest.of(page, size,
+        Direction.ASC, "createdDateTime");
     List<ApplyParticipantListDto.Response> result =
         participantGameService.validApplyParticipantList(gameId, pageable, user);
 
@@ -82,23 +77,18 @@ public class ParticipantGameController {
   @GetMapping("/accept/list")
   public ResponseEntity<Map<String, List<AcceptParticipantListDto.Response>>> getAcceptParticipantList(
       @RequestParam("gameId")
-      @Parameter(name = "gameId", description = "경기 아이디",
+      @Parameter(name = "gameId", description = "경기 pk",
           example = "1", required = true) Long gameId,
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
-
-      @Parameter(name = "size", description = "페이지 크기", example = "10", required = true)
+      @Parameter(name = "size", description = "페이지 크기", example = "10",
+          required = true)
       @RequestParam(defaultValue = "10") int size,
-
-      @Parameter(name = "sort", description = "정렬 기준", example = "createdDateTime", required = true)
-      @RequestParam(defaultValue = "createdDateTime") String sort,
-
-      @Parameter(name = "direction", description = "정렬 방향", example = "ASC", required = true)
-      @RequestParam(defaultValue = "ASC") Direction direction,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} getAcceptParticipantList start", user.getLoginId());
-    Pageable pageable = PageRequest.of(page, size, direction, sort);
+    Pageable pageable = PageRequest.of(page, size,
+        Direction.ASC, "createdDateTime");
     List<AcceptParticipantListDto.Response> result =
         participantGameService.validAcceptParticipantList(gameId, pageable, user);
 

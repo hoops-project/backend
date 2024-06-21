@@ -17,10 +17,15 @@ import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.friends.dto.AcceptFriendDto;
 import com.zerobase.hoops.friends.dto.ApplyFriendDto;
-import com.zerobase.hoops.friends.dto.CommonFriendDto;
+import com.zerobase.hoops.friends.dto.CancelFriendDto;
+import com.zerobase.hoops.friends.dto.DeleteFriendDto;
 import com.zerobase.hoops.friends.dto.FriendListDto;
 import com.zerobase.hoops.friends.dto.InviteFriendListDto;
+import com.zerobase.hoops.friends.dto.RejectFriendDto;
+import com.zerobase.hoops.friends.dto.RequestFriendListDto;
+import com.zerobase.hoops.friends.dto.SearchFriendListDto;
 import com.zerobase.hoops.friends.repository.FriendRepository;
 import com.zerobase.hoops.friends.repository.impl.FriendCustomRepositoryImpl;
 import com.zerobase.hoops.friends.type.FriendStatus;
@@ -52,10 +57,10 @@ public class FriendService {
   /**
    * 친구 신청 전 validation
    */
-  public CommonFriendDto.Response validApplyFriend(ApplyFriendDto.Request request, UserEntity user) {
+  public ApplyFriendDto.Response validApplyFriend(ApplyFriendDto.Request request, UserEntity user) {
     log.info("loginId = {} validApplyFriend start", user.getLoginId());
 
-    CommonFriendDto.Response response = null;
+    ApplyFriendDto.Response response = null;
 
     try {
       // 자기 자신은 친구 신청 불가
@@ -102,7 +107,7 @@ public class FriendService {
   /**
    * 친구 신청
    */
-  private CommonFriendDto.Response applyFriend(UserEntity user, UserEntity friendUser) {
+  private ApplyFriendDto.Response applyFriend(UserEntity user, UserEntity friendUser) {
 
     FriendEntity friendEntity = new ApplyFriendDto.Request()
         .toEntity(user, friendUser);
@@ -113,18 +118,18 @@ public class FriendService {
     notificationService.send(NotificationType.FRIEND,
         friendUser, user.getNickName() + "의 친구신청이 도착했습니다.");
 
-    return new CommonFriendDto.Response()
-        .toDto(friendUser.getNickName() + "에게 친구 신청을 완료했습니다.");
+    return new ApplyFriendDto.Response()
+        .toDto(friendUser.getNickName() + "에게 친구 신청을 했습니다.");
   }
 
 
   /**
    * 친구 신청 취소 전 validation
    */
-  public CommonFriendDto.Response validCancelFriend(CommonFriendDto.Request request, UserEntity user) {
+  public CancelFriendDto.Response validCancelFriend(CancelFriendDto.Request request, UserEntity user) {
     log.info("loginId = {} validCancelFriend start", user.getLoginId());
 
-    CommonFriendDto.Response response = null;
+    CancelFriendDto.Response response = null;
 
     try {
       // 친구 상태 조회
@@ -157,23 +162,23 @@ public class FriendService {
   /**
    * 친구 신청 취소
    */
-  public CommonFriendDto.Response cancelFriend(FriendEntity friend, UserEntity user) {
+  public CancelFriendDto.Response cancelFriend(FriendEntity friend, UserEntity user) {
     FriendEntity result = FriendEntity.setCancel(friend, clock);
 
     friendRepository.save(result);
     log.info("loginId = {} friend canceled", user.getLoginId());
 
-    return new CommonFriendDto.Response()
+    return new CancelFriendDto.Response()
         .toDto(result.getFriendUser().getNickName() + "에게 친구 신청 한것을 취소 했습니다.");
   }
 
   /**
    * 친구 수락 전 validation
    */
-  public CommonFriendDto.Response validAcceptFriend(CommonFriendDto.Request request, UserEntity user) {
+  public AcceptFriendDto.Response validAcceptFriend(AcceptFriendDto.Request request, UserEntity user) {
     log.info("loginId = {} validAcceptFriend start", user.getLoginId());
 
-    CommonFriendDto.Response response = null;
+    AcceptFriendDto.Response response = null;
 
     try {
 
@@ -207,7 +212,7 @@ public class FriendService {
   /**
    * 친구 수락
    */
-  private CommonFriendDto.Response acceptFriend(FriendEntity friend, UserEntity user) {
+  private AcceptFriendDto.Response acceptFriend(FriendEntity friend, UserEntity user) {
     FriendEntity myFriendEntity = FriendEntity.setAcceptMyFriend(friend, clock);
 
     friendRepository.save(myFriendEntity);
@@ -219,18 +224,18 @@ public class FriendService {
     friendRepository.save(otherFriendEntity);
     log.info("loginId = {} otherFriend accepted", user.getLoginId());
 
-    return new CommonFriendDto.Response()
-        .toDto(myFriendEntity.getUser().getNickName() + "의 친구 신청을 수락 했습니다.");
+    return new AcceptFriendDto.Response()
+        .toDto(myFriendEntity.getUser().getNickName() + " 의 친구 신청을 수락 했습니다.");
 
   }
 
   /**
    * 친구 거절 전 validation
    */
-  public CommonFriendDto.Response validRejectFriend(CommonFriendDto.Request request, UserEntity user) {
+  public RejectFriendDto.Response validRejectFriend(RejectFriendDto.Request request, UserEntity user) {
     log.info("loginId = {} validRejectFriend start", user.getLoginId());
 
-    CommonFriendDto.Response response = null;
+    RejectFriendDto.Response response = null;
 
     try {
 
@@ -258,23 +263,23 @@ public class FriendService {
   /**
    * 친구 거절
    */
-  private CommonFriendDto.Response rejectFriend(FriendEntity friend, UserEntity user) {
+  private RejectFriendDto.Response rejectFriend(FriendEntity friend, UserEntity user) {
     FriendEntity rejectEntity = FriendEntity.setReject(friend, clock);
 
     friendRepository.save(rejectEntity);
     log.info("loginId = {} friend rejected", user.getLoginId());
 
-    return new CommonFriendDto.Response()
+    return new RejectFriendDto.Response()
         .toDto(rejectEntity.getUser().getNickName() + "의 친구 신청을 거절 했습니다.");
   }
 
   /**
    * 친구 삭제 전 validation
    */
-  public CommonFriendDto.Response validDeleteFriend(CommonFriendDto.Request request, UserEntity user) {
+  public DeleteFriendDto.Response validDeleteFriend(DeleteFriendDto.Request request, UserEntity user) {
     log.info("loginId = {} validDeleteFriend start", user.getLoginId());
 
-    CommonFriendDto.Response response = null;
+    DeleteFriendDto.Response response = null;
 
     try {
 
@@ -316,7 +321,7 @@ public class FriendService {
   /**
    * 친구 삭제
    */
-  public CommonFriendDto.Response deleteFriend(FriendEntity myAcceptFriendEntity,
+  public DeleteFriendDto.Response deleteFriend(FriendEntity myAcceptFriendEntity,
       FriendEntity otherAcceptFriendEntity, UserEntity user) {
 
     FriendEntity myDeleteFriendEntity =
@@ -331,18 +336,19 @@ public class FriendService {
     friendRepository.save(otherDeleteFriendEntity);
     log.info("loginId = {} otherFriend deleted", user.getLoginId());
 
-    return new CommonFriendDto.Response()
-        .toDto(myAcceptFriendEntity.getFriendUser().getNickName() + "를 친구 삭제 했습니다.");
+    return new DeleteFriendDto.Response()
+        .toDto(myAcceptFriendEntity.getFriendUser().getNickName() +
+            "을(를) 친구 삭제 했습니다.");
   }
 
   /**
    * 친구 검색 전 validation
    */
-  public Page<FriendListDto.Response> validSearchFriend(String nickName,
+  public Page<SearchFriendListDto.Response> validSearchFriend(String nickName,
       Pageable pageable, UserEntity user) {
     log.info("loginId = {} validSearchFriend start", user.getLoginId());
 
-    Page<FriendListDto.Response> result = null;
+    Page<SearchFriendListDto.Response> result = null;
 
     try {
 
@@ -370,7 +376,7 @@ public class FriendService {
   /**
    * 친구 검색
    */
-  private Page<FriendListDto.Response> searchNickName(UserEntity user, String nickName, Pageable pageable) {
+  private Page<SearchFriendListDto.Response> searchNickName(UserEntity user, String nickName, Pageable pageable) {
     return friendCustomRepository.findBySearchFriendList
         (user.getId(), nickName, pageable);
   }
@@ -456,11 +462,11 @@ public class FriendService {
   /**
    * 내가 친구 요청 받은 리스트 조회 전 validation
    */
-  public List<FriendListDto.Response> validGetRequestFriendList
+  public List<RequestFriendListDto.Response> validGetRequestFriendList
   (Pageable pageable, UserEntity user) {
     log.info("loginId = {} validGetRequestFriendList start", user.getLoginId());
 
-    List<FriendListDto.Response> result = null;
+    List<RequestFriendListDto.Response> result = null;
 
     try {
 
@@ -483,7 +489,7 @@ public class FriendService {
   /**
    * 내가 친구 요청 받은 리스트 조회
    */
-  private List<FriendListDto.Response> getRequestFriendList(UserEntity user,
+  private List<RequestFriendListDto.Response> getRequestFriendList(UserEntity user,
       Pageable pageable) {
     Page<FriendEntity> friendEntityList =
         friendRepository.findByStatusAndFriendUserId
@@ -491,7 +497,7 @@ public class FriendService {
     log.info("loginId = {} requestFriendList got", user.getLoginId());
 
     return friendEntityList.stream()
-        .map(FriendListDto.Response::toRequestFriendListDto)
+        .map(RequestFriendListDto.Response::toDto)
         .toList();
   }
 
