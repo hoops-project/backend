@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
@@ -50,10 +52,21 @@ public class ParticipantGameController {
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 아이디",
           example = "1", required = true) Long gameId,
-      @PageableDefault(page = 10, size = 0, sort = "createdDateTime",
-          direction = Direction.ASC) Pageable pageable,
+      @Parameter(name = "page", description = "페이지 번호", example = "0", required = true)
+      @RequestParam(defaultValue = "0") int page,
+
+      @Parameter(name = "size", description = "페이지 크기", example = "10", required = true)
+      @RequestParam(defaultValue = "10") int size,
+
+      @Parameter(name = "sort", description = "정렬 기준", example = "createdDateTime", required = true)
+      @RequestParam(defaultValue = "createdDateTime") String sort,
+
+      @Parameter(name = "direction", description = "정렬 방향", example = "ASC", required = true)
+      @RequestParam(defaultValue = "ASC") Direction direction,
+
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} getApplyParticipantList start", user.getLoginId());
+    Pageable pageable = PageRequest.of(page, size, direction, sort);
     List<ApplyParticipantListDto.Response> result =
         participantGameService.validApplyParticipantList(gameId, pageable, user);
 
@@ -71,10 +84,21 @@ public class ParticipantGameController {
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 아이디",
           example = "1", required = true) Long gameId,
-      @PageableDefault(page = 10, size = 0, sort = "createdDateTime",
-          direction = Direction.ASC) Pageable pageable,
+      @Parameter(name = "page", description = "페이지 번호", example = "0",
+          required = true)
+      @RequestParam(defaultValue = "0") int page,
+
+      @Parameter(name = "size", description = "페이지 크기", example = "10", required = true)
+      @RequestParam(defaultValue = "10") int size,
+
+      @Parameter(name = "sort", description = "정렬 기준", example = "createdDateTime", required = true)
+      @RequestParam(defaultValue = "createdDateTime") String sort,
+
+      @Parameter(name = "direction", description = "정렬 방향", example = "ASC", required = true)
+      @RequestParam(defaultValue = "ASC") Direction direction,
       @AuthenticationPrincipal UserEntity user) {
     log.info("loginId = {} getAcceptParticipantList start", user.getLoginId());
+    Pageable pageable = PageRequest.of(page, size, direction, sort);
     List<AcceptParticipantListDto.Response> result =
         participantGameService.validAcceptParticipantList(gameId, pageable, user);
 
