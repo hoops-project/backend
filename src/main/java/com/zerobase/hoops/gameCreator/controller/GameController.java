@@ -1,7 +1,6 @@
 package com.zerobase.hoops.gameCreator.controller;
 
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.gameCreator.dto.CommonGameDto;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
 import com.zerobase.hoops.gameCreator.dto.DeleteGameDto;
 import com.zerobase.hoops.gameCreator.dto.DetailGameDto;
