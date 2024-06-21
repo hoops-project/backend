@@ -25,8 +25,6 @@ import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-import com.zerobase.hoops.gameCreator.dto.CommonGameDto;
-import com.zerobase.hoops.gameCreator.dto.CommonGameDto.Response;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto.Request;
 import com.zerobase.hoops.gameCreator.dto.DeleteGameDto;
