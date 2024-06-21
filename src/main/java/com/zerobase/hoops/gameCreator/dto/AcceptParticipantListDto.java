@@ -4,6 +4,7 @@ import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-public class ParticipantListDto {
+public class AcceptParticipantListDto {
 
   @Getter
   @ToString
@@ -20,18 +21,26 @@ public class ParticipantListDto {
   @AllArgsConstructor
   @Builder
   public static class Response {
+
+    @Schema(description = "참여 pk", example = "1")
     private Long participantId;
 
+    @Schema(description = "경기 참가자 유저 생년월일", example = "2003-03-03")
     private LocalDate birthday;
 
+    @Schema(description = "경기 참가자 유저 성별", example = "MALE")
     private GenderType gender;
 
+    @Schema(description = "경기 참가자 유저 닉네임", example = "딸기")
     private String nickName;
 
+    @Schema(description = "경기 참가자 유저 플레이스타일", example = "AGGRESSIVE")
     private PlayStyleType playStyle;
 
+    @Schema(description = "경기 참가자 유저 능력", example = "PASS")
     private AbilityType ability;
 
+    @Schema(description = "경기 참가자 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
     public static Response toDto(ParticipantGameEntity participantGameEntity){

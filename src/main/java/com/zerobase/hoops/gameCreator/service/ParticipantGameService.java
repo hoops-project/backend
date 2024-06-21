@@ -15,8 +15,11 @@ import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-import com.zerobase.hoops.gameCreator.dto.CommonParticipantDto;
-import com.zerobase.hoops.gameCreator.dto.ParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.ApplyParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.KickoutParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.RejectParticipantDto;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
@@ -44,13 +47,13 @@ public class ParticipantGameService {
   private final Clock clock;
 
   /**
-   * 경기 참가 지원자 리스트 조회 전 validation
+   * 경기 지원자 리스트 조회 전 validation
    */
-  public List<ParticipantListDto.Response> validApplyParticipantList(Long gameId,
+  public List<ApplyParticipantListDto.Response> validApplyParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     log.info("loginId = {} validApplyParticipantList start", user.getLoginId());
 
-    List<ParticipantListDto.Response> result = null;
+    List<ApplyParticipantListDto.Response> result = null;
 
     try {
       GameEntity game = getGame(gameId);
@@ -58,6 +61,7 @@ public class ParticipantGameService {
       checkCreator(user, game);
 
       result = getApplyParticipantList(game.getId(), pageable, user);
+      log.info("loginId = {} ApplyParticipantList got", user.getLoginId());
 
     } catch (CustomException e) {
       log.warn("loginId = {} validApplyParticipantList CustomException message = {}",
@@ -76,24 +80,30 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 리스트 조회
    */
-  private List<ParticipantListDto.Response> getApplyParticipantList(Long gameId,
+  private List<ApplyParticipantListDto.Response> getApplyParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
-    return getParticipantList(APPLY, gameId, pageable, user);
+    Page<ParticipantGameEntity> page =
+        getParticipantList(APPLY, gameId, pageable, user);
+
+    return page.stream()
+        .map(ApplyParticipantListDto.Response::toDto)
+        .toList();
   }
 
   /**
-   * 경기 지원자 리스트 조회 전 validation
+   * 경기 참가자 리스트 조회 전 validation
    */
-  public List<ParticipantListDto.Response> validAcceptParticipantList(Long gameId,
+  public List<AcceptParticipantListDto.Response> validAcceptParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     log.info("loginId = {} validAcceptParticipantList start", user.getLoginId());
 
-    List<ParticipantListDto.Response> result = null;
+    List<AcceptParticipantListDto.Response> result = null;
 
     try {
       GameEntity game = getGame(gameId);
 
       result = getAcceptParticipantList(game.getId(), pageable, user);
+      log.info("loginId = {} AcceptParticipantList got", user.getLoginId());
 
     } catch (CustomException e) {
       log.warn("loginId = {} validAcceptParticipantList CustomException message = {}",
@@ -112,19 +122,24 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 리스트 조회
    */
-  public List<ParticipantListDto.Response> getAcceptParticipantList(Long gameId,
+  public List<AcceptParticipantListDto.Response> getAcceptParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
-    return getParticipantList(ACCEPT, gameId, pageable, user);
+    Page<ParticipantGameEntity> page =
+        getParticipantList(ACCEPT, gameId, pageable, user);
+
+    return page.stream()
+        .map(AcceptParticipantListDto.Response::toDto)
+        .toList();
   }
 
   /**
    * 경기 지원자 수락 전 validation
    */
-  public CommonParticipantDto.Response validAcceptParticipant(
-      CommonParticipantDto.Request request, UserEntity user) {
+  public AcceptParticipantDto.Response validAcceptParticipant(
+      AcceptParticipantDto.Request request, UserEntity user) {
     log.info("loginId = {} validAcceptParticipant start", user.getLoginId());
 
-    CommonParticipantDto.Response response = null;
+    AcceptParticipantDto.Response response = null;
 
     try {
       ParticipantGameEntity participantGame =
@@ -165,7 +180,7 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 수락
    */
-  private CommonParticipantDto.Response acceptParticipant(ParticipantGameEntity participantGame,
+  private AcceptParticipantDto.Response acceptParticipant(ParticipantGameEntity participantGame,
       UserEntity user) {
 
     ParticipantGameEntity result =
@@ -177,19 +192,19 @@ public class ParticipantGameService {
     notificationService.send(NotificationType.ACCEPTED_GAME, result.getUser(),
         result.getGame().getTitle() + "에 참가가 수락되었습니다.");
 
-    return new CommonParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 수락 완료 했습니다.");
+    return new AcceptParticipantDto.Response().toDto(
+        result.getUser().getNickName() + "을 경기에 수락 했습니다.");
 
   }
 
   /**
    * 경기 지원자 거절 전 validation
    */
-  public CommonParticipantDto.Response validRejectParticipant(
-      CommonParticipantDto.Request request, UserEntity user) {
+  public RejectParticipantDto.Response validRejectParticipant(
+      RejectParticipantDto.Request request, UserEntity user) {
     log.info("loginId = {} validRejectParticipant start", user.getLoginId());
 
-    CommonParticipantDto.Response response = null;
+    RejectParticipantDto.Response response = null;
 
     try {
       ParticipantGameEntity participantGame =
@@ -220,7 +235,7 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 거절
    */
-  private CommonParticipantDto.Response rejectParticipant(ParticipantGameEntity participantGame,
+  private RejectParticipantDto.Response rejectParticipant(ParticipantGameEntity participantGame,
       UserEntity user) {
     ParticipantGameEntity result =
         new ParticipantGameEntity().setReject(participantGame, clock);
@@ -233,19 +248,19 @@ public class ParticipantGameService {
 
     log.info("kickoutParticipant end");
 
-    return new CommonParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 거절 완료 했습니다.");
+    return new RejectParticipantDto.Response().toDto(
+        result.getUser().getNickName() + "을 경기에 거절 했습니다.");
   }
 
 
   /**
    * 경기 참가자 강퇴 전 validation
    */
-  public CommonParticipantDto.Response validKickoutParticipant(
-      CommonParticipantDto.Request request, UserEntity user) {
+  public KickoutParticipantDto.Response validKickoutParticipant(
+      KickoutParticipantDto.Request request, UserEntity user) {
     log.info("loginId = {} validKickoutParticipant start", user.getLoginId());
 
-    CommonParticipantDto.Response response = null;
+    KickoutParticipantDto.Response response = null;
 
     try {
       ParticipantGameEntity participantGame =
@@ -278,7 +293,7 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 강퇴
    */
-  private CommonParticipantDto.Response kickoutParticipant(ParticipantGameEntity participantGame,
+  private KickoutParticipantDto.Response kickoutParticipant(ParticipantGameEntity participantGame,
       UserEntity user) {
     ParticipantGameEntity result =
         new ParticipantGameEntity().setKickout(participantGame, clock);
@@ -289,21 +304,15 @@ public class ParticipantGameService {
     notificationService.send(NotificationType.KICKED_OUT, result.getUser()
         , result.getGame().getTitle() + "에서 강퇴당하였습니다.");
 
-    return new CommonParticipantDto.Response().toDto(
-        result.getUser().getNickName() + "을 경기에 강퇴 완료 했습니다.");
+    return new KickoutParticipantDto.Response().toDto(
+        result.getUser().getNickName() + "을 경기에 강퇴 했습니다.");
   }
 
   // 리스트 조회
-  private List<ParticipantListDto.Response> getParticipantList
-  (ParticipantGameStatus status, Long gameId, Pageable pageable,
+  private Page<ParticipantGameEntity> getParticipantList(
+      ParticipantGameStatus status, Long gameId, Pageable pageable,
       UserEntity user) {
-    Page<ParticipantGameEntity> participantGameEntityPage =
-        participantGameRepository.findByStatusAndGameId(status, gameId, pageable);
-    log.info("loginId = {} ParticipantList got", user.getLoginId());
-
-    return participantGameEntityPage.stream()
-        .map(ParticipantListDto.Response::toDto)
-        .toList();
+    return participantGameRepository.findByStatusAndGameId(status, gameId, pageable);
   }
   
   // 경기 조회

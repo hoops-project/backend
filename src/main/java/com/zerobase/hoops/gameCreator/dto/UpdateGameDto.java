@@ -8,6 +8,7 @@ import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.validation.ValidStartTime;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,7 @@ public class UpdateGameDto {
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
+    @Min(1)
     private Long gameId;
 
     @Schema(

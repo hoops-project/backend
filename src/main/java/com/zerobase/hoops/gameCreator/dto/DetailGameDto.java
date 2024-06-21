@@ -157,7 +157,7 @@ public class DetailGameDto {
     @Schema(description = "경기 참가자 유저 능력", example = "PASS")
     private AbilityType ability;
 
-    @Schema(description = "경기 참가자 유저 매너점수", example = "0")
+    @Schema(description = "경기 참가자 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
     public static ParticipantUser toDto(ParticipantGameEntity participantGame) {
