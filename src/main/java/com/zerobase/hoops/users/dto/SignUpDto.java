@@ -6,6 +6,7 @@ import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
@@ -30,38 +31,53 @@ public class SignUpDto {
   public static class Request {
 
     @NotBlank(message = "아이디를 입력하세요.")
+    @Schema(description = "아이디", example = "hoops", defaultValue = "hoops")
     private String loginId;
 
     @NotBlank(message = "비밀번호를 입력하세요.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~!@#$%^&*()])"
         + "[a-zA-Z0-9~!@#$%^&*()]{8,13}$")
+    @Schema(description = "비밀번호", example = "Hoops123$%^",
+        defaultValue = "Hoops123$%^")
     private String password;
 
     @NotBlank(message = "확인할 비밀번호를 입력하세요.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~!@#$%^&*()])"
         + "[a-zA-Z0-9~!@#$%^&*()]{8,13}$")
+    @Schema(description = "비밀번호 확인", example = "Hoops123$%^",
+        defaultValue = "Hoops123$%^")
     private String passwordCheck;
 
     @NotBlank(message = "이메일을 입력하세요.")
     @Email(message = "이메일 형식에 맞게 입력하세요.")
+    @Schema(description = "이메일", example = "hoops@hoops.com",
+        defaultValue = "hoops@hoops.com")
     private String email;
 
     @NotBlank(message = "이름을 입력하세요.")
+    @Schema(description = "이름", example = "차은우", defaultValue = "차은우")
     private String name;
 
     @JsonFormat(shape = Shape.STRING,
         pattern = "yyyyMMdd",
         timezone = "Asia/Seoul")
     @Past(message = "생년월일은 과거의 날짜만 입력 가능합니다.")
+    @Schema(description = "생년월일", example = "19900101",
+        defaultValue = "19900101")
     private LocalDate birthday;
 
     @NotBlank(message = "성별을 선택하세요.")
+    @Schema(description = "성별", example = "MALE", defaultValue = "MALE")
     private String gender;
 
     @NotBlank(message = "별명을 입력하세요.")
+    @Schema(description = "별명", example = "농구의신", defaultValue = "농구의신")
     private String nickName;
 
+    @Schema(description = "플레이 스타일", example = "AGGRESSIVE",
+        defaultValue = "AGGRESSIVE")
     private String playStyle;
+    @Schema(description = "능력", example = "SHOOT", defaultValue = "SHOOT")
     private String ability;
 
     public static UserEntity toEntity(Request request) {
@@ -86,16 +102,42 @@ public class SignUpDto {
   @Builder
   public static class Response {
 
+    @Schema(description = "PK", example = "1", defaultValue = "1")
     private Long id;
+
+    @Schema(description = "아이디", example = "hoops", defaultValue = "hoops")
     private String loginId;
+
+    @Schema(description = "이메일", example = "hoops@hoops.com",
+        defaultValue = "hoops@hoops.com")
     private String email;
+
+    @Schema(description = "이름", example = "차은우", defaultValue = "차은우")
     private String name;
+
+    @Schema(description = "생년월일", example = "19900101",
+        defaultValue = "19900101")
     private LocalDate birthday;
+
+    @Schema(description = "성별", example = "MALE", defaultValue = "MALE")
     private String gender;
+
+    @Schema(description = "별명", example = "농구의신", defaultValue = "농구의신")
     private String nickName;
+
+    @Schema(description = "가입 일시", example = "2024-06-04T13:31:24.255686",
+        defaultValue = "2024-06-04T13:31:24.255686")
     private LocalDateTime crateDate;
+
+    @Schema(description = "플레이 스타일", example = "AGGRESSIVE",
+        defaultValue = "AGGRESSIVE")
     private String playStyle;
+
+    @Schema(description = "능력", example = "SHOOT", defaultValue = "SHOOT")
     private String ability;
+
+    @Schema(description = "권한", example = "[\"ROLE_USER\"]",
+        defaultValue = "[\"ROLE_USER\"]")
     private List<String> roles;
 
     public static Response fromDto(UserDto userDto) {
