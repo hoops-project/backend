@@ -18,8 +18,6 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
 
-import com.zerobase.hoops.chat.repository.ChatRoomRepository;
-import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -57,8 +55,6 @@ public class GameService {
 
   private final InviteRepository inviteRepository;
 
-  private final ChatRoomRepository chatRoomRepository;
-
   private final Clock clock;
 
   /**
@@ -95,7 +91,8 @@ public class GameService {
   /**
    * 경기 생성
    */
-  private CreateGameDto.Response createGame(Request request, UserEntity user) {
+  private CreateGameDto.Response createGame(Request request,
+      UserEntity user) {
     // 경기 생성
     GameEntity game = new CreateGameDto.Request().toEntity(request, user);
 
@@ -108,12 +105,6 @@ public class GameService {
     log.info("loginId = {} participantGame created ", user.getLoginId());
 
     participantGameRepository.save(participantGame);
-
-    // 채팅 룸 개설
-    ChatRoomEntity chatRoom = new ChatRoomEntity();
-    chatRoom.saveGameInfo(game);
-    chatRoomRepository.save(chatRoom);
-    log.info("loginId = {} chatRoom created ", user.getLoginId());
 
     return new CreateGameDto.Response().toDto(
         game.getTitle() + " 경기가 생성되었습니다.");
@@ -131,7 +122,8 @@ public class GameService {
       GameEntity game = getGame(gameId);
       response = getGameDetail(game);
     } catch (Exception e) {
-      log.error("validGetGameDetail Exception message = {}", e.getMessage(), e);
+      log.error("validGetGameDetail Exception message = {}",
+          e.getMessage(), e);
       throw e;
     }
     log.info("validGetGameDetail end");
@@ -149,7 +141,8 @@ public class GameService {
     log.info("participantGameEntityList got");
 
     List<ParticipantUser> participantUserList =
-        participantGameEntityList.stream().map(ParticipantUser::toDto).toList();
+        participantGameEntityList.stream().map(ParticipantUser::toDto)
+            .toList();
 
     return new DetailGameDto.Response().toDto(game, participantUserList);
   }
@@ -167,7 +160,7 @@ public class GameService {
       GameEntity game = getGame(request.getGameId());
 
       //자신이 경기 개최자가 아니면 수정 못하게
-      if(!Objects.equals(user.getId(), game.getUser().getId())) {
+      if (!Objects.equals(user.getId(), game.getUser().getId())) {
         throw new CustomException(NOT_GAME_CREATOR);
       }
 
@@ -212,11 +205,11 @@ public class GameService {
       }
 
       response = updateGame(request, game, user);
-    } catch(CustomException e) {
+    } catch (CustomException e) {
       log.warn("loginId = {} validUpdateGame CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
-    } catch(Exception e) {
+    } catch (Exception e) {
       log.error("loginId = {} validUpdateGame Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
@@ -232,7 +225,8 @@ public class GameService {
    */
   private UpdateGameDto.Response updateGame(UpdateGameDto.Request request,
       GameEntity game, UserEntity user) {
-    GameEntity updateGame = new UpdateGameDto.Request().toEntity(request, game);
+    GameEntity updateGame = new UpdateGameDto.Request().toEntity(request,
+        game);
     gameRepository.save(updateGame);
     log.info("loginId = {} game updated ", user.getLoginId());
 
@@ -243,7 +237,8 @@ public class GameService {
   /**
    * 경기 삭제 전 validation 체크
    */
-  public DeleteGameDto.Response validDeleteGame(DeleteGameDto.Request request, UserEntity user) {
+  public DeleteGameDto.Response validDeleteGame(
+      DeleteGameDto.Request request, UserEntity user) {
     log.info("loginId = {} validDeleteGame start", user.getLoginId());
 
     DeleteGameDto.Response response = null;
@@ -254,25 +249,26 @@ public class GameService {
       GameEntity game = getGame(request.getGameId());
 
       // 설정한 경기 시작 30분 전에만 삭제 가능
-      LocalDateTime beforeDatetime = game.getStartDateTime().minusMinutes(30);
+      LocalDateTime beforeDatetime = game.getStartDateTime()
+          .minusMinutes(30);
       LocalDateTime nowDateTime = LocalDateTime.now();
 
-      if(nowDateTime.isAfter(beforeDatetime)) {
+      if (nowDateTime.isAfter(beforeDatetime)) {
         throw new CustomException(NOT_DELETE_STARTDATE);
       }
 
       // 경기 개최자가 삭제 시 -> 경기 삭제
-      if(Objects.equals(user.getId(), game.getUser().getId())) {
+      if (Objects.equals(user.getId(), game.getUser().getId())) {
         response = deleteGame(game, user);
       } else { // 팀원이 삭제 시 -> 팀원 탈퇴
         response = withdrewGame(game, user);
       }
 
-    } catch(CustomException e) {
+    } catch (CustomException e) {
       log.warn("loginId = {} validDeleteGame CustomException message = {}",
           user.getLoginId(), e.getMessage());
       throw e;
-    } catch(Exception e) {
+    } catch (Exception e) {
       log.error("loginId = {} validDeleteGame Exception message = {}",
           user.getLoginId(), e.getMessage(), e);
       throw e;
@@ -286,7 +282,8 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  private DeleteGameDto.Response deleteGame(GameEntity game, UserEntity user) {
+  private DeleteGameDto.Response deleteGame(GameEntity game,
+      UserEntity user) {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 조회
     List<ParticipantGameEntity> participantGameEntityList =
@@ -312,7 +309,8 @@ public class GameService {
     log.info("loginId = {} invite deleted ", user.getLoginId());
 
     // 경기 삭제
-    GameEntity gameEntity = new DeleteGameDto.Request().toEntity(game, clock);
+    GameEntity gameEntity = new DeleteGameDto.Request().toEntity(game,
+        clock);
     gameRepository.save(gameEntity);
     log.info("loginId = {} game deleted ", user.getLoginId());
 
@@ -323,19 +321,22 @@ public class GameService {
   /**
    * 경기 팀원 탈퇴
    */
-  private DeleteGameDto.Response withdrewGame(GameEntity game, UserEntity user) {
+  private DeleteGameDto.Response withdrewGame(GameEntity game,
+      UserEntity user) {
 
     ParticipantGameEntity participantGameEntity =
         participantGameRepository.findByStatusAndGameIdAndUserId
-            (ACCEPT, game.getId(), user.getId())
+                (ACCEPT, game.getId(), user.getId())
             .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
     ParticipantGameEntity result
-        = new ParticipantGameEntity().setWithdraw(participantGameEntity, clock);
+        = new ParticipantGameEntity().setWithdraw(participantGameEntity,
+        clock);
 
     participantGameRepository.save(result);
 
-    return new DeleteGameDto.Response().toDto(game.getTitle() + " 경기에 탈퇴했습니다.");
+    return new DeleteGameDto.Response().toDto(
+        game.getTitle() + " 경기에 탈퇴했습니다.");
   }
 
   /**
@@ -347,13 +348,14 @@ public class GameService {
 
     LocalDateTime beforeDateTime =
         startDateTime.minusHours(1).plusSeconds(1); // 13:00:01
-    LocalDateTime afterDateTime = startDateTime.plusHours(1).minusSeconds(1); // 14:59:59
+    LocalDateTime afterDateTime = startDateTime.plusHours(1)
+        .minusSeconds(1); // 14:59:59
     LocalDateTime nowDateTime = LocalDateTime.now();
 
     boolean gameExists = false;
 
     // 경기 생성
-    if(gameId == null) {
+    if (gameId == null) {
       gameExists = gameRepository
           .existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull
               (beforeDateTime, afterDateTime, address);
@@ -364,22 +366,22 @@ public class GameService {
     }
 
     // 시간 범위에 해당하는 해당 주소에서 예정된 경기를 찾을시
-    if(gameExists) {
+    if (gameExists) {
       throw new CustomException(ALREADY_GAME_CREATED);
     } else { // 예정된 경기를 못찾을시
       // 입력한 경기 시작 시간은 현재시간 30분 보다 후 여야 함
-      if(startDateTime.minusMinutes(30).isBefore(nowDateTime)) {
+      if (startDateTime.minusMinutes(30).isBefore(nowDateTime)) {
         throw new CustomException(NOT_AFTER_THIRTY_MINUTE);
       }
     }
 
     // 3:3 매치 일때 6명 ~ 9명 설정 가능
-    if(matchFormat == MatchFormat.THREEONTHREE) {
-      if(headCount < 6 || headCount > 9) {
+    if (matchFormat == MatchFormat.THREEONTHREE) {
+      if (headCount < 6 || headCount > 9) {
         throw new CustomException(NOT_CREATE_THREEONTHREEE);
       }
-    } else if(matchFormat == MatchFormat.FIVEONFIVE) { // 5:5 매치 10 ~ 15명
-      if(headCount < 10 || headCount > 15) {
+    } else if (matchFormat == MatchFormat.FIVEONFIVE) { // 5:5 매치 10 ~ 15명
+      if (headCount < 10 || headCount > 15) {
         throw new CustomException(NOT_CREATE_FIVEONFIVE);
       }
     }
