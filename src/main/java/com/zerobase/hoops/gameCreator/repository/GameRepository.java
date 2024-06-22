@@ -15,12 +15,15 @@ public interface GameRepository extends
 
   List<GameEntity> findByUserIdAndDeletedDateTimeNull(Long userId);
 
+
+
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(
       LocalDateTime beforeDatetime,
       LocalDateTime afterDateTime, String address);
 
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot(
       LocalDateTime beforeDatetime, LocalDateTime afterDateTime, String address, Long gameId);
+
 }
 
 

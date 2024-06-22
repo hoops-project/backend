@@ -15,13 +15,9 @@ public class MessageDto {
   @NotBlank
   private String content;
 
-  @NotBlank
-  private Long sessionId;
-
   public MessageEntity toEntity(UserEntity user, ChatRoomEntity chatRoom) {
     return MessageEntity.builder()
         .user(user)
-        .sessionId(sessionId)
         .content(content)
         .chatRoomEntity(chatRoom)
         .sendDateTime(LocalDateTime.now())

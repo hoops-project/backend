@@ -17,7 +17,4 @@ public class MessageConvertDto {
   @NotBlank
   private String content;
 
-  @NotBlank
-  private Long sessionId;
-
 }
