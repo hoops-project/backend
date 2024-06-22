@@ -6,13 +6,14 @@ import com.zerobase.hoops.chat.dto.MessageDto;
 import com.zerobase.hoops.chat.repository.ChatRoomRepository;
 import com.zerobase.hoops.chat.repository.MessageRepository;
 import com.zerobase.hoops.entity.ChatRoomEntity;
+import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.MessageEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,85 +29,86 @@ public class ChatService {
   private final SimpMessagingTemplate messagingTemplate;
   private final JwtTokenExtract jwtTokenExtract;
   private final MessageRepository messageRepository;
+  private final GameRepository gameRepository;
 
   public void sendMessage(ChatMessage chatMessage, String gameId,
       String token) {
+    log.info("sendMessage 시작");
     Long gameIdNumber = Long.parseLong(gameId);
-    log.info("메세지 보내기 토큰확인" + token);
+    log.info("메세지 보내기 토큰 Check={}", token);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
-    log.info("메세지 보내기 토큰확인 + 유저 닉네임" + user.getNickName());
-    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
-            gameIdNumber)
-        .orElseThrow(
-            () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
+    log.info("메세지 보내기 유저 닉네임={}", user.getNickName());
+    List<ChatRoomEntity> chatRoomEntityList = chatRoomRepository.findByGameEntity_Id(
+        gameIdNumber);
 
-    Long sessionId = chatRoom.getSessionId();
+    for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
+      String nickName = chatRoomEntity.getUserEntity().getNickName();
 
-    if (sessionId == null) {
-      throw new CustomException(ErrorCode.NOT_EXIST_CHATROOM_SESSION);
+      MessageDto message = MessageDto.builder()
+          .content(chatMessage.getContent())
+          .build();
+
+      messageRepository.save(message.toEntity(user, chatRoomEntity));
+      messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
+          chatMessage);
     }
-
-    MessageDto message = MessageDto.builder()
-        .content(chatMessage.getContent())
-        .sessionId(sessionId)
-        .build();
-
-    messageRepository.save(message.toEntity(user, chatRoom));
-    chatMessage.changeNewSessionId(sessionId);
-    messagingTemplate.convertAndSend("/topic/" + gameId, chatMessage);
+    log.info("sendMessage 종료");
   }
 
   public void addUser(ChatMessage chatMessage, String gameId,
       String token) {
+    log.info("addUser 시작");
     Long gameIdNumber = Long.parseLong(gameId);
+    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    GameEntity game = gameRepository.findById(gameIdNumber)
+        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
-    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
-            gameIdNumber)
-        .orElseThrow(
-            () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
+    boolean userChatRoom = chatRoomRepository.existsByGameEntity_IdAndUserEntity_Id(
+        game.getId(), user.getId());
 
-    Long activeSessionId = chatRoom.getSessionId();
-
-    if (activeSessionId == null) {
-      activeSessionId = generateSessionId();
-      chatRoom.changeNewSessionId(activeSessionId);
+    if (!userChatRoom) {
+      log.info("{} 새로운 채팅방 생성", user.getNickName());
+      ChatRoomEntity chatRoom = new ChatRoomEntity();
+      chatRoom.saveGameInfo(game);
+      chatRoom.saveUserInfo(user);
+      chatRoomRepository.save(chatRoom);
     }
 
-    chatMessage.changeNewSessionId(activeSessionId);
-    messagingTemplate.convertAndSend("/topic/" + gameId, chatMessage);
+    List<ChatRoomEntity> chatRoomEntityList = chatRoomRepository.findByGameEntity_Id(
+        gameIdNumber);
+
+    for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
+      log.info("{} 채팅방 입장 메세지 전파", user.getNickName());
+      String nickName = chatRoomEntity.getUserEntity().getNickName();
+      messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
+          chatMessage);
+    }
+
+    log.info("addUser 종료");
   }
 
   public void loadMessagesAndSend(String gameId, String token) {
+    log.info("loadMessagesAndSend 시작");
     Long gameIdNumber = Long.parseLong(gameId);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
-    log.info("메세지 로딩 확인 => 닉네임 나와야함" + user.getNickName());
-    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
-            gameIdNumber)
+
+    log.info("메세지 로딩 Check => userNickName={}", user.getNickName());
+
+    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_IdAndUserEntity_Id(
+            gameIdNumber, user.getId())
         .orElseThrow(
             () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
-    Long sessionId = chatRoom.getSessionId();
 
-    if (sessionId == null) {
-      throw new CustomException(ErrorCode.NOT_EXIST_CHATROOM_SESSION);
-    }
-
-    List<MessageEntity> messages = messageRepository.findByChatRoomEntity_IdAndSessionId(
-            chatRoom.getId(), sessionId)
-        .orElseThrow(() -> new CustomException(
-            ErrorCode.NOT_EXIST_MESSAGE_FOR_CHATROOM));
+    List<MessageEntity> messages = messageRepository.findByChatRoomEntity(
+        chatRoom);
 
     List<MessageConvertDto> messageDto = messages.stream()
         .map(this::convertToChatMessage)
         .collect(Collectors.toList());
 
-    boolean isNewUser = messages.stream()
-        .noneMatch(m -> m.getUser().getId().equals(user.getId()));
-    if (isNewUser) {
-      messagingTemplate.convertAndSend("/topic/" + gameId + "/newUser",
-          messageDto);
-      return;
-    }
-    messagingTemplate.convertAndSend("/topic/" + gameId, messageDto);
+    messagingTemplate.convertAndSend(
+        "/topic/" + gameId + "/" + user.getNickName(), messageDto);
+    log.info("loadMessagesAndSend 종료");
   }
 
   private MessageConvertDto convertToChatMessage(
@@ -115,11 +117,6 @@ public class ChatService {
         .id(messageEntity.getId())
         .sender(messageEntity.getUser().getNickName())
         .content(messageEntity.getContent())
-        .sessionId(messageEntity.getSessionId())
         .build();
-  }
-
-  private Long generateSessionId() {
-    return UUID.randomUUID().getMostSignificantBits();
   }
 }

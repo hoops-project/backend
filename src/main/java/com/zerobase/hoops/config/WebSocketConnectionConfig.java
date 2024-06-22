@@ -25,7 +25,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSocketMessageBroker
-public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigurer {
+public class WebSocketConnectionConfig implements
+    WebSocketMessageBrokerConfigurer {
 
   private final JwtTokenExtract jwtTokenExtract;
   private final ParticipantGameRepository participantGameRepository;
@@ -60,11 +61,14 @@ public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigur
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(
             message, StompHeaderAccessor.class);
 
+        assert accessor != null;
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
           String authToken = accessor.getFirstNativeHeader(
               "Authorization");
           String gameId = accessor.getFirstNativeHeader("gameId");
           if (!isValidUser(authToken, gameId)) {
+            UserEntity user = jwtTokenExtract.getUserFromToken(authToken);
+            log.error("{} <- 채팅 참여 권한 없음", user.getId());
             throw new CustomException(ErrorCode.NOT_ACCEPT_USER_FOR_GAME);
           }
         }
@@ -76,10 +80,7 @@ public class WebSocketConnectionConfig implements WebSocketMessageBrokerConfigur
   private boolean isValidUser(String token, String gameId) {
     Long gameIdNumber = Long.parseLong(gameId);
     UserEntity user = jwtTokenExtract.getUserFromToken(token);
-    log.info("채팅 입장 유효한지 체크 " + user.getNickName());
-    if (user == null) {
-      return false;
-    }
+    log.info("{} <- 채팅 입장 유효한지 체크", user.getNickName());
     return participantGameRepository.existsByGame_IdAndUser_IdAndStatus(
         gameIdNumber, user.getId(), ParticipantGameStatus.ACCEPT);
   }
