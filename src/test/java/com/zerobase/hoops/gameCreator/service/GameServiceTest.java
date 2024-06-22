@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.chat.repository.ChatRoomRepository;
-import com.zerobase.hoops.entity.ChatRoomEntity;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.InviteEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
@@ -65,9 +64,6 @@ class GameServiceTest {
   @Mock
   private InviteRepository inviteRepository;
 
-  @Mock
-  private ChatRoomRepository chatRoomRepository;
-
   @Spy
   private Clock clock;
 
@@ -82,8 +78,6 @@ class GameServiceTest {
   private GameEntity expectedOtherCreatedGame;
 
   private ParticipantGameEntity expectedCreatorParticipantGame;
-
-  private ChatRoomEntity expectedCreatedChatRoom;
 
   private LocalDateTime fixedStartDateTime;
   private LocalDateTime fixedCreatedDateTime;
@@ -189,10 +183,6 @@ class GameServiceTest {
         .game(expectedCreatedGame)
         .user(requestUser)
         .build();
-    expectedCreatedChatRoom = ChatRoomEntity.builder()
-        .id(1L)
-        .gameEntity(expectedCreatedGame)
-        .build();
 
   }
 
@@ -228,9 +218,6 @@ class GameServiceTest {
         new ParticipantGameEntity().toGameCreatorEntity
             (game, requestUser, clock);
 
-    ChatRoomEntity createdChatRoom = ChatRoomEntity.builder()
-        .gameEntity(game)
-        .build();
 
     // 이미 예정된 게임이 없는 상황을 가정
     checkGame(createRequest.getStartDateTime(), createRequest.getAddress(),
@@ -245,12 +232,6 @@ class GameServiceTest {
       return entity;
     });
 
-    when(chatRoomRepository.save(createdChatRoom)).thenAnswer(invocation -> {
-      ChatRoomEntity entity = invocation.getArgument(0);
-      entity.setId(1L); // id 할당
-      return entity;
-    });
-
     // when
     gameService.validCreateGame(createRequest, requestUser);
 
@@ -261,25 +242,21 @@ class GameServiceTest {
         = ArgumentCaptor.forClass(GameEntity.class);
     ArgumentCaptor<ParticipantGameEntity> participantGameEntityCaptor
         = ArgumentCaptor.forClass(ParticipantGameEntity.class);
-    ArgumentCaptor<ChatRoomEntity> chatRoomEntityCaptor
-        = ArgumentCaptor.forClass(ChatRoomEntity.class);
 
     verify(gameRepository).save(gameEntityCaptor.capture());
     verify(participantGameRepository).save(participantGameEntityCaptor.capture());
-    verify(chatRoomRepository).save(chatRoomEntityCaptor.capture());
 
     // 저장된 엔티티 캡처
     GameEntity savedGame = gameEntityCaptor.getValue();
     ParticipantGameEntity savedParticipantGame =
         participantGameEntityCaptor.getValue();
-    ChatRoomEntity savedChatRoom = chatRoomEntityCaptor.getValue();
 
     savedGame.setId(1L);
     savedGame.setCreatedDateTime(fixedCreatedDateTime);
 
     assertEquals(expectedCreatedGame, savedGame);
     assertEquals(expectedCreatorParticipantGame, savedParticipantGame);
-    assertEquals(expectedCreatedChatRoom, savedChatRoom);
+
   }
 
   @Test
