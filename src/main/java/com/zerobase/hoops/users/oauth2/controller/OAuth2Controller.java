@@ -7,6 +7,9 @@ import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.oauth2.service.OAuth2Service;
 import com.zerobase.hoops.users.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -23,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/oauth2")
-@Tag(name = "5. OAUTH2")
+@Tag(name = "OAUTH2")
 public class OAuth2Controller {
 
   private final OAuth2Service oAuth2Service;
@@ -32,12 +35,16 @@ public class OAuth2Controller {
   /**
    * 카카오 로그인
    */
-  @Operation(summary = "카카오 로그인")
+  @Operation(summary = "카카오 로그인 호출")
   @GetMapping("/login/kakao")
   public void getKakaoAuthUrl(HttpServletResponse response) throws IOException {
     response.sendRedirect(oAuth2Service.responseUrl());
   }
 
+  @Operation(summary = "카카오 로그인")
+  @ApiResponse(responseCode = "200", description = "카카오 로그인 성공",
+      content = {@Content(mediaType = "application/json",
+          schema = @Schema(implementation = Response.class))})
   @GetMapping("/kakao")
   public ResponseEntity<Response> kakaoLogin(
       @RequestParam(name = "code") String code)

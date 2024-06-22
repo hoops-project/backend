@@ -10,6 +10,10 @@ import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.oauth2.service.OAuth2Service;
 import com.zerobase.hoops.users.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-@Tag(name = "2. AUTH")
+@Tag(name = "AUTH")
 public class AuthController {
 
   private final AuthService authService;
@@ -42,6 +46,10 @@ public class AuthController {
    * 로그인
    */
   @Operation(summary = "로그인")
+  @ApiResponse(responseCode = "200", description = "로그인 성공",
+    headers = {@Header(name = "Authorization", description = "Bearer Token")},
+    content = {@Content(mediaType = "application/json",
+        schema = @Schema(implementation = Response.class))})
   @PostMapping("/login")
   public ResponseEntity<Response> logIn(
       @RequestBody @Validated LogInDto.Request request
@@ -64,7 +72,11 @@ public class AuthController {
   /**
    * refresh
    */
-  @Operation(summary = "refresh")
+  @Operation(summary = "토큰 갱신")
+  @ApiResponse(responseCode = "200", description = "토큰 갱신 성공",
+      headers = {@Header(name = "Authorization", description = "Bearer Token")},
+      content = {@Content(mediaType = "application/json",
+          schema = @Schema(implementation = Response.class))})
   @PostMapping("/refresh-token")
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<Response> refreshToken(
@@ -88,6 +100,7 @@ public class AuthController {
    * 로그아웃
    */
   @Operation(summary = "로그아웃")
+  @ApiResponse(responseCode = "200", description = "로그아웃 성공")
   @PostMapping("/logout")
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<HttpStatus> logOut(
@@ -109,6 +122,9 @@ public class AuthController {
    * 회원 정보 조회
    */
   @Operation(summary = "회원 정보 조회")
+  @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공",
+      content = {@Content(mediaType = "application/json",
+          schema = @Schema(implementation = UserDto.class))})
   @GetMapping("/user/info")
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<UserDto> getUserInfo(
@@ -126,6 +142,9 @@ public class AuthController {
    * 회원 정보 수정
    */
   @Operation(summary = "회원 정보 수정")
+  @ApiResponse(responseCode = "200", description = "회원 정보 수정 성공",
+      content = {@Content(mediaType = "application/json",
+          schema = @Schema(implementation = EditDto.Response.class))})
   @PatchMapping("/user/edit")
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<EditDto.Response> editUserInfo(
@@ -150,6 +169,7 @@ public class AuthController {
    * 회원 탈퇴
    */
   @Operation(summary = "회원 탈퇴")
+  @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공")
   @PostMapping("/deactivate")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<HttpStatus> deactivateUser(
