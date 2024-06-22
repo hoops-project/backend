@@ -30,8 +30,6 @@ public class QMessageEntity extends EntityPathBase<MessageEntity> {
 
     public final DateTimePath<java.time.LocalDateTime> sendDateTime = createDateTime("sendDateTime", java.time.LocalDateTime.class);
 
-    public final NumberPath<Long> sessionId = createNumber("sessionId", Long.class);
-
     public final QUserEntity user;
 
     public QMessageEntity(String variable) {

@@ -6,7 +6,6 @@ import lombok.*;
 
 @Entity(name = "chat_room")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,31 +15,33 @@ public class ChatRoomEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Builder.Default
-  @Column(nullable = false)
-  private Long sessionId = 0L;
-
-  @OneToOne
+  @ManyToOne
   private GameEntity gameEntity;
+
+  @ManyToOne
+  private UserEntity userEntity;
 
   public void saveGameInfo(GameEntity game){
     this.gameEntity = game;
   }
-  public void changeNewSessionId(Long newSessionId){
-    this.sessionId = newSessionId;
+  public void saveUserInfo(UserEntity user){
+    this.userEntity = user;
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ChatRoomEntity that = (ChatRoomEntity) o;
-    return Objects.equals(id, that.id) &&
-        Objects.equals(gameEntity, that.gameEntity);
+    return Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, gameEntity);
+    return Objects.hash(id);
   }
 }

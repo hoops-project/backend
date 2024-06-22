@@ -26,7 +26,7 @@ public class QChatRoomEntity extends EntityPathBase<ChatRoomEntity> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final NumberPath<Long> sessionId = createNumber("sessionId", Long.class);
+    public final QUserEntity userEntity;
 
     public QChatRoomEntity(String variable) {
         this(ChatRoomEntity.class, forVariable(variable), INITS);
@@ -47,6 +47,7 @@ public class QChatRoomEntity extends EntityPathBase<ChatRoomEntity> {
     public QChatRoomEntity(Class<? extends ChatRoomEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.gameEntity = inits.isInitialized("gameEntity") ? new QGameEntity(forProperty("gameEntity"), inits.get("gameEntity")) : null;
+        this.userEntity = inits.isInitialized("userEntity") ? new QUserEntity(forProperty("userEntity")) : null;
     }
 
 }

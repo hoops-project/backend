@@ -7,9 +7,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,10 +29,6 @@ public class MessageEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Builder.Default
-  @Column(nullable = false)
-  private Long sessionId = 0L;
-
   @Column(columnDefinition = "TEXT")
   private String content;
 
@@ -46,5 +42,20 @@ public class MessageEntity {
   @ManyToOne(fetch = FetchType.EAGER)
   private ChatRoomEntity chatRoomEntity;
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MessageEntity that = (MessageEntity) o;
+    return Objects.equals(id, that.id);
+  }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
 }
