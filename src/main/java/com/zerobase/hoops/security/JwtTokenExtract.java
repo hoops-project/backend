@@ -25,7 +25,7 @@ public class JwtTokenExtract {
   public UserEntity currentUser() {
     Authentication authentication = SecurityContextHolder.getContext()
         .getAuthentication();
-
+    log.info("JwtTokenExtract - currentUser value = {}", authentication);
     if (authentication == null || !authentication.isAuthenticated()
         || authentication.getPrincipal() == null) {
       throw new CustomException(ErrorCode.EXPIRED_TOKEN);
@@ -38,9 +38,10 @@ public class JwtTokenExtract {
   }
 
   public UserEntity getUserFromToken(String authorizationHeader) {
+    log.info("JwtTokenExtract - getUserFromToken value = {}",
+        authorizationHeader);
     if (authorizationHeader == null || !authorizationHeader.startsWith(
         "Bearer ")) {
-      log.info("getUserFromToken 안됨" + authorizationHeader);
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
     String token = authorizationHeader.substring(7);
