@@ -102,7 +102,7 @@ public enum ErrorCode {
   NOT_EXIST_REPORTED(HttpStatus.BAD_REQUEST.value(), "신고 내용이 없습니다."),
 
   // 서버 오류
-  INTERNAL_SERVER_ERROR(HttpStatus.BAD_REQUEST.value(),"내부 서버 오류"),
+  INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(),"내부 서버 오류"),
 
   // 채팅
   NOT_ACCEPT_USER_FOR_GAME(HttpStatus.BAD_REQUEST.value(), "경기 개최자가 승인한 유저만 채팅에 참여할 수 있습니다."),
