@@ -2,7 +2,6 @@ package com.zerobase.hoops.reports.controller;
 
 import com.zerobase.hoops.commonResponse.ApiResponseFactory;
 import com.zerobase.hoops.commonResponse.BasicApiResponse;
-import com.zerobase.hoops.commonResponse.swaggerSchema.ErrorResponse;
 import com.zerobase.hoops.commonResponse.swaggerSchema.ReportResponse;
 import com.zerobase.hoops.commonResponse.swaggerSchema.ReportResponse.ReportContent;
 import com.zerobase.hoops.reports.dto.ReportDto;
@@ -10,6 +9,7 @@ import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,13 +45,13 @@ public class ReportController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "유저 신고 기능 성공",
           content = @Content(schema = @Schema(implementation = ReportResponse.ReportUser.class))),
-      @ApiResponse(responseCode = "400", description = "커스텀 에러",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.CustomError.class))),
-      @ApiResponse(responseCode = "403", description = "리프레시 토큰 만료",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ExpiredRefreshToken.class))),
-      @ApiResponse(responseCode = "500", description = "서버 에러 표시",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ServerError.class)))
-  }
+  })
+  @Parameters(
+      {
+          @Parameter(name = "reportedUserId", description = "신고 당하는 유저의 pk"),
+          @Parameter(name = "content", description = "신고내역"),
+
+      }
   )
   @PreAuthorize("hasRole('USER')")
   @PostMapping("/user")
@@ -65,13 +65,7 @@ public class ReportController {
   @Operation(summary = "신고된 유저 리스트")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "신고된 리스트 출력",
-          content = @Content(schema = @Schema(implementation = ReportResponse.PageReportUsersList.class))),
-      @ApiResponse(responseCode = "400", description = "커스텀 에러",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.CustomError.class))),
-      @ApiResponse(responseCode = "403", description = "리프레시 토큰 만료",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ExpiredRefreshToken.class))),
-      @ApiResponse(responseCode = "500", description = "서버 에러 표시",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ServerError.class)))
+          content = @Content(schema = @Schema(implementation = ReportResponse.PageReportUsersList.class)))
   })
   @PreAuthorize("hasRole('OWNER')")
   @GetMapping("/user-list")
@@ -85,14 +79,9 @@ public class ReportController {
   @Operation(summary = "신고 내역 조회")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "신고 내역 조회",
-          content = @Content(schema = @Schema(implementation = ReportContent.class))),
-      @ApiResponse(responseCode = "400", description = "커스텀 에러",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.CustomError.class))),
-      @ApiResponse(responseCode = "403", description = "리프레시 토큰 만료",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ExpiredRefreshToken.class))),
-      @ApiResponse(responseCode = "500", description = "서버 에러 표시",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.ServerError.class)))
+          content = @Content(schema = @Schema(implementation = ReportContent.class)))
   })
+
   @PreAuthorize("hasRole('OWNER')")
   @GetMapping("/contents/{report_id}")
   public ResponseEntity<BasicApiResponse> reportContents(
