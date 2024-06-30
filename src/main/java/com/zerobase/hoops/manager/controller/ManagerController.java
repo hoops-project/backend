@@ -72,7 +72,7 @@ public class ManagerController {
       @ApiResponse(responseCode = "200", description = "블랙리스트 여부 체크 - True / False",
           content = @Content(schema = @Schema(implementation = BlackListResponse.BlackUserUnlock.class))),
   })
-  @Parameter(name = "blackUserId", description = "블랙 유저의 pk", required = true)
+  @Parameter(name = "blackUserId", description = "블랙 유저의 로그인 ID", required = true)
   @PreAuthorize("hasRole('OWNER')")
   @PatchMapping("/unlock-black-list")
   public ResponseEntity<BasicApiResponse> blackTest(
