@@ -4,44 +4,38 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.KICKOUT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.REJECT;
-import static org.assertj.core.api.Assertions.allOf;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.alarm.repository.NotificationRepository;
 import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.AcceptRequest;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.DetailResponse;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.KickoutRequest;
-import com.zerobase.hoops.gameCreator.dto.ParticipantDto.RejectRequest;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.ApplyParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.KickoutParticipantDto;
+import com.zerobase.hoops.gameCreator.dto.RejectParticipantDto;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
-import com.zerobase.hoops.security.JwtTokenExtract;
-import com.zerobase.hoops.security.TokenProvider;
-import com.zerobase.hoops.users.repository.EmailRepository;
-import com.zerobase.hoops.users.repository.UserRepository;
+import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
-import io.jsonwebtoken.Jwts;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,10 +43,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class ParticipantGameServiceTest {
@@ -64,12 +62,6 @@ class ParticipantGameServiceTest {
   private NotificationService notificationService;
 
   @Mock
-  private JwtTokenExtract jwtTokenExtract;
-
-  @Mock
-  private UserRepository userRepository;
-
-  @Mock
   private ParticipantGameRepository participantGameRepository;
 
   @Mock
@@ -78,23 +70,38 @@ class ParticipantGameServiceTest {
   @Mock
   private NotificationRepository notificationRepository;
 
+  @Spy
+  private Clock clock;
+
   @Mock
   private EmitterRepository emitterRepository;
 
+  private LocalDateTime fixedStartDateTime;
+  private LocalDateTime fixedCreatedDateTime;
+  private LocalDateTime fixedAcceptedDateTime;
+  private LocalDateTime fixedRejectedDateTime;
+  private LocalDateTime fixedKickoutedDateTime;
   private UserEntity createdUser;
-  private UserEntity applyedUser;
-
-  private GameEntity createdGameEntity;
-
-  private ParticipantGameEntity creatorParticipantGameEntity;
-
-  private NotificationEntity notificationEntity;
+  private UserEntity applyUser;
+  private GameEntity expectedCreatedGame;
+  private GameEntity expectedOtherCreatedGame;
+  private ParticipantGameEntity expectedApplyParticipantGame;
+  private ParticipantGameEntity expectedAcceptParticipantGame;
 
   @BeforeEach
   void setUp() {
+    fixedStartDateTime = LocalDateTime.now().plusHours(1L);
+    fixedCreatedDateTime = LocalDateTime
+        .of(2024, 6, 9, 0, 0, 0);
+    fixedAcceptedDateTime = LocalDateTime
+        .of(2024, 6, 9, 1, 0, 0);
+    fixedRejectedDateTime = LocalDateTime
+        .of(2024, 6, 9, 1, 0, 0);
+    fixedKickoutedDateTime = LocalDateTime
+        .of(2024, 6, 9, 2, 0, 0);
     createdUser = UserEntity.builder()
-        .userId(1L)
-        .id("test")
+        .id(1L)
+        .loginId("test")
         .password("Testpass12!@")
         .email("test@example.com")
         .name("test")
@@ -104,12 +111,12 @@ class ParticipantGameServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(fixedCreatedDateTime)
         .emailAuth(true)
         .build();
-    applyedUser = UserEntity.builder()
-        .userId(2L)
-        .id("test1")
+    applyUser = UserEntity.builder()
+        .id(2L)
+        .loginId("test1")
         .password("Testpass12!@")
         .email("test1@example.com")
         .name("test1")
@@ -119,279 +126,583 @@ class ParticipantGameServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(fixedCreatedDateTime)
         .emailAuth(true)
         .build();
-    createdGameEntity = GameEntity.builder()
-        .gameId(1L)
+    expectedCreatedGame = GameEntity.builder()
+        .id(1L)
         .title("테스트제목")
         .content("테스트내용")
         .headCount(10L)
         .fieldStatus(FieldStatus.INDOOR)
         .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .startDateTime(fixedStartDateTime)
         .inviteYn(true)
         .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
         .latitude(32.13123)
         .longitude(123.13123)
         .matchFormat(MatchFormat.FIVEONFIVE)
         .cityName(CityName.SEOUL)
-        .userEntity(createdUser)
+        .user(createdUser)
         .build();
-    creatorParticipantGameEntity = ParticipantGameEntity.builder()
-        .participantId(1L)
-        .status(ACCEPT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(createdUser)
-        .build();
-    notificationEntity = NotificationEntity.builder()
-        .receiver(applyedUser)
+    expectedOtherCreatedGame = GameEntity.builder()
+        .id(2L)
+        .title("테스트제목")
         .content("테스트내용")
-        .createdDateTime(LocalDateTime.now())
+        .headCount(10L)
+        .fieldStatus(FieldStatus.INDOOR)
+        .gender(Gender.ALL)
+        .startDateTime(fixedStartDateTime)
+        .inviteYn(true)
+        .address("서울 마포구 와우산로13길 6 지하1,2층 (서교동)")
+        .latitude(32.13123)
+        .longitude(123.13123)
+        .matchFormat(MatchFormat.FIVEONFIVE)
+        .cityName(CityName.SEOUL)
+        .user(applyUser)
         .build();
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(APPLY)
+        .createdDateTime(fixedCreatedDateTime)
+        .game(expectedCreatedGame)
+        .user(applyUser)
+        .build();
+    expectedAcceptParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(ACCEPT)
+        .createdDateTime(fixedCreatedDateTime)
+        .acceptedDateTime(fixedAcceptedDateTime)
+        .game(expectedCreatedGame)
+        .user(applyUser)
+        .build();
+  }
+
+  @Test
+  @DisplayName("경기 지원자 리스트 조회 성공")
+  void testGetApplyParticipantListSuccess() {
+    // Given
+    Long gameId = 1L;
+
+    ParticipantGameEntity applyParticipantGame =
+        ParticipantGameEntity.builder()
+        .id(2L)
+        .status(APPLY)
+        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .game(expectedCreatedGame)
+        .user(applyUser)
+        .build();
+
+    Pageable pageable = PageRequest.of(0, 10);
+
+    List<ParticipantGameEntity> applyParticipantGameList
+        = List.of(applyParticipantGame);
+
+    Page<ParticipantGameEntity> expectedPage =
+        new PageImpl<>(applyParticipantGameList, pageable, applyParticipantGameList.size());
+
+    List<ApplyParticipantListDto.Response> expectedList = expectedPage.stream()
+        .map(ApplyParticipantListDto.Response::toDto)
+        .toList();
+
+    getGame(gameId, expectedCreatedGame);
+
+    getParticipantPage(APPLY, gameId, pageable, expectedPage);
+
+    // when
+    List<ApplyParticipantListDto.Response> result = participantGameService
+        .validApplyParticipantList(gameId, pageable, createdUser);
+
+    // Then
+    assertEquals(expectedList, result);
+  }
+
+  @Test
+  @DisplayName("경기 지원자 리스트 조회 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
+  void testGetApplyParticipantListFailIfNotGameCreator() {
+    // Given
+    Long gameId = 2L;
+
+    Pageable pageable = PageRequest.of(0, 10);
+
+    getGame(gameId, expectedOtherCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validApplyParticipantList(gameId, pageable, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_GAME_CREATOR, exception.getErrorCode());
   }
 
   @Test
   @DisplayName("경기 참가자 리스트 조회 성공")
-  void getParticipantList_success() {
+  void testGetAcceptParticipantListSuccess() {
     // Given
     Long gameId = 1L;
 
-    List<ParticipantGameEntity> participantList = List.of(creatorParticipantGameEntity);
+    ParticipantGameEntity acceptParticipantGame =
+        ParticipantGameEntity.builder()
+            .id(1L)
+            .status(ACCEPT)
+            .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+            .game(expectedCreatedGame)
+            .user(createdUser)
+            .build();
 
-    List<DetailResponse> detailResponseList = participantList.stream()
-        .map(DetailResponse::toDto)
+    Pageable pageable = PageRequest.of(0, 10);
+
+    List<ParticipantGameEntity> acceptParticipantGameList
+        = List.of(acceptParticipantGame);
+
+    Page<ParticipantGameEntity> expectedPage =
+        new PageImpl<>(acceptParticipantGameList, pageable, acceptParticipantGameList.size());
+
+    List<AcceptParticipantListDto.Response> expectedList = expectedPage.stream()
+        .map(AcceptParticipantListDto.Response::toDto)
         .toList();
+    
+    getGame(gameId, expectedCreatedGame);
 
-    getCurrentUser();
-
-    when(gameRepository.findByGameIdAndDeletedDateTimeNull(anyLong()))
-        .thenReturn(Optional.ofNullable(createdGameEntity));
-
-    when(participantGameRepository.findByStatusAndGameEntityGameId
-        (eq(APPLY), anyLong())).thenReturn(participantList);
+    getParticipantPage(ACCEPT, gameId, pageable, expectedPage);
 
     // when
-    List<DetailResponse> result = participantGameService
-        .getParticipantList(gameId);
+    List<AcceptParticipantListDto.Response> result = participantGameService
+        .validAcceptParticipantList(gameId, pageable, createdUser);
 
     // Then
-    assertThat(result).containsExactlyElementsOf(detailResponseList);
+    assertEquals(expectedList, result);
   }
 
   @Test
-  @DisplayName("경기 참가 희망자 수락")
-  void acceptParticipant_success() {
+  @DisplayName("경기 지원자 수락 성공")
+  void testAcceptParticipantSuccess() {
     // Given
-    Long gameId = 1L;
-
-    AcceptRequest request = AcceptRequest.builder()
+    AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
-    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
-        .participantId(2L)
-        .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
-        .build();
+    Instant fixedInstant = fixedAcceptedDateTime.atZone(ZoneId.systemDefault())
+        .toInstant();
 
-    ParticipantGameEntity acceptPartEntity = ParticipantGameEntity.builder()
-        .participantId(2L)
-        .status(ACCEPT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
-        .build();
+    when(clock.instant()).thenReturn(fixedInstant);
+    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
-    Long count = 1L;
+    ParticipantGameEntity acceptParticipantGame =
+        new ParticipantGameEntity().setAccept
+            (expectedApplyParticipantGame, clock);
 
-    getCurrentUser();
+    
 
-    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(APPLY)))
-        .thenReturn(Optional.ofNullable(applyPartEntity));
+    // 경기 참가 정보 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+    
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedCreatedGame);
 
-    when(gameRepository.findByGameIdAndDeletedDateTimeNull
-        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+    // 경기에 참가자가 1명 있다고 가정
+    countsParticipantGame(ACCEPT, expectedCreatedGame.getId(), 1);
 
-    when(participantGameRepository.countByStatusAndGameEntityGameId
-        (eq(ACCEPT), anyLong())).thenReturn(count);
-
-    when(participantGameRepository.save(any()))
-        .thenReturn(acceptPartEntity);
-
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
-
-    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
-        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+    when(participantGameRepository.save(acceptParticipantGame))
+        .thenReturn(acceptParticipantGame);
 
     // when
-    participantGameService.acceptParticipant(request);
+    participantGameService.validAcceptParticipant(request, createdUser);
 
     // Then
-    verify(participantGameRepository)
-        .save(participantGameEntityArgumentCaptor.capture());
-
-    ParticipantGameEntity result
-        = participantGameEntityArgumentCaptor.getValue();
-
-    assertEquals(acceptPartEntity.getParticipantId(),
-        result.getParticipantId());
-    assertEquals(acceptPartEntity.getStatus(), result.getStatus());
-    assertEquals(acceptPartEntity.getCreatedDateTime(),
-        result.getCreatedDateTime());
-    assertEquals(acceptPartEntity.getGameEntity().getGameId(),
-        result.getGameEntity().getGameId());
-    assertEquals(acceptPartEntity.getUserEntity().getUserId(),
-        result.getUserEntity().getUserId());
+    assertEquals(expectedAcceptParticipantGame, acceptParticipantGame);
   }
 
   @Test
-  @DisplayName("경기 참가 희망자 거절")
-  void rejectParticipant_success() {
+  @DisplayName("경기 지원자 수락 실패 : 경기 개설자 참가 정보를 조회 했을때")
+  void testAcceptParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
-    Long gameId = 1L;
-
-    RejectRequest request = RejectRequest.builder()
+    AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
-    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
-        .participantId(2L)
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
         .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .user(createdUser)
         .build();
 
-    ParticipantGameEntity rejectPartEntity = ParticipantGameEntity.builder()
-        .participantId(2L)
-        .status(REJECT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .rejectedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
-        .build();
+    
 
-    getCurrentUser();
-
-    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(APPLY)))
-        .thenReturn(Optional.ofNullable(applyPartEntity));
-
-    when(gameRepository.findByGameIdAndDeletedDateTimeNull
-        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
-
-    when(participantGameRepository.save(any()))
-        .thenReturn(rejectPartEntity);
-
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
-
-    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
-        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+    // 경기 참가 정보 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
 
     // when
-    participantGameService.rejectParticipant(request);
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validAcceptParticipant(request, createdUser);
+    });
 
     // Then
-    verify(participantGameRepository)
-        .save(participantGameEntityArgumentCaptor.capture());
-
-    ParticipantGameEntity result
-        = participantGameEntityArgumentCaptor.getValue();
-
-    assertEquals(rejectPartEntity.getParticipantId(),
-        result.getParticipantId());
-    assertEquals(rejectPartEntity.getStatus(), result.getStatus());
-    assertEquals(rejectPartEntity.getCreatedDateTime(),
-        result.getCreatedDateTime());
-    assertEquals(rejectPartEntity.getGameEntity().getGameId(),
-        result.getGameEntity().getGameId());
-    assertEquals(rejectPartEntity.getUserEntity().getUserId(),
-        result.getUserEntity().getUserId());
+    assertEquals(ErrorCode.NOT_UPDATE_CREATOR, exception.getErrorCode());
   }
 
   @Test
-  @DisplayName("경기 참가자 강퇴")
-  void kickoutParticipant_success() {
+  @DisplayName("경기 지원자 수락 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
+  void testAcceptParticipantFailIfNotGameCreator() {
     // Given
-    Long gameId = 1L;
-
-    KickoutRequest request = KickoutRequest.builder()
+    AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
         .participantId(2L)
         .build();
 
-    ParticipantGameEntity applyPartEntity = ParticipantGameEntity.builder()
-        .participantId(2L)
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
         .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .user(applyUser)
+        .game(expectedOtherCreatedGame)
         .build();
 
-    ParticipantGameEntity rejectPartEntity = ParticipantGameEntity.builder()
+    
+
+    // 경기 참가 정보 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedOtherCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validAcceptParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_GAME_CREATOR, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 지원자 수락 실패 : 경기가 이미 시작 함")
+  void testAcceptParticipantFailIfGameAlreadyStarted() {
+    // Given
+    AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
         .participantId(2L)
+        .build();
+
+    expectedCreatedGame = GameEntity.builder()
+        .id(1L)
+        .startDateTime(LocalDateTime.now().minusHours(1))
+        .user(createdUser)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validAcceptParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.ALREADY_GAME_START, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 지원자 수락 실패 : 해당 경기에 참가자가 다 참")
+  void testAcceptParticipantFailIfGameAlreadyFull() {
+    // Given
+    AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedCreatedGame);
+
+    // 경기에 참가자가 10명 있다고 가정
+    countsParticipantGame(ACCEPT, expectedCreatedGame.getId(), 10);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validAcceptParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.FULL_PARTICIPANT, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 지원자 거절 성공")
+  void testRejectParticipantSuccess() {
+    // Given
+    RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    ParticipantGameEntity expectedRejectParticipantGame =
+        ParticipantGameEntity.builder()
+            .id(2L)
+            .status(REJECT)
+            .createdDateTime(fixedCreatedDateTime)
+            .rejectedDateTime(fixedRejectedDateTime)
+            .game(expectedCreatedGame)
+            .user(applyUser)
+            .build();
+
+    Instant fixedInstant = fixedRejectedDateTime.atZone(ZoneId.systemDefault())
+        .toInstant();
+
+    when(clock.instant()).thenReturn(fixedInstant);
+    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+
+    ParticipantGameEntity rejectParticipantGame =
+        new ParticipantGameEntity().setReject
+            (expectedApplyParticipantGame, clock);
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedCreatedGame);
+
+    when(participantGameRepository.save(rejectParticipantGame))
+        .thenReturn(rejectParticipantGame);
+
+    // when
+    participantGameService.validRejectParticipant(request, createdUser);
+
+    // Then
+    assertEquals(expectedRejectParticipantGame, rejectParticipantGame);
+  }
+
+  @Test
+  @DisplayName("경기 지원자 거절 실패 : 경기 개설자 참가 정보 조회 할때")
+  void testRejectParticipantFailIfGetGameCreatorParticipantGame() {
+    // Given
+    RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(APPLY)
+        .user(createdUser)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validRejectParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_UPDATE_CREATOR, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 지원자 거절 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
+  void testRejectParticipantFailIfNotGameCreator() {
+    // Given
+    RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(APPLY)
+        .user(applyUser)
+        .game(expectedOtherCreatedGame)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), APPLY,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedOtherCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validRejectParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_GAME_CREATOR, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 참가자 강퇴 성공")
+  void testKickoutParticipantSuccess() {
+    // Given
+    KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    Instant fixedInstant = fixedKickoutedDateTime.atZone(ZoneId.systemDefault())
+        .toInstant();
+
+    when(clock.instant()).thenReturn(fixedInstant);
+    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+
+    ParticipantGameEntity expectedKickoutParticipantGame =
+        ParticipantGameEntity.builder()
+        .id(2L)
         .status(KICKOUT)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
-        .acceptedDateTime(LocalDateTime.of(2024, 10, 10, 12, 30, 0))
-        .kickoutDateTime(LocalDateTime.of(2024, 10, 10, 12, 40, 0))
-        .gameEntity(createdGameEntity)
-        .userEntity(applyedUser)
+        .createdDateTime(fixedCreatedDateTime)
+        .acceptedDateTime(fixedAcceptedDateTime)
+        .kickoutDateTime(fixedKickoutedDateTime)
+        .game(expectedCreatedGame)
+        .user(applyUser)
         .build();
 
-    getCurrentUser();
+    ParticipantGameEntity kickoutParticipantGame =
+        new ParticipantGameEntity().setKickout
+            (expectedAcceptParticipantGame, clock);
 
-    when(participantGameRepository.findByParticipantIdAndStatus(anyLong(), eq(ACCEPT)))
-        .thenReturn(Optional.ofNullable(applyPartEntity));
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), ACCEPT,
+        expectedAcceptParticipantGame);
 
-    when(gameRepository.findByGameIdAndDeletedDateTimeNull
-        (anyLong())).thenReturn(Optional.ofNullable(createdGameEntity));
+    // 경기 조회
+    getGame(expectedAcceptParticipantGame.getGame().getId(), expectedCreatedGame);
 
-    when(participantGameRepository.save(any()))
-        .thenReturn(rejectPartEntity);
-
-    lenient().when(notificationRepository.save(any())).thenReturn(notificationEntity);
-
-    lenient().
-        when(emitterRepository.findAllStartWithByEmitterId(anyString())).thenReturn(null);
-
-    ArgumentCaptor<ParticipantGameEntity> participantGameEntityArgumentCaptor
-        = ArgumentCaptor.forClass(ParticipantGameEntity.class);
+    when(participantGameRepository.save(kickoutParticipantGame))
+        .thenReturn(kickoutParticipantGame);
 
     // when
-    participantGameService.kickoutParticipant(request);
+    participantGameService.validKickoutParticipant(request, createdUser);
 
     // Then
-    verify(participantGameRepository)
-        .save(participantGameEntityArgumentCaptor.capture());
-
-    ParticipantGameEntity result
-        = participantGameEntityArgumentCaptor.getValue();
-
-    assertEquals(rejectPartEntity.getParticipantId(),
-        result.getParticipantId());
-    assertEquals(rejectPartEntity.getStatus(), result.getStatus());
-    assertEquals(rejectPartEntity.getCreatedDateTime(),
-        result.getCreatedDateTime());
-    assertEquals(rejectPartEntity.getGameEntity().getGameId(),
-        result.getGameEntity().getGameId());
-    assertEquals(rejectPartEntity.getUserEntity().getUserId(),
-        result.getUserEntity().getUserId());
+    assertEquals(expectedKickoutParticipantGame, kickoutParticipantGame);
   }
 
-  private void getCurrentUser() {
-    when(jwtTokenExtract.currentUser()).thenReturn(createdUser);
+  @Test
+  @DisplayName("경기 지원자 강퇴 실패 : 경기 개설자 참가 정보 조회 할때")
+  void testKickoutParticipantFailIfGetGameCreatorParticipantGame() {
+    // Given
+    KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
 
-    when(userRepository.findById(anyLong())).thenReturn(
-        Optional.ofNullable(createdUser));
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(ACCEPT)
+        .user(createdUser)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), ACCEPT,
+        expectedApplyParticipantGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validKickoutParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_UPDATE_CREATOR, exception.getErrorCode());
+  }
+
+  @Test
+  @DisplayName("경기 지원자 강퇴 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
+  void testKickoutParticipantFailIfNotGameCreator() {
+    // Given
+    KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    expectedApplyParticipantGame = ParticipantGameEntity.builder()
+        .id(2L)
+        .status(ACCEPT)
+        .user(applyUser)
+        .game(expectedOtherCreatedGame)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), ACCEPT,
+        expectedApplyParticipantGame);
+
+    // 경기 조회
+    getGame(expectedApplyParticipantGame.getGame().getId(), expectedOtherCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validKickoutParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.NOT_GAME_CREATOR, exception.getErrorCode());
+  }
+
+
+  @Test
+  @DisplayName("경기 참가자 강퇴 실패 : 경기가 이미 시작 함")
+  void testKickoutParticipantFailIfGameAlreadyStarted() {
+    // Given
+    KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
+        .participantId(2L)
+        .build();
+
+    expectedCreatedGame = GameEntity.builder()
+        .id(1L)
+        .startDateTime(LocalDateTime.now().minusHours(1))
+        .user(createdUser)
+        .build();
+
+    // 경기 참가 조회
+    getParticipantGame(request.getParticipantId(), ACCEPT,
+        expectedAcceptParticipantGame);
+
+    // 경기 조회
+    getGame(expectedAcceptParticipantGame.getGame().getId(), expectedCreatedGame);
+
+    // when
+    CustomException exception = assertThrows(CustomException.class, () -> {
+      participantGameService.validKickoutParticipant(request, createdUser);
+    });
+
+    // Then
+    assertEquals(ErrorCode.ALREADY_GAME_START, exception.getErrorCode());
+  }
+
+
+  // 경기 조회
+  private void getGame(Long gameId, GameEntity expectedCreatedGame) {
+    when(gameRepository.findByIdAndDeletedDateTimeNull(gameId))
+        .thenReturn(Optional.ofNullable(expectedCreatedGame));
+  }
+
+  // 경기 지원자,참가자 리스트 조회
+  private void getParticipantPage(ParticipantGameStatus status,
+      Long gameId, Pageable pageable, Page<ParticipantGameEntity> expectedPage) {
+
+    when(participantGameRepository.findByStatusAndGameId(status, gameId, pageable))
+        .thenReturn(expectedPage);
+  }
+
+  // 경기 지원,참가 정보 조회
+  private void getParticipantGame(Long participantGameId,
+      ParticipantGameStatus status,
+      ParticipantGameEntity expectedParticipantGame) {
+
+    when(participantGameRepository.findByIdAndStatus
+        (participantGameId, status))
+        .thenReturn(Optional.ofNullable(expectedParticipantGame));
+  }
+
+
+  // 경기에 참가한 인원수를 셈
+  private void countsParticipantGame
+  (ParticipantGameStatus status, Long gameId, int count) {
+    when(participantGameRepository.countByStatusAndGameId
+        (status, gameId)).thenReturn(count);
   }
 
 }

@@ -11,8 +11,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.criteria.CriteriaBuilder.In;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,7 +36,7 @@ public class ParticipantGameEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(nullable = false)
-  private Long participantId;
+  private Long id;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -58,78 +59,130 @@ public class ParticipantGameEntity {
   private LocalDateTime deletedDateTime;
 
   @ManyToOne
-  @JoinColumn(name = "game_id", nullable = false)
-  private GameEntity gameEntity;
+  @JoinColumn(nullable = false)
+  private GameEntity game;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private UserEntity userEntity;
+  @JoinColumn(nullable = false)
+  private UserEntity user;
 
-  public static ParticipantGameEntity toGameCreatorEntity(
+  public ParticipantGameEntity toGameCreatorEntity(
       GameEntity gameEntity,
-      UserEntity userEntity) {
+      UserEntity userEntity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.ACCEPT)
-        .createdDateTime(gameEntity.getCreatedDateTime())
-        .acceptedDateTime(gameEntity.getCreatedDateTime())
-        .gameEntity(gameEntity)
-        .userEntity(userEntity)
+        .acceptedDateTime(LocalDateTime.now(clock))
+        .game(gameEntity)
+        .user(userEntity)
         .build();
   }
 
-  public static ParticipantGameEntity setAccept(ParticipantGameEntity entity) {
+  public ParticipantGameEntity setAccept(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.ACCEPT)
         .createdDateTime(entity.getCreatedDateTime())
-        .acceptedDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .acceptedDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
-  public static ParticipantGameEntity setReject(ParticipantGameEntity entity) {
+  public ParticipantGameEntity setReject(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.REJECT)
         .createdDateTime(entity.getCreatedDateTime())
-        .rejectedDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .rejectedDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
-  public static ParticipantGameEntity setKickout(ParticipantGameEntity entity) {
+  public ParticipantGameEntity setKickout(ParticipantGameEntity entity,
+      Clock clock) {
     return ParticipantGameEntity.builder()
-        .participantId(entity.getParticipantId())
+        .id(entity.getId())
         .status(ParticipantGameStatus.KICKOUT)
         .createdDateTime(entity.getCreatedDateTime())
         .acceptedDateTime(entity.getAcceptedDateTime())
-        .kickoutDateTime(LocalDateTime.now())
-        .gameEntity(entity.getGameEntity())
-        .userEntity(entity.getUserEntity())
+        .kickoutDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
         .build();
   }
 
-  public static ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity) {
+  public ParticipantGameEntity setWithdraw(ParticipantGameEntity entity,
+      Clock clock) {
+    return ParticipantGameEntity.builder()
+        .id(entity.getId())
+        .status(ParticipantGameStatus.WITHDRAW)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(entity.getAcceptedDateTime())
+        .withdrewDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
+        .build();
+  }
 
-    LocalDateTime nowDateTime = LocalDateTime.now();
+  public ParticipantGameEntity setDelete(ParticipantGameEntity entity,
+      Clock clock) {
+    return ParticipantGameEntity.builder()
+        .id(entity.getId())
+        .status(ParticipantGameStatus.DELETE)
+        .createdDateTime(entity.getCreatedDateTime())
+        .acceptedDateTime(entity.getAcceptedDateTime())
+        .deletedDateTime(LocalDateTime.now(clock))
+        .game(entity.getGame())
+        .user(entity.getUser())
+        .build();
+  }
 
+  public ParticipantGameEntity gameCreatorInvite(InviteEntity inviteEntity,
+      LocalDateTime nowDateTime) {
     return ParticipantGameEntity.builder()
             .status(ParticipantGameStatus.ACCEPT)
             .createdDateTime(nowDateTime)
             .acceptedDateTime(nowDateTime)
-            .gameEntity(inviteEntity.getGameEntity())
-            .userEntity(inviteEntity.getReceiverUserEntity())
+            .game(inviteEntity.getGame())
+            .user(inviteEntity.getReceiverUser())
             .build();
   }
 
-  public static ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
+  public ParticipantGameEntity gameUserInvite(InviteEntity inviteEntity) {
     return ParticipantGameEntity.builder()
         .status(ParticipantGameStatus.APPLY)
-        .gameEntity(inviteEntity.getGameEntity())
-        .userEntity(inviteEntity.getReceiverUserEntity())
+        .game(inviteEntity.getGame())
+        .user(inviteEntity.getReceiverUser())
         .build();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ParticipantGameEntity that = (ParticipantGameEntity) o;
+    return Objects.equals(id, that.id) &&
+        Objects.equals(status, that.status) &&
+        Objects.equals(createdDateTime, that.createdDateTime) &&
+        Objects.equals(acceptedDateTime, that.acceptedDateTime) &&
+        Objects.equals(rejectedDateTime, that.rejectedDateTime) &&
+        Objects.equals(canceledDateTime, that.canceledDateTime) &&
+        Objects.equals(withdrewDateTime, that.withdrewDateTime) &&
+        Objects.equals(kickoutDateTime, that.kickoutDateTime) &&
+        Objects.equals(deletedDateTime, that.deletedDateTime) &&
+        Objects.equals(game, that.game) &&
+        Objects.equals(user, that.user);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, status, createdDateTime, acceptedDateTime,
+        rejectedDateTime, canceledDateTime, withdrewDateTime, kickoutDateTime,
+        deletedDateTime, game, user);
   }
 
 }

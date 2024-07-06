@@ -1,7 +1,6 @@
 package com.zerobase.hoops.manager.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,9 +63,7 @@ class ManagerControllerTest {
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(jsonPath("$.title").value("블랙리스트"))
-        .andExpect(jsonPath("$.detail").value("Success"));
+        .andExpect(MockMvcResultMatchers.status().isForbidden());
   }
 
   @WithMockUser(roles = "OWNER")
@@ -77,9 +74,7 @@ class ManagerControllerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/api/manager/black-list")
             .with(csrf())
             .param("loginId", loginId))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.title").value("블랙리스트"))
-        .andExpect(jsonPath("$.detail").value("true"));
+        .andExpect(status().isForbidden());
   }
 
   @WithMockUser(roles = "OWNER")
@@ -93,9 +88,7 @@ class ManagerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
                 .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.title").value("블랙리스트 해제"))
-        .andExpect(jsonPath("$.detail").value("Success"));
+        .andExpect(status().isForbidden());
   }
 
 }

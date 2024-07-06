@@ -1,380 +1,480 @@
 package com.zerobase.hoops.users.service;
 
-import static com.zerobase.hoops.exception.ErrorCode.NOT_FOUND_APPLY_FRIEND;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.WITHDRAW;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.entity.FriendEntity;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
-import com.zerobase.hoops.friends.dto.FriendDto.AcceptRequest;
-import com.zerobase.hoops.friends.dto.FriendDto.ApplyRequest;
 import com.zerobase.hoops.friends.repository.FriendRepository;
-import com.zerobase.hoops.friends.service.FriendService;
 import com.zerobase.hoops.friends.type.FriendStatus;
-import com.zerobase.hoops.gameCreator.dto.GameDto.CreateRequest;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
-import com.zerobase.hoops.gameCreator.service.GameService;
-import com.zerobase.hoops.gameCreator.type.FieldStatus;
-import com.zerobase.hoops.gameCreator.type.Gender;
-import com.zerobase.hoops.gameCreator.type.MatchFormat;
-import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
-import com.zerobase.hoops.gameUsers.service.GameUserService;
+import com.zerobase.hoops.invite.repository.InviteRepository;
+import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.security.TokenProvider;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
-import com.zerobase.hoops.users.dto.SignUpDto;
 import com.zerobase.hoops.users.dto.TokenDto;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.users.repository.UserRepository;
+import com.zerobase.hoops.users.repository.redis.AuthRepository;
+import com.zerobase.hoops.users.type.AbilityType;
+import com.zerobase.hoops.users.type.GenderType;
+import com.zerobase.hoops.users.type.PlayStyleType;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
-@Transactional
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-  @Autowired
+  @InjectMocks
   AuthService authService;
-  @Autowired
-  TokenProvider tokenProvider;
-  @Autowired
-  UserService userService;
-  @Autowired
-  GameService gameService;
-  @Autowired
-  GameUserService gameUserService;
-  @Autowired
-  FriendService friendService;
-  @Autowired
+
+  @Mock
   UserRepository userRepository;
-  @Autowired
+
+  @Mock
+  AuthRepository authRepository;
+
+  @Mock
+  EmitterRepository emitterRepository;
+
+  @Mock
+  TokenProvider tokenProvider;
+
+  @Mock
   GameRepository gameRepository;
-  @Autowired
+
+  @Mock
   ParticipantGameRepository participantGameRepository;
-  @Autowired
+
+  @Mock
+  InviteRepository inviteRepository;
+
+  @Mock
   FriendRepository friendRepository;
 
-  @BeforeEach
-  void insertTestUser() {
-    userService.signUpUser(SignUpDto.Request.builder()
-        .id("basketman")
-        .password("Abcdefg123$%")
-        .passwordCheck("Abcdefg123$%")
-        .email("testMail@hoops.com")
-        .name("농구공")
-        .birthday(LocalDate.parse("18900101", DateTimeFormatter.ofPattern(
-            "yyyyMMdd")))
-        .gender("MALE")
-        .nickName("농구짱")
-        .playStyle("AGGRESSIVE")
-        .ability("PASS")
-        .build());
+  @Spy
+  BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    userService.signUpUser(SignUpDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$%")
-        .passwordCheck("Abcdefg123$%")
+  UserEntity user;
+  UserEntity notConfirmedUser;
+
+  @BeforeEach
+  void setUp() {
+    user = UserEntity.builder()
+        .id(1L)
+        .loginId("test")
+        .password(passwordEncoder.encode("test"))
         .email("test@hoops.com")
         .name("테스트")
-        .birthday(LocalDate.parse("19900101", DateTimeFormatter.ofPattern(
-            "yyyyMMdd")))
-        .gender("MALE")
-        .nickName("별명")
-        .playStyle("BALANCE")
-        .ability("SHOOT")
-        .build());
-
-    UserEntity user = userRepository.findById("basketman")
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    user.confirm();
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("테스트별명")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(true)
+        .build();
     userRepository.save(user);
-    System.out.println("인증 결과 : " + user.isEmailAuth());
-    UserEntity testUser = userRepository.findById("testUser")
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    testUser.confirm();
-    userRepository.save(testUser);
-    System.out.println("인증 결과 : " + testUser.isEmailAuth());
+
+    notConfirmedUser = UserEntity.builder()
+        .id(1L)
+        .loginId("notConfirmedTest")
+        .password(passwordEncoder.encode("test"))
+        .email("notConfirmedTest@hoops.com")
+        .name("미인증")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(GenderType.MALE)
+        .nickName("미인증별명")
+        .playStyle(PlayStyleType.AGGRESSIVE)
+        .ability(AbilityType.SHOOT)
+        .roles(new ArrayList<>(List.of("ROLE_USER")))
+        .createdDateTime(LocalDateTime.now())
+        .emailAuth(false)
+        .build();
+    userRepository.save(user);
   }
 
   @Test
-  @DisplayName("LogIn_User_Success")
-  void logInUserTestSuccess() {
-    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  @DisplayName("Auth_LogInUser_Success")
+  void logInUserTest_Success() {
     // given
-    LogInDto.Request request = LogInDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$%")
-        .build();
+    String id = "test";
+    String password = "test";
+
+    LogInDto.Request request = new LogInDto.Request(id, password);
 
     // when
-    UserDto user = authService.logInUser(request);
+    when(passwordEncoder.matches(password, user.getPassword())).thenReturn(true);
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
+
+    UserDto result = authService.logInUser(request);
 
     // then
-    assertEquals(user.getUserId(), 12);
-    assertEquals(user.getId(), "testUser");
-    assertTrue(passwordEncoder.matches(
-        "Abcdefg123$%", user.getPassword())
-    );
-    assertEquals(user.getEmail(), "test@hoops.com");
-    assertEquals(user.getName(), "테스트");
-    assertEquals(user.getBirthday(), LocalDate
-        .parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")));
-    assertEquals(user.getGender(), "MALE");
-    assertEquals(user.getNickName(), "별명");
-    assertEquals(user.getPlayStyle(), "BALANCE");
-    assertEquals(user.getAbility(), "SHOOT");
-    for (int i = 0; i < user.getRoles().size(); i++) {
-      assertEquals(user.getRoles().get(i), "ROLE_USER");
-    }
+    assertEquals(id, result.getLoginId());
+    assertTrue(passwordEncoder.matches(password, result.getPassword()));
   }
 
   @Test
-  @DisplayName("LogIn_User_Fail_User_Not_Found")
-  void logInUserFailTest_UserNotFound() {
+  @DisplayName("Auth_LogInUser_Fail_NonExistingId")
+  void logInUserTest_NonExistingId() {
     // given
-    LogInDto.Request request = LogInDto.Request.builder()
-        .id("nouser")
-        .password("Abcdefg123$%")
-        .build();
+    String nonExistingId = "nonExistingId";
+    String password = "password";
+    LogInDto.Request request = new LogInDto.Request(nonExistingId, password);
 
-    // when
-    Throwable exception = assertThrows(CustomException.class, () ->
-        authService.logInUser(request));
+    //when
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(nonExistingId)).thenReturn(Optional.empty());
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
     // then
-    assertThrows(CustomException.class, () -> authService.logInUser(request));
     assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());
   }
 
   @Test
-  @DisplayName("LogIn_User_Fail_Not_Matched_Password")
-  void logInUserFailTest_NotMatchedPassword() {
+  @DisplayName("Auth_LogInUser_Fail_WrongPassword")
+  void logInUserTest_WrongPassword() {
     // given
-    LogInDto.Request request = LogInDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$")
-        .build();
+    String id = "test";
+    String wrongPassword = "wrongPassword";
+
+    LogInDto.Request request = new LogInDto.Request(id, wrongPassword);
 
     // when
-    Throwable exception = assertThrows(CustomException.class, () ->
-        authService.logInUser(request));
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(user));
+    Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
     // then
-    assertThrows(CustomException.class, () -> authService.logInUser(request));
     assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
   }
 
   @Test
-  @DisplayName("LogIn_User_Fail_Not_Confirmed_Auth")
-  void logInUserFailTest_NotConfirmedAuth() {
-    // given
-    LogInDto.Request request = LogInDto.Request.builder()
-        .id("basketman")
-        .password("Abcdefg123$%")
-        .build();
+  @DisplayName("Auth_LogInUser_Fail_NotConfirmedEmail")
+  void logInUserTest_NotConfirmedEmail() {
+    // Arrange
+    String id = "notConfirmedTest";
+    String password = "test";
+
+    LogInDto.Request request = new LogInDto.Request(id, password);
 
     // when
-    Throwable exception = assertThrows(CustomException.class, () ->
-        authService.logInUser(request));
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(id)).thenReturn(Optional.of(notConfirmedUser));
+    Throwable exception = assertThrows(CustomException.class, () -> authService.logInUser(request));
 
     // then
-    assertThrows(CustomException.class, () -> authService.logInUser(request));
     assertEquals("인증되지 않은 회원입니다.", exception.getMessage());
   }
 
   @Test
-  @DisplayName("Get_User_Info_Success")
+  @DisplayName("Auth_GetToken_Success")
+  void getTokenTest_Success() {
+    // given
+    UserDto userDto = UserDto.fromEntity(user);
+    String accessToken = "accessToken";
+    String refreshToken = "refreshToken";
+
+    // when
+    when(tokenProvider.createAccessToken(userDto.getLoginId(),
+        userDto.getEmail(),
+        userDto.getRoles())).thenReturn(accessToken);
+    when(tokenProvider.createRefreshToken(userDto.getLoginId())).thenReturn(refreshToken);
+
+    TokenDto result = authService.getToken(userDto);
+
+    // then
+    assertEquals(accessToken, result.getAccessToken());
+    assertEquals(refreshToken, result.getRefreshToken());
+  }
+
+  @Test
+  @DisplayName("Auth_RefreshToken_Success")
+  void refreshTokenTest_Success() {
+    // given
+    String refreshToken = "refreshToken";
+    String newAccessToken = "newAccessToken";
+
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
+
+    // when
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
+    when(userRepository.findByLoginIdAndDeletedDateTimeNull(user.getLoginId())).thenReturn(Optional.of(user));
+    when(tokenProvider.createAccessToken(user.getLoginId(), user.getEmail(), user.getRoles())).thenReturn(newAccessToken);
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
+
+    TokenDto result = authService.refreshToken(request, user);
+
+    // then
+    assertEquals(newAccessToken, result.getAccessToken());
+    assertEquals(refreshToken, result.getRefreshToken());
+  }
+
+  @Test
+  @DisplayName("Auth_RefreshToken_Fail_InvalidAccessToken")
+  void refreshTokenTest_InvalidAccessToken() {
+    // given
+    String invalidAccessToken = "invalidAccessToken";
+
+    // when
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(invalidAccessToken);
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.refreshToken(request, user));
+
+    // then
+    assertEquals("토큰 형식의 값을 찾을 수 없습니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_RefreshToken_Fail_InvalidRefreshToken")
+  void refreshTokenTest_InvalidRefreshToken() {
+    // given
+    String invalidRefreshToken = "invalidRefreshToken";
+
+    Claims refreshClaims = Jwts.claims().setSubject("invalidId");
+
+    // when
+    when(tokenProvider.parseClaims(invalidRefreshToken)).thenReturn(refreshClaims);
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + invalidRefreshToken);
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.refreshToken(request, user));
+
+    // then
+    assertEquals("유효하지 않은 토큰입니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_RefreshToken_Fail_NotFoundToken")
+  void refreshTokenTest_Fail_NotFoundToken() {
+    // given
+    String refreshToken = "refreshToken";
+
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
+
+    // when
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
+    doThrow(new CustomException(ErrorCode.NOT_FOUND_TOKEN)).when(authRepository).findByLoginId(user.getLoginId());
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.refreshToken(request, user));
+
+    // then
+    assertEquals("토큰 형식의 값을 찾을 수 없습니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_RefreshToken_Fail_UserNotFound")
+  void refreshTokenTest_Fail_UserNotFound() {
+    // given
+    String refreshToken = "refreshToken";
+
+    Claims claims = Jwts.claims().setSubject(user.getLoginId());
+
+    // when
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(claims);
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + refreshToken);
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.refreshToken(request, user));
+
+    // then
+    assertEquals("아이디가 존재하지 않습니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_LogOutUserTest_Success")
+  void logOutUserTest_Success() {
+    // given
+    String accessToken = "accessToken";
+    String refreshToken = "refreshToken";
+
+    // when
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
+    when(request.getHeader("refreshToken")).thenReturn(refreshToken);
+
+    Claims accessClaims = Jwts.claims().setSubject(user.getLoginId());
+    Claims refreshClaims = Jwts.claims().setSubject(user.getLoginId());
+
+    when(tokenProvider.parseClaims(accessToken)).thenReturn(accessClaims);
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(refreshClaims);
+
+    doNothing().when(authRepository).deleteByLoginId(user.getLoginId());
+    doNothing().when(emitterRepository).deleteAllStartWithUserId(
+        String.valueOf(user.getLoginId()));
+    doNothing().when(emitterRepository).deleteAllEventCacheStartWithUserId(
+        String.valueOf(user.getLoginId()));
+    doNothing().when(tokenProvider).addToLogOutList(accessToken);
+
+    authService.logOutUser(request, user);
+
+    // then
+    verify(authRepository, times(1)).deleteByLoginId(user.getLoginId());
+    verify(emitterRepository, times(1)).deleteAllStartWithUserId(
+        String.valueOf(user.getLoginId()));
+    verify(emitterRepository, times(1)).deleteAllEventCacheStartWithUserId(
+        String.valueOf(user.getLoginId()));
+    verify(tokenProvider, times(1)).addToLogOutList(accessToken);
+  }
+
+  @Test
+  @DisplayName("Auth_LogOutUserTest_Fail_NotFoundToken")
+  void logOutUserTest_Fail_NotFoundToken() {
+    // when
+    HttpServletRequest request = mock(HttpServletRequest.class);
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.logOutUser(request, user));
+
+    // then
+    assertEquals("토큰 형식의 값을 찾을 수 없습니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_LogOutUserTest_Fail_InValidToken")
+  void logOutUserTest_Fail_InvalidToken() {
+    // given
+    String accessToken = "invalidAccessToken";
+    String refreshToken = "invalidRefreshToken";
+
+    // when
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
+    when(request.getHeader("refreshToken")).thenReturn(refreshToken);
+    when(tokenProvider.parseClaims(anyString())).thenThrow(new CustomException(ErrorCode.INVALID_TOKEN));
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.logOutUser(request, user));
+
+    // then
+    assertEquals("유효하지 않은 토큰입니다.", exception.getMessage());
+  }
+
+  @Test
+  @DisplayName("Auth_GetUserInfoTest_Success")
   void getUserInfoTest() {
     // given
-    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    UserDto user = authService.logInUser(LogInDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$%")
-        .build());
-    TokenDto token = authService.getToken(user);
-
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.addHeader("Authorization", "Bearer " + token.getAccessToken());
-
-    UserEntity userEntity = userRepository.findById("testUser")
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    String accessToken = "accessToken";
 
     // when
-    UserDto userInfo = authService.getUserInfo(request, userEntity);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
+    when(tokenProvider.parseClaims(anyString())).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
+
+    UserDto result = authService.getUserInfo(request, user);
 
     // then
-    assertEquals(userInfo.getUserId(), 12);
-    assertEquals(userInfo.getId(), "testUser");
-    assertTrue(passwordEncoder.matches(
-        "Abcdefg123$%", userInfo.getPassword())
-    );
-    assertEquals(userInfo.getEmail(), "test@hoops.com");
-    assertEquals(userInfo.getName(), "테스트");
-    assertEquals(userInfo.getBirthday(), LocalDate
-        .parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")));
-    assertEquals(userInfo.getGender(), "MALE");
-    assertEquals(userInfo.getNickName(), "별명");
-    assertEquals(userInfo.getPlayStyle(), "BALANCE");
-    assertEquals(userInfo.getAbility(), "SHOOT");
-    for (int i = 0; i < userInfo.getRoles().size(); i++) {
-      assertEquals(userInfo.getRoles().get(i), "ROLE_USER");
-    }
+    assertEquals(user.getLoginId(), result.getLoginId());
+    verify(request, times(1)).getHeader(HttpHeaders.AUTHORIZATION);
+    verify(tokenProvider, times(1)).parseClaims(anyString());
   }
 
   @Test
-  @DisplayName("Edit_User_Info_Success")
-  void editUserInfoTest() {
+  @DisplayName("Auth_GetUserInfo_Fail_InvalidToken")
+  void getUserInfoTest_InvalidToken() {
     // given
-    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    UserDto user = authService.logInUser(LogInDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$%")
-        .build());
-    TokenDto token = authService.getToken(user);
-
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.addHeader("Authorization", "Bearer " + token.getAccessToken());
-
-    UserEntity userEntity = userRepository.findById("testUser")
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-    EditDto.Request requestEdit = EditDto.Request.builder()
-        .password("TransPa1@#")
-        .nickName("변경")
-        .gender("FEMALE")
-        .build();
+    String invalidAccessToken = "invalidAccessToken";
+    UserEntity user = new UserEntity();
+    user.setLoginId("testUser");
 
     // when
-    UserDto edit = authService.editUserInfo(request, requestEdit, userEntity);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + invalidAccessToken);
+    when(tokenProvider.parseClaims(anyString())).thenThrow(new CustomException(ErrorCode.INVALID_TOKEN));
+
+    Throwable exception = assertThrows(CustomException.class, () -> authService.getUserInfo(request, user));
 
     // then
-    assertEquals(edit.getUserId(), 12);
-    assertEquals(edit.getId(), "testUser");
-    assertTrue(passwordEncoder.matches(
-        "TransPa1@#", edit.getPassword())
-    );
-    assertEquals(edit.getEmail(), "test@hoops.com");
-    assertEquals(edit.getName(), "테스트");
-    assertEquals(edit.getBirthday(), LocalDate
-        .parse("19900101", DateTimeFormatter.ofPattern("yyyyMMdd")));
-    assertEquals(edit.getGender(), "FEMALE");
-    assertEquals(edit.getNickName(), "변경");
-    assertEquals(edit.getPlayStyle(), "BALANCE");
-    assertEquals(edit.getAbility(), "SHOOT");
-    for (int i = 0; i < edit.getRoles().size(); i++) {
-      assertEquals(edit.getRoles().get(i), "ROLE_USER");
-    }
+    assertEquals("유효하지 않은 토큰입니다.", exception.getMessage());
   }
 
   @Test
-  @DisplayName("Deactivate_User_Success")
-  void deactivateUserTest() {
+  @DisplayName("Auth_EditUserInfoTest_Success")
+  void editUserInfoTest_Success() {
     // given
-    UserDto user = authService.logInUser(LogInDto.Request.builder()
-        .id("basketman")
-        .password("Abcdefg123$%")
-        .build());
-    TokenDto token = authService.getToken(user);
-
-    Authentication auth = tokenProvider.getAuthentication(
-        token.getAccessToken());
-    SecurityContextHolder.getContext().setAuthentication(auth);
-
-    gameService.createGame(CreateRequest.builder()
-        .title("테스트 경기")
-        .content("테스트 내용")
-        .headCount(10L)
-        .fieldStatus(FieldStatus.OUTDOOR)
-        .gender(Gender.ALL)
-        .startDateTime(LocalDateTime.of(2024, 5, 15, 12, 0, 0))
-        .inviteYn(true)
-        .address("서울 종로구")
-        .latitude(12.33)
-        .longitude(11.33)
-        .matchFormat(MatchFormat.FIVEONFIVE)
-        .build());
-
-    UserDto testUser = authService.logInUser(LogInDto.Request.builder()
-        .id("testUser")
-        .password("Abcdefg123$%")
-        .build());
-    TokenDto testUserToken = authService.getToken(testUser);
-
-    Authentication testUserAuth =
-        tokenProvider.getAuthentication(testUserToken.getAccessToken());
-    SecurityContextHolder.getContext().setAuthentication(testUserAuth);
-
-    gameUserService.participateInGame(1L);
-
-    friendService.applyFriend(ApplyRequest.builder()
-        .friendUserId(11L)
-        .build());
-
-    TokenDto reUsertoken = authService.getToken(user);
-
-    Authentication reUserAuth =
-        tokenProvider.getAuthentication(reUsertoken.getAccessToken());
-    SecurityContextHolder.getContext().setAuthentication(reUserAuth);
-
-    friendService.acceptFriend(AcceptRequest.builder()
-        .friendId(1L)
-        .build());
-
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.addHeader("Authorization",
-        "Bearer " + reUsertoken.getAccessToken());
-    request.addHeader("refreshToken", reUsertoken.getRefreshToken());
-
-    UserEntity userEntity = userRepository.findById("basketman")
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    String accessToken = "accessToken";
+    EditDto.Request editDto = new EditDto.Request();
+    editDto.setPassword("newPassword");
+    editDto.setNickName("newNickName");
+    String password = user.getPassword();
 
     // when
-    authService.deactivateUser(request, userEntity);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(
+        "Bearer " + accessToken);
+    when(tokenProvider.parseClaims(accessToken)).thenReturn(
+        Jwts.claims().setSubject(user.getLoginId()));
+
+    UserDto result = authService.editUserInfo(request, editDto, user);
 
     // then
-    GameEntity resultGame = gameRepository.findById(1L)
-        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
-    List<ParticipantGameEntity> participantGame =
-        participantGameRepository
-            .findByStatusAndGameEntityGameId(ParticipantGameStatus.DELETE, 1L);
-    FriendEntity resultFriends =
-        friendRepository.findByFriendIdAndStatus(1L,
-                FriendStatus.DELETE)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+    assertEquals(user.getLoginId(), result.getLoginId());
+    assertEquals(user.getNickName(), result.getNickName());
+    assertNotEquals(password, result.getPassword());
+  }
 
-    FriendEntity resultAppliedFriends =
-        friendRepository.findByFriendIdAndStatus(2L,
-                FriendStatus.DELETE)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_APPLY_FRIEND));
+  @Test
+  @DisplayName("Auth_DeactivateUser_Success")
+  void deactivateUserTest_Success() {
+    // given
+    String accessToken = "accessToken";
+    String refreshToken = "refreshToken";
 
-    System.out.println("participantGame size : " + participantGame.size());
-    assertNotNull(resultGame.getDeletedDateTime());
-    assertEquals(participantGame.get(0).getStatus(),
-        ParticipantGameStatus.DELETE);
-    assertNotNull(participantGame.get(0).getDeletedDateTime());
-    assertEquals(participantGame.get(1).getStatus(),
-        ParticipantGameStatus.DELETE);
-    assertNotNull(participantGame.get(1).getDeletedDateTime());
-    assertEquals(resultFriends.getStatus(), FriendStatus.DELETE);
-    assertNotNull(resultFriends.getDeletedDateTime());
-    assertEquals(resultAppliedFriends.getStatus(), FriendStatus.DELETE);
-    assertNotNull(resultAppliedFriends.getDeletedDateTime());
+    // when
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + accessToken);
+    when(request.getHeader("refreshToken")).thenReturn(refreshToken);
+    when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
+    when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
+    lenient().when(gameRepository.findByUserIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByUserIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
+    lenient().when(inviteRepository.findByInviteStatusAndGameId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
+    when(inviteRepository.findByInviteStatusAndSenderUserIdOrReceiverUserId(
+        InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());
+    lenient().when(friendRepository.findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());
+    lenient().when(userRepository.findByLoginIdAndDeletedDateTimeNull(anyString())).thenReturn(Optional.of(user));
+
+    authService.deactivateUser(request, user);
+
+    // then
+    assertNotNull(user.getDeletedDateTime());
   }
 }

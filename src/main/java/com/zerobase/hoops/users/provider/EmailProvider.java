@@ -4,6 +4,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +15,8 @@ public class EmailProvider {
   private final String SUBJECT = "[HOOPS] 인증 메일입니다.";
   private final String PASSWORD_SUBJECT = "[HOOPS] 임시 비밀번호입니다.";
 
-  public boolean sendCertificationMail(String id, String email,
+  @Async
+  public void sendCertificationMail(String loginId, String email,
       String certificationNumber) {
     try {
       MimeMessage message = javaMailSender.createMimeMessage();
@@ -22,7 +24,7 @@ public class EmailProvider {
           new MimeMessageHelper(message, true);
 
       String htmlContent = getCertificationMessage(
-          id, email, certificationNumber);
+          loginId, email, certificationNumber);
 
       messageHelper.setTo(email);
       messageHelper.setSubject(SUBJECT);
@@ -31,13 +33,10 @@ public class EmailProvider {
       javaMailSender.send(message);
     } catch (Exception e) {
       e.printStackTrace();
-      return false;
     }
-
-    return true;
   }
 
-  private String getCertificationMessage(String id, String email,
+  private String getCertificationMessage(String loginId, String email,
       String certificationNumber) {
     String certificationMessage = "";
     certificationMessage +=
@@ -47,7 +46,7 @@ public class EmailProvider {
     certificationMessage +=
         "<h3 style='text-align: center;'>"
             + "인증 링크 : "
-            + "<a href=\"http://localhost:8080/api/user/signup/confirm?id=" + id
+            + "<a href=\"http://localhost:8080/api/user/signup/confirm?loginId=" + loginId
             + "&email=" + email + "&certificationNumber=" + certificationNumber
             + "\">"
             + "이곳을 눌러 인증을 완료해주세요. 링크는 3분 동안 유효합니다."
@@ -57,7 +56,8 @@ public class EmailProvider {
     return certificationMessage;
   }
 
-  public boolean sendTemporaryPasswordMail(String email, String newPassword) {
+  @Async
+  public void sendTemporaryPasswordMail(String email, String newPassword) {
     try {
       MimeMessage message = javaMailSender.createMimeMessage();
       MimeMessageHelper messageHelper =
@@ -72,10 +72,7 @@ public class EmailProvider {
       javaMailSender.send(message);
     } catch (Exception e) {
       e.printStackTrace();
-      return false;
     }
-
-    return true;
   }
 
   private String getTemporaryPasswordMessage(String newPassword) {

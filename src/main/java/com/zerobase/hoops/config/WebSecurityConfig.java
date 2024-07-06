@@ -1,7 +1,9 @@
 package com.zerobase.hoops.config;
 
 import com.zerobase.hoops.security.JwtAuthenticationFilter;
+import com.zerobase.hoops.security.JwtExceptionFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+@Slf4j
 @Configurable
 @Configuration
 @EnableWebSecurity
@@ -27,6 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class WebSecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtExceptionFilter jwtExceptionFilter;
 
   @Bean
   protected SecurityFilterChain configure(HttpSecurity httpSecurity)
@@ -45,44 +48,39 @@ public class WebSecurityConfig {
         .headers(header -> header
             .frameOptions(FrameOptionsConfig::disable))
         .authorizeHttpRequests(request -> request
-            .requestMatchers("/**", "/api/user/**",
-                "/swagger-ui/**", "/v3/api-docs/**",
-                "/api/auth/login", "/api/oauth2/**/**",
-                "/api/game-user/**",
-                //로그인 개발되면 해당 부분 삭제
-                "/ws",
-                //--------------------
-                "/h2-console/**").permitAll()
-            .requestMatchers("/api/auth/**")
-            .hasAnyRole("USER", "CREATOR", "ADMIN")
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/game-creator/game/detail")
-            .permitAll()
             .requestMatchers(
-                "/api/game-creator/game/create",
-                "/api/game-creator/game/update")
-            .hasRole("USER")
-            .requestMatchers("/api/game-creator/game/delete")
-            .hasAnyRole("USER", "ADMIN")
-            .requestMatchers("/api/game-creator/participant/**")
-            .hasRole("USER")
-            .requestMatchers("/api/friend/**")
-            .hasRole("USER")
-            .requestMatchers("/api/invite/**")
-            .hasRole("USER")
+                "/ws/**",
+                "/api/user/**",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/api/auth/login",
+                "/api/oauth2/**",
+                "/api/game-user/**",
+                "/api/game-creator/game/detail").permitAll()
+            .requestMatchers("/api/chat/create")
+            .hasAnyRole("USER")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter,
-            UsernamePasswordAuthenticationFilter.class);
+            UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(jwtExceptionFilter,
+            JwtAuthenticationFilter.class);
     return httpSecurity.build();
   }
 
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
-    corsConfiguration.addAllowedOrigin("http://localhost:3000");
+    corsConfiguration.addAllowedOrigin("http://127.0.0.1:5001");
+    corsConfiguration.addAllowedOrigin("http://localhost:5173");
+    corsConfiguration.addAllowedOrigin(
+        "https://hoops-frontend-jet.vercel.app");
+    corsConfiguration.addAllowedOrigin("https://hoops.services");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
+    corsConfiguration.addExposedHeader("Authorization");
+    corsConfiguration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfiguration);

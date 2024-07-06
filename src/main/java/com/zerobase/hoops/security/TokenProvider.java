@@ -1,10 +1,16 @@
 package com.zerobase.hoops.security;
 
-import com.zerobase.hoops.users.repository.AuthRepository;
+import com.zerobase.hoops.exception.CustomException;
+import com.zerobase.hoops.exception.ErrorCode;
+import com.zerobase.hoops.manager.service.ManagerService;
+import com.zerobase.hoops.users.repository.redis.AuthRepository;
 import com.zerobase.hoops.users.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -21,18 +27,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenProvider {
 
-  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 5;
-  private static final long BLACK_TOKEN_EXPIRE_TIME = 1000L * 60 * 2;
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30;
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
   private final UserService userService;
   private final AuthRepository authRepository;
+  private final ManagerService managerService;
 
   @Getter
   private final Set<String> logOut =
@@ -41,33 +46,41 @@ public class TokenProvider {
   @Value("${spring.jwt.secret}")
   private String secretKey;
 
-  /**
-   * AccessToken 생성
-   */
-  public String createAccessToken(String id, String email, List<String> role) {
-    return generateToken(id, email, role, ACCESS_TOKEN_EXPIRE_TIME);
+  public String createAccessToken(String loginId, String email,
+      List<String> role) {
+    log.info("Access Token 생성 시작");
+    return generateAccessToken(loginId, email, role, ACCESS_TOKEN_EXPIRE_TIME);
   }
 
-  /**
-   * RefreshToken 생성
-   */
-  public String createRefreshToken(String id, String email, List<String> role) {
-
+  public String createRefreshToken(String loginId) {
+    log.info("Refresh Token 생성 시작");
     String refreshToken =
-        generateToken(id, email, role, REFRESH_TOKEN_EXPIRE_TIME);
+        generateRefreshToken(loginId, REFRESH_TOKEN_EXPIRE_TIME);
 
     authRepository.saveRefreshToken(
-        id, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
+        loginId, refreshToken, Duration.ofMillis(REFRESH_TOKEN_EXPIRE_TIME));
+    log.info("Refresh Token 저장 완료");
     return refreshToken;
   }
 
-  public String generateToken(String id, String email, List<String> roles,
-      Long expireTime) {
+  public String generateAccessToken(String loginId, String email,
+      List<String> roles, Long expireTime) {
 
-    Claims claims = Jwts.claims().setSubject(email);
-    claims.put("id", id);
+    Claims claims = Jwts.claims().setSubject(loginId);
+    claims.put("email", email);
     claims.put("roles", roles);
 
+    return returnToken(claims, expireTime);
+  }
+
+  public String generateRefreshToken(String loginId, Long expireTime) {
+
+    Claims claims = Jwts.claims().setSubject(loginId);
+
+    return returnToken(claims, expireTime);
+  }
+
+  private String returnToken(Claims claims, Long expireTime) {
     var now = new Date();
     var expireDate = new Date(now.getTime() + expireTime);
 
@@ -101,11 +114,43 @@ public class TokenProvider {
   }
 
   public boolean validateToken(String token) {
-    if (!StringUtils.hasText(token)) {
-      return false;
+    try {
+      validateRefreshToken(token);
+      Jws<Claims> claims = Jwts.parserBuilder()
+          .setSigningKey(
+              getSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)))
+          .build()
+          .parseClaimsJws(token);
+      managerService.checkBlackList(claims.getBody().getSubject());
+      checkLogOut(token);
+      return !claims.getBody().getExpiration().before(new Date());
+    } catch (IllegalArgumentException e) {
+      log.error("IllegalArgumentException!!");
+      throw new JwtException(ErrorCode.NOT_FOUND_TOKEN.getDescription());
+    } catch (MalformedJwtException e) {
+      log.error("MalformedJwtException!!");
+      throw new JwtException(ErrorCode.UNSUPPORTED_TOKEN.getDescription());
+    } catch (ExpiredJwtException e) {
+      log.error("ExpiredJwtException!!");
+      throw new JwtException(ErrorCode.EXPIRED_TOKEN.getDescription());
+    } catch (JwtException e) {
+      log.error("JwtException!!");
+      throw new JwtException(ErrorCode.INVALID_TOKEN.getDescription());
+    } catch (CustomException e) {
+      if(e.getErrorCode().equals(ErrorCode.ALREADY_LOGOUT)){
+        log.error("CustomException!!");
+        throw new JwtException(ErrorCode.ALREADY_LOGOUT.getDescription());
+      } else if (e.getErrorCode().equals(ErrorCode.BAN_FOR_10DAYS)) {
+        log.error("CustomException!!");
+        throw new JwtException(ErrorCode.BAN_FOR_10DAYS.getDescription());
+      } else if (e.getErrorCode().equals(ErrorCode.EXPIRED_REFRESH_TOKEN)) {
+        log.error("CustomException!!");
+        throw new JwtException(ErrorCode.EXPIRED_REFRESH_TOKEN.getDescription());
+      } else {
+        log.error("CustomException!!");
+        throw new JwtException(ErrorCode.ACCESS_DENIED.getDescription());
+      }
     }
-    var claims = this.parseClaims(token);
-    return !claims.getExpiration().before(new Date());
   }
 
   public Authentication getAuthentication(String jwt) {
@@ -120,6 +165,18 @@ public class TokenProvider {
 
   public boolean isLogOut(String token) {
     return this.logOut.contains(token);
+  }
+
+  public void checkLogOut(String token) {
+    if (isLogOut(token)) {
+      throw new CustomException(ErrorCode.ALREADY_LOGOUT);
+    }
+  }
+
+  public void validateRefreshToken(String token) {
+    if (token.length() == 152 && parseClaims(token).getExpiration().before(new Date())) {
+      throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+    }
   }
 
   public void addToLogOutList(String token) {

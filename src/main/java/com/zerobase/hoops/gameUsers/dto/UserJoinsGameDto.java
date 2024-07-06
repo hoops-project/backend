@@ -38,8 +38,8 @@ public class UserJoinsGameDto {
 
     public static Response from(ParticipateGameDto participateGameDto) {
       return Response.builder()
-          .userId(participateGameDto.getUserEntity().getUserId())
-          .gameId(participateGameDto.getGameEntity().getGameId())
+          .userId(participateGameDto.getUserEntity().getId())
+          .gameId(participateGameDto.getGameEntity().getId())
           .gameAddress(participateGameDto.getGameEntity().getAddress())
           .participantGameStatus(ParticipantGameStatus.APPLY)
           .createdDateTime(participateGameDto.getCreatedDateTime())

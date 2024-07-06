@@ -9,10 +9,10 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
-//import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponseDto;
 import com.zerobase.hoops.reports.repository.ReportRepository;
@@ -35,7 +35,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -56,14 +55,17 @@ class ReportServiceTest {
   @Mock
   private JwtTokenExtract jwtTokenExtract;
 
+  @Mock
+  private NotificationService notificationService;
+
   private UserEntity userEntity;
   private UserEntity reportedUserEntity;
 
   @BeforeEach
   void setUp() {
     userEntity = UserEntity.builder()
-        .userId(1L)
-        .id("user1")
+        .id(1L)
+        .loginId("user1")
         .password("password123")
         .email("user@example.com")
         .name("John Doe")
@@ -77,8 +79,8 @@ class ReportServiceTest {
         .emailAuth(true)
         .build();
     reportedUserEntity = UserEntity.builder()
-        .userId(2L)
-        .id("user1")
+        .id(2L)
+        .loginId("user1")
         .password("password123")
         .email("reported@example.com")
         .name("John Doe")
@@ -148,13 +150,13 @@ class ReportServiceTest {
     when(reportRepository.findByBlackListStartDateTimeIsNull(
         any(PageRequest.class)))
         .thenReturn(reportPage);
-    List<ReportListResponseDto> result = reportService.reportList(0, 10);
+    Page<ReportListResponseDto> result = reportService.reportList(0, 10);
 
     // Then
     verify(reportRepository).findByBlackListStartDateTimeIsNull(
         any(PageRequest.class));
     assertThat(result).isNotNull();
-    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.getSize()).isEqualTo(2);
   }
 
   @Test

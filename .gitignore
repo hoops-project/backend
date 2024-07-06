@@ -38,3 +38,6 @@ out/
 
 ### OAuth2 ###
 **/src/main/resources/application-secret.yml
+
+### logs ###
+/logs/
