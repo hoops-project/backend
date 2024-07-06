@@ -1,8 +1,11 @@
 package com.zerobase.hoops.entity;
 
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,6 +34,8 @@ public class NotificationEntity {
   @JoinColumn(nullable = false)
   private UserEntity receiver;
 
+  @Enumerated(EnumType.STRING)
+  private NotificationType notificationType;
   private String content;
   private LocalDateTime createdDateTime;
 

@@ -1,23 +1,20 @@
 package com.zerobase.hoops.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zerobase.hoops.manager.service.ManagerService;
-import com.zerobase.hoops.users.service.UserService;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
@@ -29,9 +26,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   public static final String TOKEN_PREFIX = "Bearer ";
 
   private final TokenProvider tokenProvider;
-  private final ObjectMapper objectMapper;
-  private final UserService userService;
-  private final ManagerService managerService;
 
   @Override
   protected void doFilterInternal(
@@ -40,54 +34,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       FilterChain filterChain) throws ServletException, IOException {
 
     String accessToken = resolveTokenFromRequest(request);
-
     try {
-      if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(
-          accessToken)) {
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType("application/json");
-        String errorMessage = objectMapper.writeValueAsString(
-            Map.of("error", "Unauthorized", "message",
-                "Your token is invalid."));
-        response.getWriter().write(errorMessage);
-
-        // 요청 헤더에 access token 이 없으면 Exception 발생
-      } else if (!StringUtils.hasText(accessToken)) {
-        log.warn("Not have Access Token!");
-
-        // 유효 기간이 지나지 않았으면 인증 세팅 진행
-      } else if (tokenProvider.validateToken(accessToken)) {
+      if(accessToken != null && tokenProvider.validateToken(accessToken)) {
         Authentication auth = tokenProvider.getAuthentication(accessToken);
-
-        // 토큰의 인증정보 세팅
         SecurityContextHolder.getContext().setAuthentication(auth);
-
-        // 블랙리스트 체크
-        try {
-          managerService.checkBlackList(tokenProvider.getUsername(accessToken));
-        } catch (Exception e) {
-          setUnauthorizedResponse(response, e.getMessage());
-          return;
+      } else {
+        String requestURI = request.getRequestURI();
+        if (!isPublicPath(requestURI)) {
+          throw new AccessDeniedException("Access Denied");
         }
-        log.info(String.format("[%s] -> %s",
-            tokenProvider.getUsername(accessToken),
-            request.getRequestURI()));
       }
-    } catch (ExpiredJwtException e) {
-      log.warn("에러 메세지 : " + e.getMessage());
+    } catch (AccessDeniedException e) {
+      response.setContentType("application/json;charset=UTF-8");
+      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      ObjectMapper objectMapper = new ObjectMapper();
+      String errorMessage = objectMapper.writeValueAsString(
+          Map.of("statusCode", HttpServletResponse.SC_FORBIDDEN,
+              "errorCode", "ACCESS_DENIED",
+              "errorMessage", "접근 권한이 없습니다. 로그인 후 이용해주세요."));
+      response.getWriter().write(errorMessage);
+      return;
     }
 
     filterChain.doFilter(request, response);
-  }
-
-  private void setUnauthorizedResponse(HttpServletResponse response,
-      String message) throws IOException {
-    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-    response.setContentType("application/json; charset=UTF-8");
-    response.setCharacterEncoding("UTF-8");
-    String errorMessage = objectMapper.writeValueAsString(
-        Map.of("error", "Unauthorized", "message", message));
-    response.getWriter().write(errorMessage);
   }
 
   private String resolveTokenFromRequest(HttpServletRequest request) {
@@ -97,5 +66,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return token.substring(TOKEN_PREFIX.length());
     }
     return null;
+  }
+
+  private boolean isPublicPath(String requestURI) {
+    List<String> publicPaths = List.of(
+        "/api/user", "/api/auth/login", "/api/oauth2/login/kakao",
+        "/api/oauth2/kakao", "/swagger-ui", "/v3/api-docs", "/api/game-user",
+        "/ws",
+        "/api/game-creator/game/detail");
+    return publicPaths.stream().anyMatch(requestURI::startsWith);
   }
 }

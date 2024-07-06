@@ -21,8 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.MannerPointEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
@@ -51,7 +49,6 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -106,32 +103,32 @@ class GameUserControllerTest {
     // Given
     LocalDateTime time = LocalDateTime.now();
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setGameId(1L);
+    gameEntity.setId(1L);
     gameEntity.setTitle("Test Game");
     gameEntity.setStartDateTime(time.minusDays(1));
     gameEntity.setAddress("Test Address");
 
     UserEntity user = UserEntity.builder()
-        .userId(1L)
+        .id(1L)
         .gender(GenderType.MALE)
         .build();
 
     UserEntity receiverUser = UserEntity.builder()
-        .userId(2L)
+        .id(2L)
         .gender(GenderType.MALE)
         .build();
 
     MannerPointDto gameForManner = MannerPointDto.builder()
-        .receiverId(receiverUser.getUserId())
-        .gameId(gameEntity.getGameId())
+        .receiverId(receiverUser.getId())
+        .gameId(gameEntity.getId())
         .point(5)
         .build();
 
     given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
     given(userRepository.findById(anyLong())).willReturn(Optional.of(receiverUser));
-    given(gameUserRepository.findByGameIdAndStartDateTimeBefore(anyLong(), any(LocalDateTime.class)))
+    given(gameUserRepository.findByIdAndStartDateTimeBefore(anyLong(), any(LocalDateTime.class)))
         .willReturn(Optional.of(gameEntity));
-    given(mannerPointRepository.existsByUser_UserIdAndReceiver_UserIdAndGame_GameId(anyLong(), anyLong(), anyLong()))
+    given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(anyLong(), anyLong(), anyLong()))
         .willReturn(false);
 
     // When
@@ -153,20 +150,20 @@ class GameUserControllerTest {
     // Given
     LocalDateTime time = LocalDateTime.now();
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setGameId(1L);
+    gameEntity.setId(1L);
     gameEntity.setTitle("Test Game");
     gameEntity.setStartDateTime(time.minusDays(1));
     gameEntity.setAddress("Test Address");
 
     List<MannerPointListResponse> mannerPointList = Arrays.asList(
         MannerPointListResponse.builder()
-            .gameId(gameEntity.getGameId())
+            .gameId(gameEntity.getId())
             .title(gameEntity.getTitle())
             .address(gameEntity.getAddress())
             .player("Player 1")
             .build(),
         MannerPointListResponse.builder()
-            .gameId(gameEntity.getGameId())
+            .gameId(gameEntity.getId())
             .title(gameEntity.getTitle())
             .address(gameEntity.getAddress())
             .player("Player 2")
@@ -179,7 +176,7 @@ class GameUserControllerTest {
     mockMvc.perform(get("/api/game-user/manner-point/8"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(2)))
-        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getGameId()))
+        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getId()))
         .andExpect(jsonPath("$[0].title").value(
             gameEntity.getTitle()))
         .andExpect(jsonPath("$[0].address").value(
@@ -187,7 +184,7 @@ class GameUserControllerTest {
         .andExpect(jsonPath("$[0].player").value(
             "Player 1"))
         .andExpect(jsonPath("$[1].gameId").value(
-            gameEntity.getGameId()))
+            gameEntity.getId()))
         .andExpect(jsonPath("$[1].title").value(
             gameEntity.getTitle()))
         .andExpect(jsonPath("$[1].address").value(
@@ -210,7 +207,7 @@ class GameUserControllerTest {
     LocalDateTime time = LocalDateTime.now()
         .plusDays(10);
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setGameId(1L);
+    gameEntity.setId(1L);
     gameEntity.setTitle("Test Game");
     gameEntity.setContent("Test Game Content");
     gameEntity.setHeadCount(6L);
@@ -226,11 +223,11 @@ class GameUserControllerTest {
     gameEntity.setCityName(cityName);
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(1L);
-    gameEntity.setUserEntity(userEntity);
+    userEntity.setId(1L);
+    gameEntity.setUser(userEntity);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+        GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
 
@@ -247,7 +244,7 @@ class GameUserControllerTest {
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
         .andExpect(jsonPath("$.content").isArray());
   }
 
@@ -265,7 +262,7 @@ class GameUserControllerTest {
 
     LocalDateTime time = LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099);
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setGameId(1L);
+    gameEntity.setId(1L);
     gameEntity.setTitle("Test Game");
     gameEntity.setContent("Test Game Content");
     gameEntity.setHeadCount(6L);
@@ -281,10 +278,10 @@ class GameUserControllerTest {
     gameEntity.setCityName(cityName);
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(1L);
-    gameEntity.setUserEntity(userEntity);
+    userEntity.setId(1L);
+    gameEntity.setUser(userEntity);
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+        GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
     // When
@@ -299,7 +296,7 @@ class GameUserControllerTest {
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
         .andExpect(jsonPath("$.content").isArray());
   }
 
@@ -346,12 +343,12 @@ class GameUserControllerTest {
     Gender gender = ALL;
     MatchFormat matchFormat = THREEONTHREE;
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(1L);
+    userEntity.setId(1L);
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setUserEntity(userEntity);
+    gameEntity.setUser(userEntity);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+        GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
     // When
@@ -388,7 +385,7 @@ class GameUserControllerTest {
 
     LocalDateTime time = LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099);
     GameEntity gameEntity = new GameEntity();
-    gameEntity.setGameId(1L);
+    gameEntity.setId(1L);
     gameEntity.setTitle("Test Game");
     gameEntity.setContent("Test Game Content");
     gameEntity.setHeadCount(6L);
@@ -404,10 +401,10 @@ class GameUserControllerTest {
     gameEntity.setCityName(cityName);
     gameEntity.setMatchFormat(matchFormat);
     UserEntity userEntity = new UserEntity();
-    userEntity.setUserId(1L);
-    gameEntity.setUserEntity(userEntity);
+    userEntity.setId(1L);
+    gameEntity.setUser(userEntity);
     List<GameSearchResponse> expectedGames = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getUserId()));
+        GameSearchResponse.of(gameEntity, userEntity.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(expectedGames);
 
     // When
@@ -427,7 +424,7 @@ class GameUserControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getGameId()))
+            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
         .andExpect(
             jsonPath("$.content[0].title").value(gameEntity.getTitle()))
         .andExpect(jsonPath("$.content[0].content").value(

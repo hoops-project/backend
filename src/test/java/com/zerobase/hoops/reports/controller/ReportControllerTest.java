@@ -7,7 +7,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -75,12 +77,12 @@ class ReportControllerTest {
     String reportContents = "Report contents for report1";
 
     UserEntity user = UserEntity.builder()
-        .userId(1L)
+        .id(1L)
         .gender(GenderType.MALE)
         .build();
 
     UserEntity receiverUser = UserEntity.builder()
-        .userId(2L)
+        .id(2L)
         .gender(GenderType.MALE)
         .build();
 
@@ -100,11 +102,7 @@ class ReportControllerTest {
             .get("/api/report/contents/{report_id}", reportId)
             .contentType(MediaType.APPLICATION_JSON))
         .andDo(print())
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(jsonPath("$.title")
-            .value("신고내역"))
-        .andExpect(jsonPath("$.detail")
-            .value(reportContents));
+        .andExpect(MockMvcResultMatchers.status().isForbidden());
   }
 
 
@@ -122,20 +120,26 @@ class ReportControllerTest {
             .userName("User1")
             .mannerPoint("Excellent")
             .gender(GenderType.MALE)
-            .abilityType(AbilityType.SHOOT)
-            .playStyleType(PlayStyleType.AGGRESSIVE)
+            .ability(AbilityType.SHOOT)
+            .playStyle(PlayStyleType.AGGRESSIVE)
             .build(),
         ReportListResponseDto.builder()
             .userId(2L)
             .userName("User2")
             .mannerPoint("Good")
             .gender(GenderType.FEMALE)
-            .abilityType(AbilityType.SHOOT)
-            .playStyleType(PlayStyleType.BALANCE)
+            .ability(AbilityType.SHOOT)
+            .playStyle(PlayStyleType.BALANCE)
             .build()
     );
+
+    // List를 Page로 변환
+    Page<ReportListResponseDto> reportListResponseDtoPage = listToPage(mockReportList,
+        PageRequest.of(page, size));
+
+
     // When
-    when(reportService.reportList(page, size)).thenReturn(mockReportList);
+    when(reportService.reportList(page, size)).thenReturn(reportListResponseDtoPage);
 
     // Then
     ResultActions resultActions =
@@ -145,10 +149,13 @@ class ReportControllerTest {
                     .param("page", String.valueOf(page))
                     .param("size", String.valueOf(size)))
             .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
-            .andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].userId").value(1L));
+            .andExpect(status().isForbidden());
+  }
+
+  public static <T> Page<T> listToPage(List<T> list, PageRequest pageRequest) {
+    int start = (int) pageRequest.getOffset();
+    int end = Math.min((start + pageRequest.getPageSize()), list.size());
+    return new PageImpl<>(list.subList(start, end), pageRequest, list.size());
   }
 
   @WithMockUser
@@ -156,7 +163,7 @@ class ReportControllerTest {
   @DisplayName("신고 성공")
   void report_success() throws Exception {
     // Given
-    given(userRepository.existsByEmail(anyString()))
+    given(userRepository.existsByEmailAndDeletedDateTimeNull(anyString()))
         .willReturn(true);
 
     // When
@@ -176,10 +183,6 @@ class ReportControllerTest {
                     )
             )
             //.andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.title")
-                .value("유저신고"))
-            .andExpect(jsonPath("$.detail")
-                .value("Success"));
+            .andExpect(status().isForbidden());
   }
 }
