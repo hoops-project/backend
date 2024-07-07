@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.commonResponse.ApiResponseFactory;
 import com.zerobase.hoops.manager.dto.BlackListDto;
 import com.zerobase.hoops.manager.dto.UnLockBlackListDto;
 import com.zerobase.hoops.manager.repository.BlackListUserRepository;
@@ -37,6 +38,9 @@ class ManagerControllerTest {
 
   @MockBean
   private UserService userService;
+
+  @MockBean
+  private ApiResponseFactory apiResponseFactory;
 
   @MockBean
   private ReportRepository reportRepository;
