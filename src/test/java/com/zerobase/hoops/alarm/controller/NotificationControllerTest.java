@@ -15,7 +15,6 @@ import com.zerobase.hoops.users.service.UserService;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

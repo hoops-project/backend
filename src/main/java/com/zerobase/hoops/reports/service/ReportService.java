@@ -1,6 +1,5 @@
 package com.zerobase.hoops.reports.service;
 
-import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.service.NotificationService;
 import com.zerobase.hoops.entity.ReportEntity;

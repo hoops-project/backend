@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.commonResponse.ApiResponseFactory;
 import com.zerobase.hoops.entity.ReportEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.manager.service.ManagerService;
@@ -58,6 +59,9 @@ class ReportControllerTest {
 
   @MockBean
   private ManagerService managerService;
+
+  @MockBean
+  ApiResponseFactory apiResponseFactory;
 
   @Autowired
   private MockMvc mockMvc;

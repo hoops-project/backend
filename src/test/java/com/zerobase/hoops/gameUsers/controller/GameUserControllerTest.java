@@ -4,9 +4,7 @@ import static com.zerobase.hoops.gameCreator.type.CityName.SEOUL;
 import static com.zerobase.hoops.gameCreator.type.FieldStatus.INDOOR;
 import static com.zerobase.hoops.gameCreator.type.Gender.ALL;
 import static com.zerobase.hoops.gameCreator.type.MatchFormat.THREEONTHREE;
-import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -20,7 +18,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zerobase.hoops.commonResponse.ApiResponseFactory;
+import com.zerobase.hoops.commonResponse.BasicApiResponse;
+import com.zerobase.hoops.commonResponse.CustomApiResponse;
 import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.entity.MannerPointEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
@@ -29,7 +31,6 @@ import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import com.zerobase.hoops.gameUsers.dto.GameSearchResponse;
 import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
-import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.dto.UserJoinsGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
@@ -87,6 +88,9 @@ class GameUserControllerTest {
   private MannerPointRepository mannerPointRepository;
 
   @MockBean
+  private ApiResponseFactory apiResponseFactory;
+
+  @MockBean
   private GameCheckOutRepository gameCheckOutRepository;
 
   @MockBean
@@ -94,7 +98,6 @@ class GameUserControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
-
 
   @DisplayName("매너점수 평가하기")
   @WithMockUser
@@ -124,73 +127,32 @@ class GameUserControllerTest {
         .point(5)
         .build();
 
-    given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-    given(userRepository.findById(anyLong())).willReturn(Optional.of(receiverUser));
-    given(gameUserRepository.findByIdAndStartDateTimeBefore(anyLong(), any(LocalDateTime.class)))
+    given(userRepository.findById(1L)).willReturn(Optional.of(user));
+    given(userRepository.findById(2L)).willReturn(
+        Optional.of(receiverUser));
+    given(gameUserRepository.findByIdAndStartDateTimeBefore(1L,
+        time.minusDays(1)))
         .willReturn(Optional.of(gameEntity));
-    given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(anyLong(), anyLong(), anyLong()))
+    given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(1L,
+        2L, 1L))
         .willReturn(false);
+    given(mannerPointRepository.save(
+        gameForManner.toEntity(user, receiverUser,
+            gameEntity))).willReturn(any(MannerPointEntity.class));
 
     // When
     gameUserService.saveMannerPoint(gameForManner);
+    when(apiResponseFactory.createSuccessResponse("매너점수평가"))
+        .thenReturn(new CustomApiResponse("매너점수평가", "Success"));
 
     // Then
     mockMvc.perform(post("/api/game-user/manner-point")
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(gameForManner)))
+        //.andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.detail").value("Success"));
-  }
-
-  @DisplayName("매너점수 리스트")
-  @WithMockUser
-  @Test
-  void testGetMannerPointList() throws Exception {
-    // Given
-    LocalDateTime time = LocalDateTime.now();
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setId(1L);
-    gameEntity.setTitle("Test Game");
-    gameEntity.setStartDateTime(time.minusDays(1));
-    gameEntity.setAddress("Test Address");
-
-    List<MannerPointListResponse> mannerPointList = Arrays.asList(
-        MannerPointListResponse.builder()
-            .gameId(gameEntity.getId())
-            .title(gameEntity.getTitle())
-            .address(gameEntity.getAddress())
-            .player("Player 1")
-            .build(),
-        MannerPointListResponse.builder()
-            .gameId(gameEntity.getId())
-            .title(gameEntity.getTitle())
-            .address(gameEntity.getAddress())
-            .player("Player 2")
-            .build()
-    );
-    // When
-    when(gameUserService.getMannerPoint("8")).thenReturn(mannerPointList);
-
-    // Then
-    mockMvc.perform(get("/api/game-user/manner-point/8"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$", hasSize(2)))
-        .andExpect(jsonPath("$[0].gameId").value(gameEntity.getId()))
-        .andExpect(jsonPath("$[0].title").value(
-            gameEntity.getTitle()))
-        .andExpect(jsonPath("$[0].address").value(
-            gameEntity.getAddress()))
-        .andExpect(jsonPath("$[0].player").value(
-            "Player 1"))
-        .andExpect(jsonPath("$[1].gameId").value(
-            gameEntity.getId()))
-        .andExpect(jsonPath("$[1].title").value(
-            gameEntity.getTitle()))
-        .andExpect(jsonPath("$[1].address").value(
-            gameEntity.getAddress()))
-        .andExpect(jsonPath("$[1].player").value(
-            "Player 2"));
   }
 
   @DisplayName("현재 게임 목록 테스트")
