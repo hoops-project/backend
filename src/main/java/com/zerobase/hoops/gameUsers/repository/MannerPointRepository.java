@@ -9,5 +9,5 @@ public interface MannerPointRepository extends
     JpaRepository<MannerPointEntity, Long> {
 
    boolean existsByUser_IdAndReceiver_IdAndGame_Id(
-      Long userId, Long userId1, Long gameId);
+      Long userId, Long receiverId, Long gameId);
 }
