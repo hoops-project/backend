@@ -34,31 +34,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       FilterChain filterChain) throws ServletException, IOException {
 
     String accessToken = resolveTokenFromRequest(request);
-    try {
-      if(accessToken != null && tokenProvider.validateToken(accessToken)) {
-        Authentication auth = tokenProvider.getAuthentication(accessToken);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-      } else {
-        String requestURI = request.getRequestURI();
-        if (!isPublicPath(requestURI)) {
-          throw new AccessDeniedException("Access Denied");
-        }
-      }
-    } catch (AccessDeniedException e) {
-      response.setContentType("application/json;charset=UTF-8");
-      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-      ObjectMapper objectMapper = new ObjectMapper();
-      String errorMessage = objectMapper.writeValueAsString(
-          Map.of("statusCode", HttpServletResponse.SC_FORBIDDEN,
-              "errorCode", "ACCESS_DENIED",
-              "errorMessage", "접근 권한이 없습니다. 로그인 후 이용해주세요."));
-      response.getWriter().write(errorMessage);
-      return;
-    }
+    String requestURI = request.getRequestURI();
 
-    filterChain.doFilter(request, response);
+    try {
+      if (!isSearchPath(requestURI) && !authenticateRequest(accessToken,
+          requestURI)) {
+        throw new AccessDeniedException("Access Denied");
+      }
+      filterChain.doFilter(request, response);
+    } catch (AccessDeniedException e) {
+      handleAccessDenied(response);
+    }
   }
 
+  private boolean isSearchPath(String requestURI) {
+    return requestURI.startsWith("/api/game-user/search")
+        || requestURI.startsWith("/api/game-user/search-address");
+  }
+
+  private boolean authenticateRequest(String accessToken, String requestURI) {
+    if (accessToken != null && tokenProvider.validateToken(accessToken)) {
+      Authentication auth = tokenProvider.getAuthentication(accessToken);
+      SecurityContextHolder.getContext().setAuthentication(auth);
+      return true;
+    }
+    return isPublicPath(requestURI);
+  }
+
+  private void handleAccessDenied(HttpServletResponse response) throws IOException {
+    response.setContentType("application/json;charset=UTF-8");
+    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    ObjectMapper objectMapper = new ObjectMapper();
+    String errorMessage = objectMapper.writeValueAsString(
+        Map.of("statusCode", HttpServletResponse.SC_FORBIDDEN,
+            "errorCode", "ACCESS_DENIED",
+            "errorMessage", "접근 권한이 없습니다. 로그인 후 이용해주세요."));
+    response.getWriter().write(errorMessage);
+  }
   private String resolveTokenFromRequest(HttpServletRequest request) {
     String token = request.getHeader(TOKEN_HEADER);
 
@@ -71,7 +83,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private boolean isPublicPath(String requestURI) {
     List<String> publicPaths = List.of(
         "/api/user", "/api/auth/login", "/api/oauth2/login/kakao",
-        "/api/oauth2/kakao", "/swagger-ui", "/v3/api-docs", "/api/game-user",
+        "/api/oauth2/kakao", "/swagger-ui", "/v3/api-docs",
+        "/api/game-user/search",
+        "/api/game-user/search-address",
         "/ws",
         "/api/game-creator/game/detail");
     return publicPaths.stream().anyMatch(requestURI::startsWith);
