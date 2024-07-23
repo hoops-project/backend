@@ -1,78 +1,77 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.1.11'
-	id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+    id 'org.springframework.boot' version '3.1.11'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'com.zerobase'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '17'
+    sourceCompatibility = '17'
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation group: 'org.json', name: 'json', version: '20231013'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation group: 'org.json', name: 'json', version: '20231013'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
 
-	// swagger
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
-	implementation 'org.springframework.data:spring-data-envers'
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    implementation 'org.springframework.data:spring-data-envers'
 
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 
-	// websocket 관련
-	implementation 'org.webjars:webjars-locator-core'
-	implementation 'org.webjars:sockjs-client:1.5.1'
-	implementation 'org.webjars:stomp-websocket:2.3.4'
-	implementation 'org.webjars:bootstrap:5.2.3'
-	implementation 'org.webjars:jquery:3.6.4'
+    // websocket 관련
+    implementation 'org.webjars:webjars-locator-core'
+    implementation 'org.webjars:sockjs-client:1.5.1'
+    implementation 'org.webjars:stomp-websocket:2.3.4'
 
-	// queryDsl 관련 코드생성 기능 제공
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-	// queryDsl 라이브러리
-	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    // queryDsl 관련 코드생성 기능 제공
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+
+    // queryDsl 라이브러리
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
 }
 
 tasks.named('bootBuildImage') {
-	builder = 'paketobuildpacks/builder-jammy-base:latest'
+    builder = 'paketobuildpacks/builder-jammy-base:latest'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 ///// Querydsl 빌드 옵션 (옵셔널)
@@ -80,15 +79,15 @@ def generated = 'src/main/generated'
 
 ///// querydsl QClass 파일 생성 위치를 지정
 tasks.withType(JavaCompile).configureEach {
-	options.getGeneratedSourceOutputDirectory().set(file(generated))
+    options.getGeneratedSourceOutputDirectory().set(file(generated))
 }
 
 ///// java source set 에 querydsl QClass 위치 추가
 sourceSets {
-	main.java.srcDirs += [ generated ]
+    main.java.srcDirs += [generated]
 }
 
 ///// gradle clean 시에 QClass 디렉토리 삭제
 clean {
-	delete file(generated)
+    delete file(generated)
 }
