@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.commonResponse.ApiResponseFactory;
-import com.zerobase.hoops.commonResponse.BasicApiResponse;
 import com.zerobase.hoops.commonResponse.CustomApiResponse;
 import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.MannerPointEntity;
@@ -51,6 +50,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
@@ -61,6 +61,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(GameUserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class GameUserControllerTest {
 
   @MockBean
@@ -150,9 +151,10 @@ class GameUserControllerTest {
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(gameForManner)))
-        //.andDo(print())
+        .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.detail").value("Success"));
+
   }
 
   @DisplayName("현재 게임 목록 테스트")
