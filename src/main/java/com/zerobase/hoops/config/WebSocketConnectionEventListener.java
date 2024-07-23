@@ -58,7 +58,18 @@ public class WebSocketConnectionEventListener {
     if (sessionAttributes != null) {
       String username = (String) sessionAttributes.get("nickName");
       String gameId = (String) sessionAttributes.get("gameId");
-      Long gameIdNumber = Long.parseLong(gameId);
+
+      Long gameIdNumber = null;
+      if (gameId != null && !gameId.isEmpty()) {
+        try {
+          gameIdNumber = Long.parseLong(gameId);
+        } catch (NumberFormatException e) {
+          log.warn("Invalid user ID format: {}", gameId);
+        }
+      } else {
+        log.warn("User ID is null or empty");
+      }
+
       log.info("username={}", username);
       log.info("gameId={}", gameIdNumber);
       if (username != null) {
