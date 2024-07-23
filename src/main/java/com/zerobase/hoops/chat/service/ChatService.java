@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,7 +25,7 @@ import org.springframework.stereotype.Service;
 public class ChatService {
 
   private final ChatRoomRepository chatRoomRepository;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final MessageSender messageSender;
   private final JwtTokenExtract jwtTokenExtract;
   private final MessageRepository messageRepository;
   private final GameRepository gameRepository;
@@ -49,7 +48,7 @@ public class ChatService {
           .build();
 
       messageRepository.save(message.toEntity(user, chatRoomEntity));
-      messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
+      messageSender.send("/topic/" + gameId + "/" + nickName,
           chatMessage);
     }
     log.info("sendMessage 종료");
@@ -80,7 +79,7 @@ public class ChatService {
     for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
       log.info("{} 채팅방 입장 메세지 전파", user.getNickName());
       String nickName = chatRoomEntity.getUserEntity().getNickName();
-      messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
+      messageSender.send("/topic/" + gameId + "/" + nickName,
           chatMessage);
     }
 
@@ -106,7 +105,7 @@ public class ChatService {
         .map(this::convertToChatMessage)
         .collect(Collectors.toList());
 
-    messagingTemplate.convertAndSend(
+    messageSender.send(
         "/topic/" + gameId + "/" + user.getNickName(), messageDto);
     log.info("loadMessagesAndSend 종료");
   }
