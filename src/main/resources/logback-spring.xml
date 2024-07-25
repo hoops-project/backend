@@ -1,41 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 로그 파일이 저장될 디렉토리를 설정합니다. -->
-    <property name="LOG_DIR" value="./logs"/>
+    <!-- 환경 변수에서 로그 디렉토리를 가져옵니다. 기본값은 /app/logs 입니다. -->
+    <property name="LOG_DIR" value="${LOG_PATH:-/app/logs}"/>
 
-    <!-- 콘솔에 로그를 출력하는 appender를 설정합니다. -->
+    <!-- 콘솔에 로그를 출력하는 appender 설정 (변경 없음) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <!-- 로그 메시지의 출력 형식을 설정합니다. -->
             <pattern> %d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %magenta(%-4relative) --- [ %thread{10} ] %cyan(%logger{20}) : %msg%n </pattern>
         </encoder>
     </appender>
 
-    <!-- 파일에 로그를 저장하는 appender를 설정합니다. -->
+    <!-- 파일에 로그를 저장하는 appender 설정 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 로그 롤링 정책을 설정합니다. -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- 롤링되는 파일의 이름 패턴을 설정합니다. 년/월/일별로 디렉토리가 생성됩니다. -->
-            <fileNamePattern>${LOG_DIR}/%d{yyyy/MM/dd}/%i.log.gz</fileNamePattern>
-            <!-- 각 아카이브된 파일의 최대 크기를 설정합니다. -->
+            <fileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
-            <!-- 보관할 로그 파일의 최대 기간을 설정합니다. -->
             <maxHistory>30</maxHistory>
-            <!-- 애플리케이션 시작 시 이전 로그를 삭제할지 여부를 설정합니다. -->
+            <totalSizeCap>3GB</totalSizeCap>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
-            <!-- 로그 파일에 출력될 형식을 설정합니다. -->
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- 특정 패키지의 로그 레벨을 설정합니다. -->
+    <!-- 특정 패키지의 로그 레벨 설정 (변경 없음) -->
     <logger name="org.springframework" level="info"/>
     <logger name="org.hibernate" level="info"/>
 
-    <!-- 기본 로그 레벨을 설정하고, 사용할 appender를 지정합니다. -->
+    <!-- 기본 로그 레벨 설정 및 appender 지정 -->
     <root level="info">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>

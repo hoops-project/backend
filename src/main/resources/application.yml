@@ -1,9 +1,3 @@
-spring:
-  profiles:
-    group:
-      "local" : "local, secret"
-    active : local
----
 server:
   port: 8080
 spring:
@@ -23,3 +17,52 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+  jwt:
+    secret: ${JWT_SECRET:JWT_SECRET}
+    token-validity-in-seconds: 1800
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://${DB_URL:host.docker.internal}/${DB_NAME:hoops}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_ID:KAKAO_ID}
+            client-secret: ${KAKAO_SECRET:KAKAO_SECRET}
+            redirect-uri: '{baseUrl}/api/oauth2/{registrationId}'
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope: profile_nickname, account_email, gender, birthday
+            client-name: Kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USER_NAME:EMAIL_USER_NAME}
+    password: ${EMAIL_USER_PASSWORD:EMAIL_USER_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+admin-key: ${ADMIN_KEY:ADMIN_KEY}

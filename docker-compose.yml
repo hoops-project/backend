@@ -1,0 +1,30 @@
+version: '1'
+services:
+  hoops-redis:
+    image: redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+    restart: always
+  hoops-backend:
+    image: yohan032/hoops-backend:1.0.0
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - JWT_SECRET=${JWT_SECRET}
+      - LOG_PATH=${LOG_PATH}
+      - KAKAO_ID=${KAKAO_ID}
+      - KAKAO_SECRET=${KAKAO_SECRET}
+      - EMAIL_USER_NAME=${EMAIL_USER_NAME}
+      - EMAIL_USER_PASSWORD=${EMAIL_USER_PASSWORD}
+      - ADMIN_KEY=${ADMIN_KEY}
+    ports:
+      - 8080:8080
+    volumes:
+      - backend_logs:/app/logs
+    restart: on-failure
+    depends_on:
+      - hoops-redis
+volumes:
+  backend_logs:

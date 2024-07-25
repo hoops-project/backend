@@ -39,5 +39,11 @@ out/
 ### OAuth2 ###
 **/src/main/resources/application-secret.yml
 
+### env ###
+.env
+src/main/resources/docker_application.yml
+src/main/resources/local_application.yml
+
 ### logs ###
 /logs/
+

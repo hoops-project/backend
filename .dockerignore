@@ -1,0 +1,5 @@
+logs
+pull_request_template.md
+README.md
+src/main/resources/docker_application.yml
+src/main/resources/local_application.yml
