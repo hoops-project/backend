@@ -11,6 +11,9 @@ services:
   hoops-backend:
     image: yohan032/hoops-backend:1.0.0
     environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=${REDIS_HOST}
       - JWT_SECRET=${JWT_SECRET}
       - LOG_PATH=${LOG_PATH}
@@ -20,7 +23,8 @@ services:
       - EMAIL_USER_PASSWORD=${EMAIL_USER_PASSWORD}
       - ADMIN_KEY=${ADMIN_KEY}
     ports:
-      - 8080:8080
+      - 80:8080
+      - 443:8080
     volumes:
       - backend_logs:/app/logs
     restart: on-failure
