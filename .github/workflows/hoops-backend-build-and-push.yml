@@ -28,5 +28,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/leafy-backend:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/hoops-backend:${{ github.sha }}
           platforms: linux/amd64, linux/arm64
