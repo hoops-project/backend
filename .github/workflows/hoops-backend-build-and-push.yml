@@ -46,6 +46,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker run
         run: |
-          cd backend
+          cd /home/ubuntu/backend
           docker compose down
           docker compose up
