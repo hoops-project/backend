@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64, linux/arm64
 
   deploy:
-    needs: build-and-push
+    needs: build
     name: Deploy
     runs-on: [ self-hosted, label-go ]
     steps:
@@ -49,3 +49,4 @@ jobs:
           cd /home/ubuntu/backend
           docker compose down
           docker compose up -d
+
