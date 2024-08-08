@@ -3,7 +3,7 @@ name: Backend Build and Push
 on:
   push:
     branches:
-      - yohan-main
+      - yohan-cicd-test
 
 jobs:
   build-and-push:
@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64, linux/arm64
 
   deploy:
-    needs: build
+    needs: build-and-push
     name: Deploy
     runs-on: [ self-hosted, label-go ]
     steps:
