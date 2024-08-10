@@ -1,4 +1,3 @@
-version: '1'
 services:
   hoops-redis:
     image: redis

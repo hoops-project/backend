@@ -3,7 +3,7 @@ name: Backend Build and Push
 on:
   push:
     branches:
-      - yohan-main
+      - yohan-test-cicd
 
 jobs:
   build-and-push:
@@ -46,7 +46,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker run
         run: |
-          cd /home/ubuntu/backend
-          docker compose down
-          docker compose up -d
-
+          docker-compose pull
+          docker-compose up -d
+      - name: Clean up old images
+        run: |
+          docker image prune -af
