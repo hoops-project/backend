@@ -1,9 +1,10 @@
 package com.zerobase.hoops.users.dto;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class UserDto {
 
   @Schema(description = "PK", example = "1", defaultValue = "1")
-  private Long id;
+  private String id;
 
   @Schema(description = "아이디", example = "hoops", defaultValue = "hoops")
   private String loginId;
@@ -43,13 +44,13 @@ public class UserDto {
   @Schema(description = "별명", example = "농구의신", defaultValue = "농구의신")
   private String nickName;
 
-  @Schema(description = "가입 일시", example = "2024-06-04T13:31:24.255686",
-      defaultValue = "2024-06-04T13:31:24.255686")
-  private LocalDateTime createDate;
+  @Schema(description = "가입 일시", example = "2024-06-04T13:31:24+09:00",
+      defaultValue = "2024-06-04T13:31:24+09:00")
+  private OffsetDateTime createDate;
 
-  @Schema(description = "탈퇴 일시", example = "2024-06-04T13:31:24.255686",
-      defaultValue = "2024-06-04T13:31:24.255686")
-  private LocalDateTime deleteDate;
+  @Schema(description = "탈퇴 일시", example = "2024-06-04T13:31:24+09:00",
+      defaultValue = "2024-06-04T13:31:24+09:00")
+  private OffsetDateTime deleteDate;
 
   @Schema(description = "플레이 스타일", example = "AGGRESSIVE",
       defaultValue = "AGGRESSIVE")
@@ -62,21 +63,21 @@ public class UserDto {
       defaultValue = "[\"ROLE_USER\"]")
   private List<String> roles;
 
-  public static UserDto fromEntity(UserEntity userEntity) {
+  public static UserDto fromDocument(UserDocument userDocument) {
     return UserDto.builder()
-        .id(userEntity.getId())
-        .loginId(userEntity.getLoginId())
-        .password(userEntity.getPassword())
-        .email(userEntity.getEmail())
-        .name(userEntity.getName())
-        .birthday(userEntity.getBirthday())
-        .gender(String.valueOf(userEntity.getGender()))
-        .nickName(userEntity.getNickName())
-        .createDate(userEntity.getCreatedDateTime())
-        .deleteDate(userEntity.getDeletedDateTime())
-        .playStyle(String.valueOf(userEntity.getPlayStyle()))
-        .ability(String.valueOf(userEntity.getAbility()))
-        .roles(userEntity.getRoles())
+        .id(userDocument.getId())
+        .loginId(userDocument.getLoginId())
+        .password(userDocument.getPassword())
+        .email(userDocument.getEmail())
+        .name(userDocument.getName())
+        .birthday(userDocument.getBirthday())
+        .gender(String.valueOf(userDocument.getGender()))
+        .nickName(userDocument.getNickName())
+        .createDate(userDocument.getCreatedDateTime())
+        .deleteDate(userDocument.getDeletedDateTime())
+        .playStyle(String.valueOf(userDocument.getPlayStyle()))
+        .ability(String.valueOf(userDocument.getAbility()))
+        .roles(userDocument.getRoles())
         .build();
   }
 

@@ -17,11 +17,12 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.users.type.GenderType.FEMALE;
 import static com.zerobase.hoops.users.type.GenderType.MALE;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.InviteEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.InviteDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto.Request;
@@ -38,6 +39,7 @@ import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -61,7 +63,7 @@ public class GameService {
    * 경기 생성 전 validation
    */
   public CreateGameDto.Response validCreateGame(
-      CreateGameDto.Request request, UserEntity user) {
+      CreateGameDto.Request request, UserDocument user) {
     log.info("loginId = {} validCreateGame start", user.getLoginId());
 
     CreateGameDto.Response response = null;
@@ -92,16 +94,22 @@ public class GameService {
    * 경기 생성
    */
   private CreateGameDto.Response createGame(Request request,
-      UserEntity user) {
+      UserDocument user) {
     // 경기 생성
-    GameEntity game = new CreateGameDto.Request().toEntity(request, user);
+    long gameId = gameRepository.count() + 1;
+
+    GameDocument game = new CreateGameDto.Request().toDocument(request, user,
+        gameId, getNowDateTime(clock));
 
     gameRepository.save(game);
     log.info("loginId = {} game created", user.getLoginId());
 
+    long participantId = participantGameRepository.count() + 1;
+
     // 경기 개설자는 경기에 참가인 상태로 있어야 함
-    ParticipantGameEntity participantGame =
-        new ParticipantGameEntity().toGameCreatorEntity(game, user, clock);
+    ParticipantGameDocument participantGame =
+        new ParticipantGameDocument().toGameCreatorDocument(game, user,
+            participantId);
     log.info("loginId = {} participantGame created ", user.getLoginId());
 
     participantGameRepository.save(participantGame);
@@ -113,13 +121,13 @@ public class GameService {
   /**
    * 경기 상세 조회 전 validation
    */
-  public DetailGameDto.Response validGetGameDetail(Long gameId) {
+  public DetailGameDto.Response validGetGameDetail(String gameId) {
     log.info("validGetGameDetail start");
 
     DetailGameDto.Response response = null;
 
     try {
-      GameEntity game = getGame(gameId);
+      GameDocument game = getGame(gameId);
       response = getGameDetail(game);
     } catch (Exception e) {
       log.error("validGetGameDetail Exception message = {}",
@@ -133,15 +141,15 @@ public class GameService {
   /**
    * 경기 상세 조회
    */
-  private DetailGameDto.Response getGameDetail(GameEntity game) {
-    List<ParticipantGameEntity> participantGameEntityList =
+  private DetailGameDto.Response getGameDetail(GameDocument game) {
+    List<ParticipantGameDocument> participantGameDocumentList =
         participantGameRepository
             .findByGameIdAndStatusAndDeletedDateTimeNull
                 (game.getId(), ACCEPT);
-    log.info("participantGameEntityList got");
+    log.info("participantGameDocumentList got");
 
     List<ParticipantUser> participantUserList =
-        participantGameEntityList.stream().map(ParticipantUser::toDto)
+        participantGameDocumentList.stream().map(ParticipantUser::toDto)
             .toList();
 
     return new DetailGameDto.Response().toDto(game, participantUserList);
@@ -151,13 +159,13 @@ public class GameService {
    * 경기 수정 전 validation 체크
    */
   public UpdateGameDto.Response validUpdateGame(
-      UpdateGameDto.Request request, UserEntity user) {
+      UpdateGameDto.Request request, UserDocument user) {
     log.info("loginId = {} validUpdateGame start", user.getLoginId());
     UpdateGameDto.Response response = null;
 
     try {
       // 게임 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-      GameEntity game = getGame(request.getGameId());
+      GameDocument game = getGame(request.getGameId());
 
       //자신이 경기 개최자가 아니면 수정 못하게
       if (!Objects.equals(user.getId(), game.getUser().getId())) {
@@ -224,8 +232,8 @@ public class GameService {
    * 경기 수정
    */
   private UpdateGameDto.Response updateGame(UpdateGameDto.Request request,
-      GameEntity game, UserEntity user) {
-    GameEntity updateGame = new UpdateGameDto.Request().toEntity(request,
+      GameDocument game, UserDocument user) {
+    GameDocument updateGame = new UpdateGameDto.Request().toDocument(request,
         game);
     gameRepository.save(updateGame);
     log.info("loginId = {} game updated ", user.getLoginId());
@@ -238,7 +246,7 @@ public class GameService {
    * 경기 삭제 전 validation 체크
    */
   public DeleteGameDto.Response validDeleteGame(
-      DeleteGameDto.Request request, UserEntity user) {
+      DeleteGameDto.Request request, UserDocument user) {
     log.info("loginId = {} validDeleteGame start", user.getLoginId());
 
     DeleteGameDto.Response response = null;
@@ -246,12 +254,12 @@ public class GameService {
     try {
 
       // 경기 아이디로 게임 조회, 먼저 삭제 되었는지 조회
-      GameEntity game = getGame(request.getGameId());
+      GameDocument game = getGame(request.getGameId());
 
       // 설정한 경기 시작 30분 전에만 삭제 가능
-      LocalDateTime beforeDatetime = game.getStartDateTime()
+      OffsetDateTime beforeDatetime = game.getStartDateTime()
           .minusMinutes(30);
-      LocalDateTime nowDateTime = LocalDateTime.now();
+      OffsetDateTime nowDateTime = OffsetDateTime.now();
 
       if (nowDateTime.isAfter(beforeDatetime)) {
         throw new CustomException(NOT_DELETE_STARTDATE);
@@ -282,36 +290,36 @@ public class GameService {
   /**
    * 경기 삭제
    */
-  private DeleteGameDto.Response deleteGame(GameEntity game,
-      UserEntity user) {
+  private DeleteGameDto.Response deleteGame(GameDocument game,
+      UserDocument user) {
 
     // 경기 삭제 전에 기존에 경기에 ACCEPT, APPLY 멤버들 조회
-    List<ParticipantGameEntity> participantGameEntityList =
+    List<ParticipantGameDocument> participantGameDocumentList =
         participantGameRepository.findByStatusInAndGameId
             (List.of(ACCEPT, APPLY), game.getId());
 
-    participantGameEntityList.forEach(participantGame -> {
-      ParticipantGameEntity entity =
-          new ParticipantGameEntity().setDelete(participantGame, clock);
-      participantGameRepository.save(entity);
+    participantGameDocumentList.forEach(participantGame -> {
+      ParticipantGameDocument Document =
+          new ParticipantGameDocument().setDelete(participantGame, clock);
+      participantGameRepository.save(Document);
     });
     log.info("loginId = {} participantGame deleted ", user.getLoginId());
 
     // 해당 경기에 초대 신청된 것들 다 조회
-    List<InviteEntity> inviteEntityList = inviteRepository
+    List<InviteDocument> inviteDocumentList = inviteRepository
         .findByInviteStatusAndGameId
             (InviteStatus.REQUEST, game.getId());
 
-    inviteEntityList.forEach(invite -> {
-      InviteEntity entity = InviteEntity.setCancel(invite, clock);
-      inviteRepository.save(entity);
+    inviteDocumentList.forEach(invite -> {
+      InviteDocument Document = InviteDocument.setCancel(invite, clock);
+      inviteRepository.save(Document);
     });
     log.info("loginId = {} invite deleted ", user.getLoginId());
 
     // 경기 삭제
-    GameEntity gameEntity = new DeleteGameDto.Request().toEntity(game,
+    GameDocument gameDocument = new DeleteGameDto.Request().toDocument(game,
         clock);
-    gameRepository.save(gameEntity);
+    gameRepository.save(gameDocument);
     log.info("loginId = {} game deleted ", user.getLoginId());
 
     return new DeleteGameDto.Response().toDto(
@@ -321,16 +329,16 @@ public class GameService {
   /**
    * 경기 팀원 탈퇴
    */
-  private DeleteGameDto.Response withdrewGame(GameEntity game,
-      UserEntity user) {
+  private DeleteGameDto.Response withdrewGame(GameDocument game,
+      UserDocument user) {
 
-    ParticipantGameEntity participantGameEntity =
+    ParticipantGameDocument participantGameDocument =
         participantGameRepository.findByStatusAndGameIdAndUserId
                 (ACCEPT, game.getId(), user.getId())
             .orElseThrow(() -> new CustomException(NOT_PARTICIPANT_FOUND));
 
-    ParticipantGameEntity result
-        = new ParticipantGameEntity().setWithdraw(participantGameEntity,
+    ParticipantGameDocument result
+        = new ParticipantGameDocument().setWithdraw(participantGameDocument,
         clock);
 
     participantGameRepository.save(result);
@@ -343,14 +351,14 @@ public class GameService {
    * 경기 생성, 수정 공통 validation
    */
   private void validCreateAndUpdateGame(Long headCount,
-      LocalDateTime startDateTime, String address,
-      MatchFormat matchFormat, Long gameId) {
+      OffsetDateTime startDateTime, String address,
+      MatchFormat matchFormat, String gameId) {
 
-    LocalDateTime beforeDateTime =
+    OffsetDateTime beforeDateTime =
         startDateTime.minusHours(1).plusSeconds(1); // 13:00:01
-    LocalDateTime afterDateTime = startDateTime.plusHours(1)
+    OffsetDateTime afterDateTime = startDateTime.plusHours(1)
         .minusSeconds(1); // 14:59:59
-    LocalDateTime nowDateTime = LocalDateTime.now();
+    OffsetDateTime nowDateTime = getNowDateTime();
 
     boolean gameExists = false;
 
@@ -388,7 +396,7 @@ public class GameService {
   }
 
   // 경기 조회
-  private GameEntity getGame(Long gameId) {
+  private GameDocument getGame(String gameId) {
     return gameRepository.findByIdAndDeletedDateTimeNull(gameId)
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }

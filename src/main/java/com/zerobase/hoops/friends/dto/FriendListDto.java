@@ -1,6 +1,6 @@
 package com.zerobase.hoops.friends.dto;
 
-import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.document.FriendDocument;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
@@ -23,7 +23,7 @@ public class FriendListDto {
   public static class Response {
 
     @Schema(description = "친구 리스트 조회 유저 pk", example = "3")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "친구 리스트 조회 유저 생년월일", example = "1999-01-01")
     private LocalDate birthday;
@@ -44,18 +44,18 @@ public class FriendListDto {
     private String mannerPoint;
 
     @Schema(description = "친구 pk", example = "1")
-    private Long friendId;
+    private String friendId;
 
-    public static Response toDto(FriendEntity friendEntity) {
+    public static Response toDto(FriendDocument friendDocument) {
       return Response.builder()
-          .userId(friendEntity.getFriendUser().getId())
-          .birthday(friendEntity.getFriendUser().getBirthday())
-          .gender(friendEntity.getFriendUser().getGender())
-          .nickName(friendEntity.getFriendUser().getNickName())
-          .playStyle(friendEntity.getFriendUser().getPlayStyle())
-          .ability(friendEntity.getFriendUser().getAbility())
-          .mannerPoint(friendEntity.getFriendUser().getStringAverageRating())
-          .friendId(friendEntity.getId())
+          .userId(friendDocument.getFriendUser().getId())
+          .birthday(friendDocument.getFriendUser().getBirthday())
+          .gender(friendDocument.getFriendUser().getGender())
+          .nickName(friendDocument.getFriendUser().getNickName())
+          .playStyle(friendDocument.getFriendUser().getPlayStyle())
+          .ability(friendDocument.getFriendUser().getAbility())
+          .mannerPoint(friendDocument.getFriendUser().getStringAverageRating())
+          .friendId(friendDocument.getId())
           .build();
     }
 

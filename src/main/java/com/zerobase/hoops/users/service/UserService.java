@@ -1,6 +1,6 @@
 package com.zerobase.hoops.users.service;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.users.dto.SignUpDto.Request;
 import com.zerobase.hoops.users.dto.UserDto;
 import com.zerobase.hoops.exception.CustomException;
@@ -62,12 +62,14 @@ public class UserService implements UserDetailsService {
       }
       emailRepository.saveCertificationNumber(email, certificationNumber);
 
-      UserEntity signUpUser =
-          userRepository.save(Request.toEntity(request));
+      long userId = userRepository.count() + 1;
+
+      UserDocument signUpUser =
+          userRepository.save(Request.toDocument(request, userId));
 
       log.info("회원 가입 완료: {}", signUpUser.getLoginId());
 
-      return UserDto.fromEntity(signUpUser);
+      return UserDto.fromDocument(signUpUser);
     } catch (NoSuchAlgorithmException e) {
       log.error("암호화 에러 : {}", e);
       throw new RuntimeException(e);
@@ -120,7 +122,7 @@ public class UserService implements UserDetailsService {
       throw new CustomException(ErrorCode.NOT_MATCHED_NUMBER);
     }
 
-    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
+    UserDocument user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     user.confirm();
 
@@ -152,7 +154,7 @@ public class UserService implements UserDetailsService {
 
   public String findLoginId(String email) {
     log.info("ID 찾기 시작: {}", email);
-    UserEntity user =
+    UserDocument user =
         userRepository.findByEmailAndDeletedDateTimeNull(email)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -163,7 +165,7 @@ public class UserService implements UserDetailsService {
 
   public boolean findPassword(String loginId) throws NoSuchAlgorithmException {
     log.info("비밀번호 찾기 시작: {}", loginId);
-    UserEntity user =
+    UserDocument user =
         userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));

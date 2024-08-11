@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.alarm.repository.NotificationRepository;
 import com.zerobase.hoops.alarm.service.NotificationService;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.gameCreator.dto.AcceptParticipantDto;
@@ -35,7 +35,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -76,31 +78,32 @@ class ParticipantGameServiceTest {
   @Mock
   private EmitterRepository emitterRepository;
 
-  private LocalDateTime fixedStartDateTime;
-  private LocalDateTime fixedCreatedDateTime;
-  private LocalDateTime fixedAcceptedDateTime;
-  private LocalDateTime fixedRejectedDateTime;
-  private LocalDateTime fixedKickoutedDateTime;
-  private UserEntity createdUser;
-  private UserEntity applyUser;
-  private GameEntity expectedCreatedGame;
-  private GameEntity expectedOtherCreatedGame;
-  private ParticipantGameEntity expectedApplyParticipantGame;
-  private ParticipantGameEntity expectedAcceptParticipantGame;
+  private OffsetDateTime fixedStartDateTime;
+  private OffsetDateTime fixedCreatedDateTime;
+  private OffsetDateTime fixedAcceptedDateTime;
+  private OffsetDateTime fixedRejectedDateTime;
+  private OffsetDateTime fixedKickoutedDateTime;
+  private UserDocument createdUser;
+  private UserDocument applyUser;
+  private GameDocument expectedCreatedGame;
+  private GameDocument expectedOtherCreatedGame;
+  private ParticipantGameDocument expectedApplyParticipantGame;
+  private ParticipantGameDocument expectedAcceptParticipantGame;
 
   @BeforeEach
   void setUp() {
-    fixedStartDateTime = LocalDateTime.now().plusHours(1L);
-    fixedCreatedDateTime = LocalDateTime
-        .of(2024, 6, 9, 0, 0, 0);
-    fixedAcceptedDateTime = LocalDateTime
-        .of(2024, 6, 9, 1, 0, 0);
-    fixedRejectedDateTime = LocalDateTime
-        .of(2024, 6, 9, 1, 0, 0);
-    fixedKickoutedDateTime = LocalDateTime
-        .of(2024, 6, 9, 2, 0, 0);
-    createdUser = UserEntity.builder()
-        .id(1L)
+    fixedStartDateTime = OffsetDateTime.now(ZoneOffset.ofHours(9)).plusHours(1);
+    fixedCreatedDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 9, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedAcceptedDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 9, 1, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedRejectedDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 9, 1, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedKickoutedDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 9, 2
+        , 0,
+        0), ZoneOffset.ofHours(9));
+    createdUser = UserDocument.builder()
+        .id("1")
         .loginId("test")
         .password("Testpass12!@")
         .email("test@example.com")
@@ -114,8 +117,8 @@ class ParticipantGameServiceTest {
         .createdDateTime(fixedCreatedDateTime)
         .emailAuth(true)
         .build();
-    applyUser = UserEntity.builder()
-        .id(2L)
+    applyUser = UserDocument.builder()
+        .id("2")
         .loginId("test1")
         .password("Testpass12!@")
         .email("test1@example.com")
@@ -129,8 +132,8 @@ class ParticipantGameServiceTest {
         .createdDateTime(fixedCreatedDateTime)
         .emailAuth(true)
         .build();
-    expectedCreatedGame = GameEntity.builder()
-        .id(1L)
+    expectedCreatedGame = GameDocument.builder()
+        .id("1")
         .title("테스트제목")
         .content("테스트내용")
         .headCount(10L)
@@ -145,8 +148,8 @@ class ParticipantGameServiceTest {
         .cityName(CityName.SEOUL)
         .user(createdUser)
         .build();
-    expectedOtherCreatedGame = GameEntity.builder()
-        .id(2L)
+    expectedOtherCreatedGame = GameDocument.builder()
+        .id("2")
         .title("테스트제목")
         .content("테스트내용")
         .headCount(10L)
@@ -161,15 +164,15 @@ class ParticipantGameServiceTest {
         .cityName(CityName.SEOUL)
         .user(applyUser)
         .build();
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
         .createdDateTime(fixedCreatedDateTime)
         .game(expectedCreatedGame)
         .user(applyUser)
         .build();
-    expectedAcceptParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedAcceptParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .createdDateTime(fixedCreatedDateTime)
         .acceptedDateTime(fixedAcceptedDateTime)
@@ -182,23 +185,25 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 리스트 조회 성공")
   void testGetApplyParticipantListSuccess() {
     // Given
-    Long gameId = 1L;
+    String gameId = "1";
 
-    ParticipantGameEntity applyParticipantGame =
-        ParticipantGameEntity.builder()
-        .id(2L)
+    ParticipantGameDocument applyParticipantGame =
+        ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
-        .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+        .createdDateTime(
+            OffsetDateTime.of(LocalDateTime.of(2024, 10, 10, 12, 0,
+                0), ZoneOffset.ofHours(9)))
         .game(expectedCreatedGame)
         .user(applyUser)
         .build();
 
     Pageable pageable = PageRequest.of(0, 10);
 
-    List<ParticipantGameEntity> applyParticipantGameList
+    List<ParticipantGameDocument> applyParticipantGameList
         = List.of(applyParticipantGame);
 
-    Page<ParticipantGameEntity> expectedPage =
+    Page<ParticipantGameDocument> expectedPage =
         new PageImpl<>(applyParticipantGameList, pageable, applyParticipantGameList.size());
 
     List<ApplyParticipantListDto.Response> expectedList = expectedPage.stream()
@@ -221,7 +226,7 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 지원자 리스트 조회 실패 : 로그인 한 유저가 경기 개설자가 아닐때")
   void testGetApplyParticipantListFailIfNotGameCreator() {
     // Given
-    Long gameId = 2L;
+    String gameId = "2";
 
     Pageable pageable = PageRequest.of(0, 10);
 
@@ -240,23 +245,25 @@ class ParticipantGameServiceTest {
   @DisplayName("경기 참가자 리스트 조회 성공")
   void testGetAcceptParticipantListSuccess() {
     // Given
-    Long gameId = 1L;
+    String gameId = "1";
 
-    ParticipantGameEntity acceptParticipantGame =
-        ParticipantGameEntity.builder()
-            .id(1L)
+    ParticipantGameDocument acceptParticipantGame =
+        ParticipantGameDocument.builder()
+            .id("1")
             .status(ACCEPT)
-            .createdDateTime(LocalDateTime.of(2024, 10, 10, 12, 0, 0))
+            .createdDateTime(
+                OffsetDateTime.of(LocalDateTime.of(2024, 10, 10, 12, 0,
+                    0), ZoneOffset.ofHours(9)))
             .game(expectedCreatedGame)
             .user(createdUser)
             .build();
 
     Pageable pageable = PageRequest.of(0, 10);
 
-    List<ParticipantGameEntity> acceptParticipantGameList
+    List<ParticipantGameDocument> acceptParticipantGameList
         = List.of(acceptParticipantGame);
 
-    Page<ParticipantGameEntity> expectedPage =
+    Page<ParticipantGameDocument> expectedPage =
         new PageImpl<>(acceptParticipantGameList, pageable, acceptParticipantGameList.size());
 
     List<AcceptParticipantListDto.Response> expectedList = expectedPage.stream()
@@ -280,20 +287,18 @@ class ParticipantGameServiceTest {
   void testAcceptParticipantSuccess() {
     // Given
     AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    Instant fixedInstant = fixedAcceptedDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedAcceptedDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    ParticipantGameEntity acceptParticipantGame =
-        new ParticipantGameEntity().setAccept
+    ParticipantGameDocument acceptParticipantGame =
+        new ParticipantGameDocument().setAccept
             (expectedApplyParticipantGame, clock);
 
-    
 
     // 경기 참가 정보 조회
     getParticipantGame(request.getParticipantId(), APPLY,
@@ -320,11 +325,11 @@ class ParticipantGameServiceTest {
   void testAcceptParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
     AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
         .user(createdUser)
         .build();
@@ -349,17 +354,16 @@ class ParticipantGameServiceTest {
   void testAcceptParticipantFailIfNotGameCreator() {
     // Given
     AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
         .user(applyUser)
         .game(expectedOtherCreatedGame)
         .build();
 
-    
 
     // 경기 참가 정보 조회
     getParticipantGame(request.getParticipantId(), APPLY,
@@ -382,12 +386,12 @@ class ParticipantGameServiceTest {
   void testAcceptParticipantFailIfGameAlreadyStarted() {
     // Given
     AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedCreatedGame = GameEntity.builder()
-        .id(1L)
-        .startDateTime(LocalDateTime.now().minusHours(1))
+    expectedCreatedGame = GameDocument.builder()
+        .id("1")
+        .startDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).minusHours(1))
         .user(createdUser)
         .build();
 
@@ -412,7 +416,7 @@ class ParticipantGameServiceTest {
   void testAcceptParticipantFailIfGameAlreadyFull() {
     // Given
     AcceptParticipantDto.Request request = AcceptParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
     // 경기 참가 조회
@@ -439,12 +443,12 @@ class ParticipantGameServiceTest {
   void testRejectParticipantSuccess() {
     // Given
     RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    ParticipantGameEntity expectedRejectParticipantGame =
-        ParticipantGameEntity.builder()
-            .id(2L)
+    ParticipantGameDocument expectedRejectParticipantGame =
+        ParticipantGameDocument.builder()
+            .id("2")
             .status(REJECT)
             .createdDateTime(fixedCreatedDateTime)
             .rejectedDateTime(fixedRejectedDateTime)
@@ -452,14 +456,13 @@ class ParticipantGameServiceTest {
             .user(applyUser)
             .build();
 
-    Instant fixedInstant = fixedRejectedDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedRejectedDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    ParticipantGameEntity rejectParticipantGame =
-        new ParticipantGameEntity().setReject
+    ParticipantGameDocument rejectParticipantGame =
+        new ParticipantGameDocument().setReject
             (expectedApplyParticipantGame, clock);
 
     // 경기 참가 조회
@@ -484,11 +487,11 @@ class ParticipantGameServiceTest {
   void testRejectParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
     RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
         .user(createdUser)
         .build();
@@ -511,11 +514,11 @@ class ParticipantGameServiceTest {
   void testRejectParticipantFailIfNotGameCreator() {
     // Given
     RejectParticipantDto.Request request = RejectParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(APPLY)
         .user(applyUser)
         .game(expectedOtherCreatedGame)
@@ -542,18 +545,17 @@ class ParticipantGameServiceTest {
   void testKickoutParticipantSuccess() {
     // Given
     KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    Instant fixedInstant = fixedKickoutedDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedKickoutedDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    ParticipantGameEntity expectedKickoutParticipantGame =
-        ParticipantGameEntity.builder()
-        .id(2L)
+    ParticipantGameDocument expectedKickoutParticipantGame =
+        ParticipantGameDocument.builder()
+        .id("2")
         .status(KICKOUT)
         .createdDateTime(fixedCreatedDateTime)
         .acceptedDateTime(fixedAcceptedDateTime)
@@ -562,8 +564,8 @@ class ParticipantGameServiceTest {
         .user(applyUser)
         .build();
 
-    ParticipantGameEntity kickoutParticipantGame =
-        new ParticipantGameEntity().setKickout
+    ParticipantGameDocument kickoutParticipantGame =
+        new ParticipantGameDocument().setKickout
             (expectedAcceptParticipantGame, clock);
 
     // 경기 참가 조회
@@ -588,11 +590,11 @@ class ParticipantGameServiceTest {
   void testKickoutParticipantFailIfGetGameCreatorParticipantGame() {
     // Given
     KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .user(createdUser)
         .build();
@@ -615,11 +617,11 @@ class ParticipantGameServiceTest {
   void testKickoutParticipantFailIfNotGameCreator() {
     // Given
     KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedApplyParticipantGame = ParticipantGameEntity.builder()
-        .id(2L)
+    expectedApplyParticipantGame = ParticipantGameDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .user(applyUser)
         .game(expectedOtherCreatedGame)
@@ -647,12 +649,12 @@ class ParticipantGameServiceTest {
   void testKickoutParticipantFailIfGameAlreadyStarted() {
     // Given
     KickoutParticipantDto.Request request = KickoutParticipantDto.Request.builder()
-        .participantId(2L)
+        .participantId("2")
         .build();
 
-    expectedCreatedGame = GameEntity.builder()
-        .id(1L)
-        .startDateTime(LocalDateTime.now().minusHours(1))
+    expectedCreatedGame = GameDocument.builder()
+        .id("1")
+        .startDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).minusHours(1))
         .user(createdUser)
         .build();
 
@@ -674,23 +676,23 @@ class ParticipantGameServiceTest {
 
 
   // 경기 조회
-  private void getGame(Long gameId, GameEntity expectedCreatedGame) {
+  private void getGame(String gameId, GameDocument expectedCreatedGame) {
     when(gameRepository.findByIdAndDeletedDateTimeNull(gameId))
         .thenReturn(Optional.ofNullable(expectedCreatedGame));
   }
 
   // 경기 지원자,참가자 리스트 조회
   private void getParticipantPage(ParticipantGameStatus status,
-      Long gameId, Pageable pageable, Page<ParticipantGameEntity> expectedPage) {
+      String gameId, Pageable pageable, Page<ParticipantGameDocument> expectedPage) {
 
     when(participantGameRepository.findByStatusAndGameId(status, gameId, pageable))
         .thenReturn(expectedPage);
   }
 
   // 경기 지원,참가 정보 조회
-  private void getParticipantGame(Long participantGameId,
+  private void getParticipantGame(String participantGameId,
       ParticipantGameStatus status,
-      ParticipantGameEntity expectedParticipantGame) {
+      ParticipantGameDocument expectedParticipantGame) {
 
     when(participantGameRepository.findByIdAndStatus
         (participantGameId, status))
@@ -700,7 +702,7 @@ class ParticipantGameServiceTest {
 
   // 경기에 참가한 인원수를 셈
   private void countsParticipantGame
-  (ParticipantGameStatus status, Long gameId, int count) {
+  (ParticipantGameStatus status, String gameId, int count) {
     when(participantGameRepository.countByStatusAndGameId
         (status, gameId)).thenReturn(count);
   }

@@ -1,12 +1,11 @@
 package com.zerobase.hoops.friends.dto;
 
-import com.zerobase.hoops.entity.FriendEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.FriendDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,16 +25,15 @@ public class AcceptFriendDto {
         description = "친구 pk",
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "친구 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long friendId;
+    @NotBlank(message = "친구 아이디는 필수 값입니다.")
+    private String friendId;
 
-    public FriendEntity toEntity(UserEntity applyUserEntity,
-        UserEntity friendUserEntity) {
-      return FriendEntity.builder()
+    public FriendDocument toDocument(UserDocument applyUserDocument,
+        UserDocument friendUserDocument) {
+      return FriendDocument.builder()
           .status(FriendStatus.APPLY)
-          .user(applyUserEntity)
-          .friendUser(friendUserEntity)
+          .user(applyUserDocument)
+          .friendUser(friendUserDocument)
           .build();
     }
   }

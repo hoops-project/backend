@@ -1,6 +1,6 @@
 package com.zerobase.hoops.gameCreator.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.document.GameDocument;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -8,11 +8,11 @@ import com.zerobase.hoops.gameCreator.type.MatchFormat;
 import com.zerobase.hoops.gameCreator.validation.ValidStartTime;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,9 +32,8 @@ public class UpdateGameDto {
         description = "경기 pk",
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
-    @Min(1)
-    private Long gameId;
+    @NotBlank(message = "게임 아이디는 필수 입력 값 입니다.")
+    private String gameId;
 
     @Schema(
         description = "제목",
@@ -77,7 +76,7 @@ public class UpdateGameDto {
         requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "시작 날짜는 필수 입력 값 입니다.")
     @ValidStartTime
-    private LocalDateTime startDateTime;
+    private OffsetDateTime startDateTime;
 
     @Schema(description = "친구 초대 여부",
         defaultValue = "true",
@@ -118,8 +117,8 @@ public class UpdateGameDto {
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
-    public GameEntity toEntity(Request request, GameEntity game) {
-      return GameEntity.builder()
+    public GameDocument toDocument(Request request, GameDocument game) {
+      return GameDocument.builder()
           .id(request.getGameId())
           .title(request.getTitle())
           .content(request.getContent())

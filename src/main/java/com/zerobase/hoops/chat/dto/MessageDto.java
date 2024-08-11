@@ -1,8 +1,10 @@
 package com.zerobase.hoops.chat.dto;
 
-import com.zerobase.hoops.entity.ChatRoomEntity;
-import com.zerobase.hoops.entity.MessageEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.ChatRoomDocument;
+import com.zerobase.hoops.document.MessageDocument;
+import com.zerobase.hoops.document.UserDocument;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -15,12 +17,15 @@ public class MessageDto {
   @NotBlank
   private String content;
 
-  public MessageEntity toEntity(UserEntity user, ChatRoomEntity chatRoom) {
-    return MessageEntity.builder()
+  public MessageDocument toDocument(UserDocument user,
+      ChatRoomDocument chatRoom,
+      long messageId) {
+    return MessageDocument.builder()
+        .id(Long.toString(messageId))
         .user(user)
         .content(content)
-        .chatRoomEntity(chatRoom)
-        .sendDateTime(LocalDateTime.now())
+        .chatRoom(chatRoom)
+        .sendDateTime(getNowDateTime())
         .build();
   }
 }

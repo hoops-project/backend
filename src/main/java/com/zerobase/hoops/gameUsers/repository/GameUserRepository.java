@@ -1,22 +1,21 @@
 package com.zerobase.hoops.gameUsers.repository;
 
-import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.document.GameDocument;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GameUserRepository extends
-    JpaRepository<GameEntity, Long> {
+    ElasticsearchRepository<GameDocument, String> {
 
-  List<GameEntity> findAll(Specification<GameEntity> spec);
+  List<GameDocument> findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
+      String partOfAddress, OffsetDateTime currentDateTime);
 
-  List<GameEntity> findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
-      String partOfAddress, LocalDateTime currentDateTime);
-
-  Optional<GameEntity> findByIdAndStartDateTimeBefore(Long gameId,
-      LocalDateTime dateTime);
+  Optional<GameDocument> findByIdAndStartDateTimeBefore(String gameId,
+      OffsetDateTime dateTime);
 }

@@ -21,9 +21,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.commonResponse.ApiResponseFactory;
 import com.zerobase.hoops.commonResponse.BasicApiResponse;
 import com.zerobase.hoops.commonResponse.CustomApiResponse;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.MannerPointEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.MannerPointDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -45,6 +45,8 @@ import com.zerobase.hoops.users.service.UserService;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -104,41 +106,41 @@ class GameUserControllerTest {
   @Test
   void testSaveMannerPointList() throws Exception {
     // Given
-    LocalDateTime time = LocalDateTime.now();
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setId(1L);
-    gameEntity.setTitle("Test Game");
-    gameEntity.setStartDateTime(time.minusDays(1));
-    gameEntity.setAddress("Test Address");
+    OffsetDateTime time = OffsetDateTime.now(ZoneOffset.ofHours(9));
+    GameDocument gameDocument = new GameDocument();
+    gameDocument.setId("1");
+    gameDocument.setTitle("Test Game");
+    gameDocument.setStartDateTime(time.minusDays(1));
+    gameDocument.setAddress("Test Address");
 
-    UserEntity user = UserEntity.builder()
-        .id(1L)
+    UserDocument user = UserDocument.builder()
+        .id("1")
         .gender(GenderType.MALE)
         .build();
 
-    UserEntity receiverUser = UserEntity.builder()
-        .id(2L)
+    UserDocument receiverUser = UserDocument.builder()
+        .id("2")
         .gender(GenderType.MALE)
         .build();
 
     MannerPointDto gameForManner = MannerPointDto.builder()
         .receiverId(receiverUser.getId())
-        .gameId(gameEntity.getId())
+        .gameId(gameDocument.getId())
         .point(5)
         .build();
 
-    given(userRepository.findById(1L)).willReturn(Optional.of(user));
-    given(userRepository.findById(2L)).willReturn(
+    given(userRepository.findById("1")).willReturn(Optional.of(user));
+    given(userRepository.findById("2")).willReturn(
         Optional.of(receiverUser));
-    given(gameUserRepository.findByIdAndStartDateTimeBefore(1L,
+    given(gameUserRepository.findByIdAndStartDateTimeBefore("1",
         time.minusDays(1)))
-        .willReturn(Optional.of(gameEntity));
-    given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(1L,
-        2L, 1L))
+        .willReturn(Optional.of(gameDocument));
+    given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id("1",
+        "2", "1"))
         .willReturn(false);
     given(mannerPointRepository.save(
-        gameForManner.toEntity(user, receiverUser,
-            gameEntity))).willReturn(any(MannerPointEntity.class));
+        gameForManner.toDocument(user, receiverUser,
+            gameDocument, 1))).willReturn(any(MannerPointDocument.class));
 
     // When
     gameUserService.saveMannerPoint(gameForManner);
@@ -166,30 +168,30 @@ class GameUserControllerTest {
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.THREEONTHREE;
 
-    LocalDateTime time = LocalDateTime.now()
-        .plusDays(10);
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setId(1L);
-    gameEntity.setTitle("Test Game");
-    gameEntity.setContent("Test Game Content");
-    gameEntity.setHeadCount(6L);
-    gameEntity.setFieldStatus(fieldStatus);
-    gameEntity.setGender(gender);
-    gameEntity.setStartDateTime(time.plusDays(1));
-    gameEntity.setCreatedDateTime(time);
-    gameEntity.setDeletedDateTime(null);
-    gameEntity.setInviteYn(true);
-    gameEntity.setAddress("Test Address");
-    gameEntity.setLatitude(37.5665);
-    gameEntity.setLongitude(126.9780);
-    gameEntity.setCityName(cityName);
-    gameEntity.setMatchFormat(matchFormat);
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
-    gameEntity.setUser(userEntity);
+    OffsetDateTime time = OffsetDateTime.now(ZoneOffset.ofHours(9)).plusDays(10);
+
+    GameDocument gameDocument = new GameDocument();
+    gameDocument.setId("1");
+    gameDocument.setTitle("Test Game");
+    gameDocument.setContent("Test Game Content");
+    gameDocument.setHeadCount(6L);
+    gameDocument.setFieldStatus(fieldStatus);
+    gameDocument.setGender(gender);
+    gameDocument.setStartDateTime(time.plusDays(1));
+    gameDocument.setCreatedDateTime(time);
+    gameDocument.setDeletedDateTime(null);
+    gameDocument.setInviteYn(true);
+    gameDocument.setAddress("Test Address");
+    gameDocument.setLatitude(37.5665);
+    gameDocument.setLongitude(126.9780);
+    gameDocument.setCityName(cityName);
+    gameDocument.setMatchFormat(matchFormat);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
+    gameDocument.setUser(userDocument);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getId()));
+        GameSearchResponse.of(gameDocument, userDocument.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
 
@@ -206,7 +208,7 @@ class GameUserControllerTest {
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
+            jsonPath("$.content[0].gameId").value(gameDocument.getId()))
         .andExpect(jsonPath("$.content").isArray());
   }
 
@@ -222,28 +224,30 @@ class GameUserControllerTest {
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.THREEONTHREE;
 
-    LocalDateTime time = LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099);
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setId(1L);
-    gameEntity.setTitle("Test Game");
-    gameEntity.setContent("Test Game Content");
-    gameEntity.setHeadCount(6L);
-    gameEntity.setFieldStatus(fieldStatus);
-    gameEntity.setGender(gender);
-    gameEntity.setStartDateTime(time.plusDays(1));
-    gameEntity.setCreatedDateTime(time);
-    gameEntity.setDeletedDateTime(null);
-    gameEntity.setInviteYn(true);
-    gameEntity.setAddress("Test Address");
-    gameEntity.setLatitude(37.5665);
-    gameEntity.setLongitude(126.9780);
-    gameEntity.setCityName(cityName);
-    gameEntity.setMatchFormat(matchFormat);
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
-    gameEntity.setUser(userEntity);
+    OffsetDateTime time = OffsetDateTime
+        .of(LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099), ZoneOffset.ofHours(9));
+
+    GameDocument gameDocument = new GameDocument();
+    gameDocument.setId("1");
+    gameDocument.setTitle("Test Game");
+    gameDocument.setContent("Test Game Content");
+    gameDocument.setHeadCount(6L);
+    gameDocument.setFieldStatus(fieldStatus);
+    gameDocument.setGender(gender);
+    gameDocument.setStartDateTime(time.plusDays(1));
+    gameDocument.setCreatedDateTime(time);
+    gameDocument.setDeletedDateTime(null);
+    gameDocument.setInviteYn(true);
+    gameDocument.setAddress("Test Address");
+    gameDocument.setLatitude(37.5665);
+    gameDocument.setLongitude(126.9780);
+    gameDocument.setCityName(cityName);
+    gameDocument.setMatchFormat(matchFormat);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
+    gameDocument.setUser(userDocument);
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getId()));
+        GameSearchResponse.of(gameDocument, userDocument.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
     // When
@@ -258,7 +262,7 @@ class GameUserControllerTest {
         .andDo(print())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
+            jsonPath("$.content[0].gameId").value(gameDocument.getId()))
         .andExpect(jsonPath("$.content").isArray());
   }
 
@@ -267,14 +271,14 @@ class GameUserControllerTest {
   @Test
   void participateInGame_validRequest_shouldSucceed() throws Exception {
     // Given
-    Long gameId = 1L;
+    String gameId = "1";
     UserJoinsGameDto.Request request = new UserJoinsGameDto.Request(
         gameId);
     ParticipateGameDto participateGameDto = ParticipateGameDto.builder()
-        .participantId(1L)
+        .participantId("1")
         .status(ParticipantGameStatus.APPLY)
-        .gameEntity(mock(GameEntity.class))
-        .userEntity(mock(UserEntity.class))
+        .gameDocument(mock(GameDocument.class))
+        .userDocument(mock(UserDocument.class))
         .build();
 
     // When
@@ -304,13 +308,13 @@ class GameUserControllerTest {
     FieldStatus fieldStatus = INDOOR;
     Gender gender = ALL;
     MatchFormat matchFormat = THREEONTHREE;
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setUser(userEntity);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
+    GameDocument gameDocument = new GameDocument();
+    gameDocument.setUser(userDocument);
 
     List<GameSearchResponse> gameSearchResponses = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getId()));
+        GameSearchResponse.of(gameDocument, userDocument.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(
         gameSearchResponses);
     // When
@@ -345,28 +349,29 @@ class GameUserControllerTest {
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.THREEONTHREE;
 
-    LocalDateTime time = LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099);
-    GameEntity gameEntity = new GameEntity();
-    gameEntity.setId(1L);
-    gameEntity.setTitle("Test Game");
-    gameEntity.setContent("Test Game Content");
-    gameEntity.setHeadCount(6L);
-    gameEntity.setFieldStatus(fieldStatus);
-    gameEntity.setGender(gender);
-    gameEntity.setStartDateTime(time.plusDays(1));
-    gameEntity.setCreatedDateTime(time);
-    gameEntity.setDeletedDateTime(null);
-    gameEntity.setInviteYn(true);
-    gameEntity.setAddress("Test Address");
-    gameEntity.setLatitude(37.5665);
-    gameEntity.setLongitude(126.9780);
-    gameEntity.setCityName(cityName);
-    gameEntity.setMatchFormat(matchFormat);
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
-    gameEntity.setUser(userEntity);
+    OffsetDateTime time = OffsetDateTime
+        .of(LocalDateTime.of(2024, 5, 6, 23, 54, 32, 8229099), ZoneOffset.ofHours(9));
+    GameDocument gameDocument = new GameDocument();
+    gameDocument.setId("1");
+    gameDocument.setTitle("Test Game");
+    gameDocument.setContent("Test Game Content");
+    gameDocument.setHeadCount(6L);
+    gameDocument.setFieldStatus(fieldStatus);
+    gameDocument.setGender(gender);
+    gameDocument.setStartDateTime(time.plusDays(1));
+    gameDocument.setCreatedDateTime(time);
+    gameDocument.setDeletedDateTime(null);
+    gameDocument.setInviteYn(true);
+    gameDocument.setAddress("Test Address");
+    gameDocument.setLatitude(37.5665);
+    gameDocument.setLongitude(126.9780);
+    gameDocument.setCityName(cityName);
+    gameDocument.setMatchFormat(matchFormat);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
+    gameDocument.setUser(userDocument);
     List<GameSearchResponse> expectedGames = Arrays.asList(
-        GameSearchResponse.of(gameEntity, userEntity.getId()));
+        GameSearchResponse.of(gameDocument, userDocument.getId()));
     Page<GameSearchResponse> expectedPage = new PageImpl<>(expectedGames);
 
     // When
@@ -386,31 +391,31 @@ class GameUserControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.content[0].gameId").value(gameEntity.getId()))
+            jsonPath("$.content[0].gameId").value(gameDocument.getId()))
         .andExpect(
-            jsonPath("$.content[0].title").value(gameEntity.getTitle()))
+            jsonPath("$.content[0].title").value(gameDocument.getTitle()))
         .andExpect(jsonPath("$.content[0].content").value(
-            gameEntity.getContent()))
+            gameDocument.getContent()))
         .andExpect(jsonPath("$.content[0].headCount").value(
-            gameEntity.getHeadCount()))
+            gameDocument.getHeadCount()))
         .andExpect(jsonPath("$.content[0].fieldStatus").value(
-            gameEntity.getFieldStatus().name()))
+            gameDocument.getFieldStatus().name()))
         .andExpect(jsonPath("$.content[0].gender").value(
-            gameEntity.getGender().name()))
+            gameDocument.getGender().name()))
         .andExpect(jsonPath("$.content[0].startDateTime").value(
-            gameEntity.getStartDateTime().toString()))
+            gameDocument.getStartDateTime().toString()))
         .andExpect(jsonPath("$.content[0].inviteYn").value(
-            gameEntity.getInviteYn()))
+            gameDocument.getInviteYn()))
         .andExpect(jsonPath("$.content[0].address").value(
-            gameEntity.getAddress()))
+            gameDocument.getAddress()))
         .andExpect(jsonPath("$.content[0].latitude").value(
-            gameEntity.getLatitude()))
+            gameDocument.getLatitude()))
         .andExpect(jsonPath("$.content[0].longitude").value(
-            gameEntity.getLongitude()))
+            gameDocument.getLongitude()))
         .andExpect(jsonPath("$.content[0].cityName").value(
-            gameEntity.getCityName().name()))
+            gameDocument.getCityName().name()))
         .andExpect(jsonPath("$.content[0].matchFormat").value(
-            gameEntity.getMatchFormat().name()));
+            gameDocument.getMatchFormat().name()));
   }
 
   @DisplayName("주소 검색 테스트")
@@ -421,8 +426,8 @@ class GameUserControllerTest {
     // Given
     String address = "123 Example St";
     List<GameSearchResponse> upcomingGames = Arrays.asList(
-        GameSearchResponse.builder().gameId(1L).address(address).build(),
-        GameSearchResponse.builder().gameId(2L).address(address).build()
+        GameSearchResponse.builder().gameId("1").address(address).build(),
+        GameSearchResponse.builder().gameId("2").address(address).build()
     );
     when(gameUserService.searchAddress(address)).thenReturn(upcomingGames);
 
@@ -431,9 +436,9 @@ class GameUserControllerTest {
             .param("address", address)
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].gameId").value(1L))
+        .andExpect(jsonPath("$[0].gameId").value("1"))
         .andExpect(jsonPath("$[0].address").value(address))
-        .andExpect(jsonPath("$[1].gameId").value(2L))
+        .andExpect(jsonPath("$[1].gameId").value("2"))
         .andExpect(jsonPath("$[1].address").value(address));
   }
 }

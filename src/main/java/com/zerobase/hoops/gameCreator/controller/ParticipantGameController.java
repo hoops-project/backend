@@ -1,9 +1,9 @@
 package com.zerobase.hoops.gameCreator.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.gameCreator.dto.AcceptParticipantDto;
-import com.zerobase.hoops.gameCreator.dto.ApplyParticipantListDto;
 import com.zerobase.hoops.gameCreator.dto.AcceptParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.ApplyParticipantListDto;
 import com.zerobase.hoops.gameCreator.dto.KickoutParticipantDto;
 import com.zerobase.hoops.gameCreator.dto.RejectParticipantDto;
 import com.zerobase.hoops.gameCreator.service.ParticipantGameService;
@@ -18,11 +18,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -51,14 +49,14 @@ public class ParticipantGameController {
   public ResponseEntity<Map<String, List<ApplyParticipantListDto.Response>>> getApplyParticipantList(
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 pk",
-          example = "1", required = true) Long gameId,
+          example = "1", required = true) String gameId,
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} getApplyParticipantList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size,
         Direction.ASC, "createdDateTime");
@@ -78,14 +76,14 @@ public class ParticipantGameController {
   public ResponseEntity<Map<String, List<AcceptParticipantListDto.Response>>> getAcceptParticipantList(
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 pk",
-          example = "1", required = true) Long gameId,
+          example = "1", required = true) String gameId,
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} getAcceptParticipantList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size,
         Direction.ASC, "createdDateTime");
@@ -104,7 +102,7 @@ public class ParticipantGameController {
   @PatchMapping("/accept")
   public ResponseEntity<AcceptParticipantDto.Response> acceptParticipant(
       @RequestBody @Validated AcceptParticipantDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} acceptParticipant start", user.getLoginId());
     AcceptParticipantDto.Response result =
         participantGameService.validAcceptParticipant(request, user);
@@ -119,7 +117,7 @@ public class ParticipantGameController {
   @PatchMapping("/reject")
   public ResponseEntity<RejectParticipantDto.Response> rejectParticipant(
       @RequestBody @Validated RejectParticipantDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} rejectParticipant start", user.getLoginId());
     RejectParticipantDto.Response result =
         participantGameService.validRejectParticipant(request, user);
@@ -134,7 +132,7 @@ public class ParticipantGameController {
   @PatchMapping("/kickout")
   public ResponseEntity<KickoutParticipantDto.Response> kickoutParticipant(
       @RequestBody @Validated KickoutParticipantDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} kickoutParticipant start", user.getLoginId());
     KickoutParticipantDto.Response result =
         participantGameService.validKickoutParticipant(request, user);

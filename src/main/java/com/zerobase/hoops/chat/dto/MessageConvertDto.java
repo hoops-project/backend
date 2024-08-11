@@ -9,7 +9,7 @@ import lombok.Data;
 public class MessageConvertDto {
 
   @NotBlank
-  private Long id;
+  private String id;
 
   @NotBlank
   private String sender;

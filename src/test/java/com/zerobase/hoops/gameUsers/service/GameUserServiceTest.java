@@ -9,10 +9,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.MannerPointEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.MannerPointDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
@@ -26,11 +26,14 @@ import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
 import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
+import com.zerobase.hoops.gameUsers.repository.impl.GameCustomRepositoryImpl;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,56 +73,62 @@ class GameUserServiceTest {
   private GameCheckOutRepository gameCheckOutRepository;
 
   @Mock
+  private GameCustomRepositoryImpl gameCustomRepository;
+
+  @Mock
   private JwtTokenExtract jwtTokenExtract;
 
-  private UserEntity user;
-  private UserEntity receiverUser;
-  private GameEntity game;
-  private GameEntity gameForManner;
-  private ParticipantGameEntity participateGame;
-  private ParticipantGameEntity participateGame2;
+  private UserDocument user;
+  private UserDocument receiverUser;
+  private GameDocument game;
+  private GameDocument gameForManner;
+  private ParticipantGameDocument participateGame;
+  private ParticipantGameDocument participateGame2;
   private MannerPointDto mannerPointDto;
 
   @BeforeEach
   void setUp() {
-    user = UserEntity.builder()
-        .id(1L)
+    user = UserDocument.builder()
+        .id("1")
         .gender(GenderType.MALE)
         .build();
 
-    receiverUser = UserEntity.builder()
-        .id(2L)
+    receiverUser = UserDocument.builder()
+        .id("2")
         .gender(GenderType.MALE)
         .build();
 
-    game = GameEntity.builder()
-        .id(1L)
+    game = GameDocument.builder()
+        .id("1")
         .headCount(10L)
         .gender(Gender.MALEONLY)
-        .startDateTime(LocalDateTime.now().plusHours(1))
+        .startDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).plusHours(1))
         .user(user)
         .build();
 
-    gameForManner = GameEntity.builder()
-        .id(2L)
+    gameForManner = GameDocument.builder()
+        .id("2")
         .headCount(10L)
         .gender(Gender.MALEONLY)
-        .startDateTime(LocalDateTime.of(2023, 5, 8, 10, 0))
+        .startDateTime(
+            OffsetDateTime.of(LocalDateTime.of(2023, 5, 8, 10, 0),
+                ZoneOffset.ofHours(9))
+        )
         .user(user)
         .build();
 
-    participateGame = ParticipantGameEntity.builder()
+    participateGame = ParticipantGameDocument.builder()
         .game(game)
         .user(user)
         .status(ParticipantGameStatus.ACCEPT)
-        .id(1L)
+        .id("1")
         .build();
 
-    participateGame2 = ParticipantGameEntity.builder()
+    participateGame2 = ParticipantGameDocument.builder()
         .game(game)
         .user(receiverUser)
         .status(ParticipantGameStatus.ACCEPT)
-        .id(2L)
+        .id("2")
         .build();
 
     mannerPointDto = MannerPointDto.builder()
@@ -140,7 +149,7 @@ class GameUserServiceTest {
     given(gameUserRepository.findById(gameForManner.getId())).willReturn(Optional.of(gameForManner));
     given(gameCheckOutRepository.findById(participateGame.getId())).willReturn(Optional.of(participateGame));
     given(gameCheckOutRepository.findById(participateGame2.getId())).willReturn(Optional.of(participateGame2));
-    given(gameUserRepository.findByIdAndStartDateTimeBefore(eq(gameForManner.getId()), any(LocalDateTime.class)))
+    given(gameUserRepository.findByIdAndStartDateTimeBefore(eq(gameForManner.getId()), any(OffsetDateTime.class)))
         .willReturn(Optional.of(gameForManner));
     given(mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(
         user.getId(), receiverUser.getId(), gameForManner.getId())).willReturn(false);
@@ -149,9 +158,9 @@ class GameUserServiceTest {
     gameUserService.saveMannerPoint(mannerPointDto);
 
     // Then
-    ArgumentCaptor<MannerPointEntity> mannerPointEntityCaptor = ArgumentCaptor.forClass(
-        MannerPointEntity.class);
-    verify(mannerPointRepository).save(mannerPointEntityCaptor.capture());
+    ArgumentCaptor<MannerPointDocument> mannerPointDocumentCaptor = ArgumentCaptor.forClass(
+        MannerPointDocument.class);
+    verify(mannerPointRepository).save(mannerPointDocumentCaptor.capture());
 
   }
 
@@ -167,19 +176,19 @@ class GameUserServiceTest {
         Optional.of(user));
 
     when(gameUserRepository.findByIdAndStartDateTimeBefore(
-        eq(Long.valueOf(gameId)),
-        any(LocalDateTime.class)))
+        eq(gameId),
+        any(OffsetDateTime.class)))
         .thenAnswer(invocation -> Optional.of(
             Collections.singletonList(participateGame)));
 
     when(
         gameCheckOutRepository.existsByGame_IdAndUser_IdAndStatus(
-            eq(Long.valueOf(gameId)), eq(user.getId()),
+            eq(gameId), eq(user.getId()),
             eq(ParticipantGameStatus.ACCEPT)))
         .thenReturn(true);
     when(gameCheckOutRepository.findByStatusAndGame_Id(
         eq(ParticipantGameStatus.ACCEPT),
-        eq(Long.valueOf(gameId))))
+        eq(gameId)))
         .thenAnswer(invocation -> Optional.of(
             Collections.singletonList(participateGame)));
 
@@ -224,7 +233,7 @@ class GameUserServiceTest {
     when(userRepository.findById(receiverUser.getId())).thenReturn(
         Optional.of(receiverUser));
     when(gameUserRepository.findByIdAndStartDateTimeBefore(
-        game.getId(), LocalDateTime.now())).thenReturn(
+        game.getId(), OffsetDateTime.now(ZoneOffset.ofHours(9)))).thenReturn(
         Optional.empty());
 
     assertThrows(CustomException.class,
@@ -241,7 +250,7 @@ class GameUserServiceTest {
     when(userRepository.findById(receiverUser.getId())).thenReturn(
         Optional.of(receiverUser));
     when(gameUserRepository.findByIdAndStartDateTimeBefore(
-        game.getId(), LocalDateTime.now())).thenReturn(
+        game.getId(), OffsetDateTime.now(ZoneOffset.ofHours(9)))).thenReturn(
         Optional.of(game));
     when(
         mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(
@@ -277,7 +286,7 @@ class GameUserServiceTest {
     when(userRepository.findById(user.getId())).thenReturn(
         Optional.of(user));
     when(gameUserRepository.findByIdAndStartDateTimeBefore(
-        game.getId(), LocalDateTime.now())).thenReturn(
+        game.getId(), OffsetDateTime.now(ZoneOffset.ofHours(9)))).thenReturn(
         Optional.empty());
 
     // Then
@@ -291,13 +300,13 @@ class GameUserServiceTest {
   @DisplayName("현제 참여중인 게임 리스트 불러오기 성공")
   void testMyCurrentGameList() {
     // Given
-    List<ParticipantGameEntity> userGameList = new ArrayList<>();
-    GameEntity futureGame = new GameEntity();
-    futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
+    List<ParticipantGameDocument> userGameList = new ArrayList<>();
+    GameDocument futureGame = new GameDocument();
+    futureGame.setStartDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).plusDays(1));
     futureGame.setUser(user);
-    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGame(futureGame);
-    userGameList.add(participantGameEntity);
+    ParticipantGameDocument participantGameDocument = new ParticipantGameDocument();
+    participantGameDocument.setGame(futureGame);
+    userGameList.add(participantGameDocument);
 
     // When
     when(jwtTokenExtract.currentUser()).thenReturn(user);
@@ -319,8 +328,8 @@ class GameUserServiceTest {
   @DisplayName("현제 참여중인 게임 리스트 불러오기 성공2")
   void testMyCurrentGameList2() {
     // Given
-    UserEntity user = new UserEntity();
-    user.setId(1L);
+    UserDocument user = new UserDocument();
+    user.setId("1");
 
     JwtTokenExtract jwtTokenExtractMock = mock(JwtTokenExtract.class);
     UserRepository userRepositoryMock = mock(UserRepository.class);
@@ -330,14 +339,16 @@ class GameUserServiceTest {
         GameUserRepository.class);
     MannerPointRepository mannerPointRepositoryMock = mock(
         MannerPointRepository.class);
+    GameCustomRepositoryImpl gameCustomRepositoryMock =
+        mock(GameCustomRepositoryImpl.class);
 
-    List<ParticipantGameEntity> userGameList = new ArrayList<>();
-    GameEntity futureGame = new GameEntity();
-    futureGame.setStartDateTime(LocalDateTime.now().plusDays(1));
+    List<ParticipantGameDocument> userGameList = new ArrayList<>();
+    GameDocument futureGame = new GameDocument();
+    futureGame.setStartDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).plusDays(1));
     futureGame.setUser(user);
-    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGame(futureGame);
-    userGameList.add(participantGameEntity);
+    ParticipantGameDocument participantGameDocument = new ParticipantGameDocument();
+    participantGameDocument.setGame(futureGame);
+    userGameList.add(participantGameDocument);
 
     // When
     when(jwtTokenExtractMock.currentUser()).thenReturn(user);
@@ -349,8 +360,10 @@ class GameUserServiceTest {
 
     GameUserService gameUserService = new GameUserService(
         gameCheckOutRepositoryMock, gameUserRepositoryMock,
+        gameCustomRepositoryMock,
         mannerPointRepositoryMock, userRepositoryMock,
         jwtTokenExtractMock);
+
     int pageSize = 10;
     Page<GameSearchResponse> resultPage = gameUserService.myCurrentGameList(
         1,
@@ -365,13 +378,13 @@ class GameUserServiceTest {
   @DisplayName("과거 게임 리스트 불러오기 성공")
   void testMyLastGameList() {
     // Given
-    List<ParticipantGameEntity> userGameList = new ArrayList<>();
-    GameEntity pastGame = new GameEntity();
-    pastGame.setStartDateTime(LocalDateTime.now().minusDays(1));
+    List<ParticipantGameDocument> userGameList = new ArrayList<>();
+    GameDocument pastGame = new GameDocument();
+    pastGame.setStartDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).minusDays(1));
     pastGame.setUser(user);
-    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity();
-    participantGameEntity.setGame(pastGame);
-    userGameList.add(participantGameEntity);
+    ParticipantGameDocument participantGameDocument = new ParticipantGameDocument();
+    participantGameDocument.setGame(pastGame);
+    userGameList.add(participantGameDocument);
 
     // When
     when(jwtTokenExtract.currentUser()).thenReturn(user);
@@ -392,8 +405,8 @@ class GameUserServiceTest {
   @DisplayName("게임 참가 성공")
   void participateInGame_validGame_shouldSucceed() {
     // Given
-    ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
-        .id(1L)
+    ParticipantGameDocument participantGameDocument = ParticipantGameDocument.builder()
+        .id("1")
         .status(ParticipantGameStatus.APPLY)
         .game(game)
         .user(user)
@@ -408,18 +421,18 @@ class GameUserServiceTest {
     when(gameCheckOutRepository.countByStatusAndGameId(
         ParticipantGameStatus.ACCEPT, game.getId())).thenReturn(0);
     when(gameCheckOutRepository.save(
-        any(ParticipantGameEntity.class))).thenReturn(
-        participantGameEntity);
+        any(ParticipantGameDocument.class))).thenReturn(
+        participantGameDocument);
 
     ParticipateGameDto result = gameUserService.participateInGame(
         game.getId());
 
     // Then
     assertEquals(ParticipantGameStatus.APPLY, result.getStatus());
-    assertEquals(participantGameEntity.getId(),
+    assertEquals(participantGameDocument.getId(),
         result.getParticipantId());
-    assertEquals(game.getId(), result.getGameEntity().getId());
-    assertEquals(user.getId(), result.getUserEntity().getId());
+    assertEquals(game.getId(), result.getGameDocument().getId());
+    assertEquals(user.getId(), result.getUserDocument().getId());
   }
 
   @Test
@@ -439,25 +452,27 @@ class GameUserServiceTest {
   @DisplayName("GameUserService 필터 테스트 1")
   void findFilteredGames_whenAllFiltersAreNull_shouldReturnAllGames() {
     // Given
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
 
-    GameEntity gameEntity1 = new GameEntity();
-    gameEntity1.setUser(userEntity);
-    GameEntity gameEntity2 = new GameEntity();
-    gameEntity2.setUser(userEntity);
+    GameDocument gameDocument1 = new GameDocument();
+    gameDocument1.setUser(userDocument);
+    GameDocument gameDocument2 = new GameDocument();
+    gameDocument2.setUser(userDocument);
 
-    List<GameEntity> gameEntities = Arrays.asList(gameEntity1,
-        gameEntity2);
+    List<GameDocument> gameEntities = Arrays.asList(gameDocument1,
+        gameDocument2);
 
     // When
     when(
-        gameUserRepository.findAll(any(Specification.class))).thenReturn(
-        gameEntities);
+        gameCustomRepository.findAllGameDocuments(
+            null, null, null, null, null))
+        .thenReturn(gameEntities);
 
     Page<GameSearchResponse> result = gameUserService.findFilteredGames(
         null, null, null, null, null
         , 1, 2);
+
     List<GameSearchResponse> result2 = result.getContent();
     // Then
     assertEquals(gameEntities.size(), result2.size());
@@ -465,8 +480,7 @@ class GameUserServiceTest {
 
   @Test
   @DisplayName("GameUserService 필터 테스트 2")
-  void findFilteredGames_whenSomeFiltersAreProvided_shouldReturnFilteredGames
-      () {
+  void findFilteredGames_whenSomeFiltersAreProvided_shouldReturnFilteredGames() {
     // Given
     LocalDate date = LocalDate.now();
     CityName cityName = CityName.SEOUL;
@@ -474,21 +488,22 @@ class GameUserServiceTest {
     Gender gender = Gender.ALL;
     MatchFormat matchFormat = MatchFormat.FIVEONFIVE;
 
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
 
-    GameEntity gameEntity1 = new GameEntity();
-    gameEntity1.setUser(userEntity);
-    GameEntity gameEntity2 = new GameEntity();
-    gameEntity2.setUser(userEntity);
+    GameDocument gameDocument1 = new GameDocument();
+    gameDocument1.setUser(userDocument);
+    GameDocument gameDocument2 = new GameDocument();
+    gameDocument2.setUser(userDocument);
 
-    List<GameEntity> gameEntities = Arrays.asList(gameEntity1,
-        gameEntity2);
+    List<GameDocument> gameEntities = Arrays.asList(gameDocument1,
+        gameDocument2);
 
     // When
     when(
-        gameUserRepository.findAll(any(Specification.class))).thenReturn(
-        gameEntities);
+        gameCustomRepository.findAllGameDocuments(
+            date, cityName, fieldStatus, gender, matchFormat))
+        .thenReturn(gameEntities);
 
     Page<GameSearchResponse> result = gameUserService.findFilteredGames(
         date, cityName, fieldStatus, gender, matchFormat, 1, 2);
@@ -503,32 +518,32 @@ class GameUserServiceTest {
   void searchAddress_shouldReturnUpcomingGamesForGivenAddress() {
     // Given
     String address = "123 Example St";
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(1L);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("1");
 
-    GameEntity gameEntity1 = GameEntity.builder()
-        .user(userEntity)
-        .id(1L)
+    GameDocument gameDocument1 = GameDocument.builder()
+        .user(userDocument)
+        .id("1")
         .address(address)
-        .startDateTime(LocalDateTime.now().plusHours(1))
+        .startDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).plusHours(1))
         .build();
 
-    GameEntity gameEntity2 = GameEntity.builder()
-        .user(userEntity)
-        .id(2L)
+    GameDocument gameDocument2 = GameDocument.builder()
+        .user(userDocument)
+        .id("2")
         .address(address)
-        .startDateTime(LocalDateTime.now().plusDays(2))
+        .startDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)).plusDays(2))
         .build();
 
-    List<GameEntity> upcomingGames = Arrays.asList(
-        gameEntity1,
-        gameEntity2
+    List<GameDocument> upcomingGames = Arrays.asList(
+        gameDocument1,
+        gameDocument2
     );
 
     // When
     when(
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
-            eq(address), any(LocalDateTime.class))).thenReturn(
+            eq(address), any(OffsetDateTime.class))).thenReturn(
         upcomingGames);
 
     List<GameSearchResponse> result = gameUserService.searchAddress(
@@ -536,7 +551,7 @@ class GameUserServiceTest {
 
     // Then
     assertEquals(2, result.size());
-    assertEquals(1L, result.get(0).getGameId());
-    assertEquals(2L, result.get(1).getGameId());
+    assertEquals("1", result.get(0).getGameId());
+    assertEquals("2", result.get(1).getGameId());
   }
 }

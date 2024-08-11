@@ -1,6 +1,6 @@
 package com.zerobase.hoops.invite.dto;
 
-import com.zerobase.hoops.entity.InviteEntity;
+import com.zerobase.hoops.document.InviteDocument;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
@@ -23,7 +23,7 @@ public class RequestInviteListDto {
   public static class Response {
 
     @Schema(description = "내가 초대 요청 받은 리스트 경기 초대 pk", example = "1")
-    private Long inviteId;
+    private String inviteId;
 
     @Schema(description = "내가 초대 요청 받은 리스트 유저 생년월일", example = "2001-01-01")
     private LocalDate birthday;
@@ -44,7 +44,7 @@ public class RequestInviteListDto {
     private String mannerPoint;
 
     @Schema(description = "내가 초대 요청 받은 리스트 유저 pk", example = "2")
-    private Long gameId;
+    private String gameId;
 
 
     @Override
@@ -68,16 +68,16 @@ public class RequestInviteListDto {
           playStyle, ability, mannerPoint, gameId);
     }
 
-    public static Response toDto(InviteEntity inviteEntity) {
+    public static Response toDto(InviteDocument inviteDocument) {
       return Response.builder()
-          .inviteId(inviteEntity.getId())
-          .birthday(inviteEntity.getSenderUser().getBirthday())
-          .gender(inviteEntity.getSenderUser().getGender())
-          .nickName(inviteEntity.getSenderUser().getNickName())
-          .playStyle(inviteEntity.getSenderUser().getPlayStyle())
-          .ability(inviteEntity.getSenderUser().getAbility())
-          .mannerPoint(inviteEntity.getSenderUser().getStringAverageRating())
-          .gameId(inviteEntity.getGame().getId())
+          .inviteId(inviteDocument.getId())
+          .birthday(inviteDocument.getSenderUser().getBirthday())
+          .gender(inviteDocument.getSenderUser().getGender())
+          .nickName(inviteDocument.getSenderUser().getNickName())
+          .playStyle(inviteDocument.getSenderUser().getPlayStyle())
+          .ability(inviteDocument.getSenderUser().getAbility())
+          .mannerPoint(inviteDocument.getSenderUser().getStringAverageRating())
+          .gameId(inviteDocument.getGame().getId())
           .build();
     }
   }

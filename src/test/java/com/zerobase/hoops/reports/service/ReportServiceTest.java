@@ -5,13 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.alarm.service.NotificationService;
-import com.zerobase.hoops.entity.ReportEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.ReportDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponseDto;
@@ -23,6 +24,8 @@ import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -58,13 +61,13 @@ class ReportServiceTest {
   @Mock
   private NotificationService notificationService;
 
-  private UserEntity userEntity;
-  private UserEntity reportedUserEntity;
+  private UserDocument userDocument;
+  private UserDocument reportedUserDocument;
 
   @BeforeEach
   void setUp() {
-    userEntity = UserEntity.builder()
-        .id(1L)
+    userDocument = UserDocument.builder()
+        .id("1")
         .loginId("user1")
         .password("password123")
         .email("user@example.com")
@@ -75,11 +78,11 @@ class ReportServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(Collections.singletonList("ROLE_USER"))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)))
         .emailAuth(true)
         .build();
-    reportedUserEntity = UserEntity.builder()
-        .id(2L)
+    reportedUserDocument = UserDocument.builder()
+        .id("2")
         .loginId("user1")
         .password("password123")
         .email("reported@example.com")
@@ -90,7 +93,7 @@ class ReportServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(Collections.singletonList("ROLE_USER"))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)))
         .emailAuth(true)
         .build();
   }
@@ -101,12 +104,12 @@ class ReportServiceTest {
     // Given
     String reportId = "1";
     String reportContent = "This is a report content";
-    ReportEntity reportEntity = ReportEntity.builder()
-        .id(1L)
+    ReportDocument reportDocument = ReportDocument.builder()
+        .id("1")
         .content(reportContent)
         .build();
-    when(reportRepository.findById(anyLong())).thenReturn(
-        Optional.of(reportEntity));
+    when(reportRepository.findById(anyString())).thenReturn(
+        Optional.of(reportDocument));
 
     // When
     String result = reportService.reportContents(reportId);
@@ -120,7 +123,7 @@ class ReportServiceTest {
   void testReportContents_NonExistingReport() {
     // Given
     String reportId = "999";
-    when(reportRepository.findById(anyLong())).thenReturn(
+    when(reportRepository.findById(anyString())).thenReturn(
         Optional.empty());
 
     // When & Then
@@ -132,19 +135,19 @@ class ReportServiceTest {
   @DisplayName("유저 목록 불러오기")
   public void testReportList() {
     // Given
-    ReportEntity reportEntity1 = ReportEntity.builder()
-        .user(userEntity)
-        .reportedUser(reportedUserEntity)
+    ReportDocument reportDocument1 = ReportDocument.builder()
+        .user(userDocument)
+        .reportedUser(reportedUserDocument)
         .build();
 
-    ReportEntity reportEntity2 = ReportEntity.builder()
-        .user(reportedUserEntity)
-        .reportedUser(userEntity)
+    ReportDocument reportDocument2 = ReportDocument.builder()
+        .user(reportedUserDocument)
+        .reportedUser(userDocument)
         .build();
 
-    List<ReportEntity> reportEntities = Arrays.asList(reportEntity1,
-        reportEntity2);
-    Page<ReportEntity> reportPage = new PageImpl<>(reportEntities);
+    List<ReportDocument> reportEntities = Arrays.asList(reportDocument1,
+        reportDocument2);
+    Page<ReportDocument> reportPage = new PageImpl<>(reportEntities);
 
     // When
     when(reportRepository.findByBlackListStartDateTimeIsNull(
@@ -164,30 +167,30 @@ class ReportServiceTest {
   void reportUser_validUsers_shouldSaveReport() {
     // Given
     ReportDto reportDto = ReportDto.builder()
-        .reportedUserId(1L)
+        .reportedUserId("1")
         .content("Reason")
         .build();
 
-    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
-    when(userRepository.findById(anyLong())).thenReturn(
-        Optional.of(userEntity));
-    when(userRepository.findById(anyLong())).thenReturn(
-        Optional.of(reportedUserEntity));
+    when(jwtTokenExtract.currentUser()).thenReturn(userDocument);
+    when(userRepository.findById(anyString())).thenReturn(
+        Optional.of(userDocument));
+    when(userRepository.findById(anyString())).thenReturn(
+        Optional.of(reportedUserDocument));
 
-    ArgumentCaptor<ReportEntity> reportEntityCaptor = ArgumentCaptor.forClass(
-        ReportEntity.class);
+    ArgumentCaptor<ReportDocument> reportDocumentCaptor = ArgumentCaptor.forClass(
+        ReportDocument.class);
 
     // When
     reportService.reportUser(reportDto);
 
     // Then
-    verify(reportRepository).save(reportEntityCaptor.capture());
-    ReportEntity savedReportEntity = reportEntityCaptor.getValue();
-    assertThat(savedReportEntity.getContent()).isEqualTo(
+    verify(reportRepository).save(reportDocumentCaptor.capture());
+    ReportDocument savedReportDocument = reportDocumentCaptor.getValue();
+    assertThat(savedReportDocument.getContent()).isEqualTo(
         reportDto.getContent());
-    assertThat(savedReportEntity.getUser()).isEqualTo(userEntity);
-    assertThat(savedReportEntity.getReportedUser()).isEqualTo(
-        reportedUserEntity);
+    assertThat(savedReportDocument.getUser()).isEqualTo(userDocument);
+    assertThat(savedReportDocument.getReportedUser()).isEqualTo(
+        reportedUserDocument);
   }
 
   @Test
@@ -195,11 +198,11 @@ class ReportServiceTest {
   void reportUser_invalidReportedUser_shouldThrowException() {
     // Given
     ReportDto reportDto = ReportDto.builder()
-        .reportedUserId(1L)
+        .reportedUserId("1")
         .content("ReasonReasonReasonReasonReasonReason")
         .build();
-    given(jwtTokenExtract.currentUser()).willReturn(userEntity);
-    when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+    given(jwtTokenExtract.currentUser()).willReturn(userDocument);
+    when(userRepository.findById(anyString())).thenReturn(Optional.empty());
 
     // When, Then
     assertThrows(CustomException.class,

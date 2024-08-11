@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerobase.hoops.commonResponse.ApiResponseFactory;
-import com.zerobase.hoops.entity.ReportEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.ReportDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.reports.dto.ReportDto;
 import com.zerobase.hoops.reports.dto.ReportListResponseDto;
@@ -80,23 +80,23 @@ class ReportControllerTest {
     String reportId = "1";
     String reportContents = "Report contents for report1";
 
-    UserEntity user = UserEntity.builder()
-        .id(1L)
+    UserDocument user = UserDocument.builder()
+        .id("1")
         .gender(GenderType.MALE)
         .build();
 
-    UserEntity receiverUser = UserEntity.builder()
-        .id(2L)
+    UserDocument receiverUser = UserDocument.builder()
+        .id("2")
         .gender(GenderType.MALE)
         .build();
 
-    ReportEntity report = ReportEntity.builder()
+    ReportDocument report = ReportDocument.builder()
         .user(user)
         .reportedUser(receiverUser)
         .content(reportContents)
         .build();
 
-    given(reportRepository.findById(Long.valueOf(reportId))).willReturn(
+    given(reportRepository.findById(reportId)).willReturn(
         Optional.of(report));
     when(reportService.reportContents(reportId)).thenReturn(
         report.getContent());
@@ -120,7 +120,7 @@ class ReportControllerTest {
 
     List<ReportListResponseDto> mockReportList = Arrays.asList(
         ReportListResponseDto.builder()
-            .userId(1L)
+            .userId("1")
             .userName("User1")
             .mannerPoint("Excellent")
             .gender(GenderType.MALE)
@@ -128,7 +128,7 @@ class ReportControllerTest {
             .playStyle(PlayStyleType.AGGRESSIVE)
             .build(),
         ReportListResponseDto.builder()
-            .userId(2L)
+            .userId("2")
             .userName("User2")
             .mannerPoint("Good")
             .gender(GenderType.FEMALE)
@@ -172,7 +172,7 @@ class ReportControllerTest {
 
     // When
     ReportDto reportDto = ReportDto.builder()
-        .reportedUserId(1L)
+        .reportedUserId("1")
         .content("ReasonReasonReasonReasonReasonReasonReasonReasonReason")
         .build();
 

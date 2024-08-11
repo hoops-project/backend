@@ -1,12 +1,15 @@
 package com.zerobase.hoops.friends.dto;
 
-import com.zerobase.hoops.entity.FriendEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.FriendDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,16 +29,19 @@ public class ApplyFriendDto {
         description = "친구 유저 pk",
         defaultValue = "3",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "친구 유저 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long friendUserId;
+    @NotBlank(message = "친구 유저 아이디는 필수 값입니다.")
+    private String friendUserId;
 
-    public FriendEntity toEntity(UserEntity applyUserEntity,
-        UserEntity friendUserEntity) {
-      return FriendEntity.builder()
+    public FriendDocument toDocument(UserDocument applyUser,
+        UserDocument friendUser,
+        long friendId,
+        Clock clock) {
+      return FriendDocument.builder()
+          .id(Long.toString(friendId))
           .status(FriendStatus.APPLY)
-          .user(applyUserEntity)
-          .friendUser(friendUserEntity)
+          .createdDateTime(getNowDateTime(clock))
+          .user(applyUser)
+          .friendUser(friendUser)
           .build();
     }
   }

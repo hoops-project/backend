@@ -7,15 +7,13 @@ import static com.zerobase.hoops.friends.type.FriendStatus.DELETE;
 import static com.zerobase.hoops.friends.type.FriendStatus.REJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.alarm.repository.NotificationRepository;
 import com.zerobase.hoops.alarm.service.NotificationService;
-import com.zerobase.hoops.entity.FriendEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.FriendDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.friends.dto.AcceptFriendDto;
@@ -39,7 +37,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +47,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -84,30 +83,30 @@ class FriendServiceTest {
   @Spy
   private Clock clock;
 
-  private UserEntity user;
-  private UserEntity friendUser1;
-  private UserEntity friendUser2;
-  private FriendEntity expectedApplyFriendEntity;
-  private LocalDateTime fixedCreateDateTime;
-  private LocalDateTime fixedCancelDateTime;
-  private LocalDateTime fixedAcceptDateTime;
-  private LocalDateTime fixedRejectDateTime;
-  private LocalDateTime fixedDeleteDateTime;
+  private UserDocument user;
+  private UserDocument friendUser1;
+  private UserDocument friendUser2;
+  private FriendDocument expectedApplyFriendDocument;
+  private OffsetDateTime fixedCreateDateTime;
+  private OffsetDateTime fixedCancelDateTime;
+  private OffsetDateTime fixedAcceptDateTime;
+  private OffsetDateTime fixedRejectDateTime;
+  private OffsetDateTime fixedDeleteDateTime;
 
   @BeforeEach
   void setUp() throws Exception{
-    fixedCreateDateTime = LocalDateTime
-        .of(2024, 6, 9, 0, 0, 0);
-    fixedCancelDateTime = LocalDateTime
-        .of(2024, 6, 10, 0, 0, 0);
-    fixedAcceptDateTime = LocalDateTime
-        .of(2024, 6, 10, 0, 0, 0);
-    fixedRejectDateTime = LocalDateTime
-        .of(2024, 6, 10, 0, 0, 0);
-    fixedDeleteDateTime = LocalDateTime
-        .of(2024, 6, 10, 0, 0, 0);
-    user = UserEntity.builder()
-        .id(1L)
+    fixedCreateDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 9, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedCancelDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 10, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedAcceptDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 10, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedRejectDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 10, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    fixedDeleteDateTime = OffsetDateTime.of(LocalDateTime.of(2024, 6, 10, 0, 0,
+        0), ZoneOffset.ofHours(9));
+    user = UserDocument.builder()
+        .id("1")
         .loginId("test")
         .password("Testpass12!@")
         .email("test@example.com")
@@ -121,8 +120,8 @@ class FriendServiceTest {
         .createdDateTime(fixedCreateDateTime)
         .emailAuth(true)
         .build();
-    friendUser1 = UserEntity.builder()
-        .id(2L)
+    friendUser1 = UserDocument.builder()
+        .id("2")
         .loginId("test1")
         .password("Testpass12!@")
         .email("test1@example.com")
@@ -136,8 +135,8 @@ class FriendServiceTest {
         .createdDateTime(fixedCreateDateTime)
         .emailAuth(true)
         .build();
-    friendUser2 = UserEntity.builder()
-        .id(3L)
+    friendUser2 = UserDocument.builder()
+        .id("3")
         .loginId("test2")
         .password("Testpass12!@")
         .email("test2@example.com")
@@ -151,8 +150,8 @@ class FriendServiceTest {
         .createdDateTime(fixedCreateDateTime)
         .emailAuth(true)
         .build();
-    expectedApplyFriendEntity = FriendEntity.builder()
-        .id(1L)
+    expectedApplyFriendDocument = FriendDocument.builder()
+        .id("1")
         .status(APPLY)
         .createdDateTime(fixedCreateDateTime)
         .user(user)
@@ -165,14 +164,16 @@ class FriendServiceTest {
   void testApplyFriendSuccess() {
     // Given
     ApplyFriendDto.Request request = ApplyFriendDto.Request.builder()
-        .friendUserId(2L)
+        .friendUserId("2")
         .build();
 
-    FriendEntity applyFriendEntity = new ApplyFriendDto.Request().toEntity(user,
-        friendUser1);
+    Instant fixedInstant = fixedCreateDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
+    when(clock.instant()).thenReturn(fixedInstant);
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    // ArgumentCaptor를 사용하여 저장된 엔티티를 캡처합니다.
-    ArgumentCaptor<FriendEntity> friendEntityArgumentCaptor = ArgumentCaptor.forClass(FriendEntity.class);
+    FriendDocument applyFriendDocument = new ApplyFriendDto.Request()
+        .toDocument(user, friendUser1, 1L, clock);
 
     // 친구 신청, 수락 상태가 없다고 가정
     existsApplyOrAcceptFriend(user.getId(), request.getFriendUserId(), false);
@@ -186,23 +187,17 @@ class FriendServiceTest {
     // 친구 유저 조회
     getFriendUser(request.getFriendUserId(), friendUser1);
 
-    when(friendRepository.save(applyFriendEntity)).thenAnswer(invocation -> {
-      FriendEntity savedFriendEntity = invocation.getArgument(0);
-      savedFriendEntity.setId(1L); // friendId 동적 할당
-      savedFriendEntity.setCreatedDateTime(fixedCreateDateTime);
-      return savedFriendEntity;
-    });
+    when(friendRepository.count()).thenReturn(0L);
+
+    when(friendRepository.save(applyFriendDocument))
+        .thenReturn(applyFriendDocument);
 
     // when
     friendService.validApplyFriend(request, user);
 
     // Then
-    verify(friendRepository).save(friendEntityArgumentCaptor.capture());
+    assertEquals(expectedApplyFriendDocument, applyFriendDocument);
 
-    // 저장된 엔티티 캡처
-    FriendEntity savedFriendEntity = friendEntityArgumentCaptor.getValue();
-
-    assertEquals(expectedApplyFriendEntity, savedFriendEntity);
   }
 
   @Test
@@ -210,7 +205,7 @@ class FriendServiceTest {
   void testApplyFriendFailIfSelfFriendApply() {
     // Given
     ApplyFriendDto.Request request = ApplyFriendDto.Request.builder()
-        .friendUserId(1L)
+        .friendUserId("1")
         .build();
 
     // when
@@ -227,7 +222,7 @@ class FriendServiceTest {
   void testApplyFriendFailIfAlreadyApplyOrAccept() {
     // Given
     ApplyFriendDto.Request request = ApplyFriendDto.Request.builder()
-        .friendUserId(2L)
+        .friendUserId("2")
         .build();
 
     // 친구 신청, 수락 상태가 있다고 가정
@@ -247,7 +242,7 @@ class FriendServiceTest {
   void testApplyFriendFailIfMyFriendFull() {
     // Given
     ApplyFriendDto.Request request = ApplyFriendDto.Request.builder()
-        .friendUserId(2L)
+        .friendUserId("2")
         .build();
 
     // 친구 신청, 수락 상태가 없다고 가정
@@ -270,7 +265,7 @@ class FriendServiceTest {
   void testApplyFriendFailIfOtherFriendFull() {
     // Given
     ApplyFriendDto.Request request = ApplyFriendDto.Request.builder()
-        .friendUserId(2L)
+        .friendUserId("2")
         .build();
 
     // 친구 신청, 수락 상태가 없다고 가정
@@ -295,11 +290,11 @@ class FriendServiceTest {
   void testCancelFriendSuccess() {
     // Given
     CancelFriendDto.Request request = CancelFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    FriendEntity expectedCancelFriendEntity = FriendEntity.builder()
-        .id(expectedApplyFriendEntity.getId())
+    FriendDocument expectedCancelFriendDocument = FriendDocument.builder()
+        .id(expectedApplyFriendDocument.getId())
         .status(CANCEL)
         .createdDateTime(fixedCreateDateTime)
         .canceledDateTime(fixedCancelDateTime)
@@ -307,25 +302,24 @@ class FriendServiceTest {
         .friendUser(friendUser1)
         .build();
 
-    Instant fixedInstant = fixedCancelDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedCancelDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    FriendEntity cancelEntity = FriendEntity.setCancel(
-        expectedApplyFriendEntity, clock);
+    FriendDocument cancelDocument = FriendDocument.setCancel(
+        expectedApplyFriendDocument, clock);
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
-    when(friendRepository.save(cancelEntity)).thenReturn(cancelEntity);
+    when(friendRepository.save(cancelDocument)).thenReturn(cancelDocument);
 
     // when
     friendService.validCancelFriend(request, user);
 
     // Then
-    assertEquals(expectedCancelFriendEntity, cancelEntity);
+    assertEquals(expectedCancelFriendDocument, cancelDocument);
   }
 
   @Test
@@ -333,16 +327,16 @@ class FriendServiceTest {
   void testCancelFriendFailIfNotSelfFriendApply() {
     // Given
     CancelFriendDto.Request request = CancelFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    expectedApplyFriendEntity = FriendEntity.builder()
-        .id(1L)
+    expectedApplyFriendDocument = FriendDocument.builder()
+        .id("1")
         .user(friendUser1)
         .build();
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -358,11 +352,11 @@ class FriendServiceTest {
   void testAcceptFriendSuccess() {
     // Given
     AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    FriendEntity expectedMyAcceptFriendEntity = FriendEntity.builder()
-        .id(expectedApplyFriendEntity.getId())
+    FriendDocument expectedMyAcceptFriendDocument = FriendDocument.builder()
+        .id(expectedApplyFriendDocument.getId())
         .status(ACCEPT)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -370,8 +364,8 @@ class FriendServiceTest {
         .friendUser(friendUser1)
         .build();
 
-    FriendEntity expectedOtherAcceptFriendEntity = FriendEntity.builder()
-        .id(2L)
+    FriendDocument expectedOtherAcceptFriendDocument = FriendDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -379,53 +373,38 @@ class FriendServiceTest {
         .friendUser(user)
         .build();
 
-    Instant fixedInstant = fixedAcceptDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedAcceptDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    FriendEntity myFriendEntity = FriendEntity.setAcceptMyFriend(
-        expectedApplyFriendEntity, clock);
+    FriendDocument myFriendDocument = FriendDocument.setAcceptMyFriend(
+        expectedApplyFriendDocument, clock);
 
-    FriendEntity otherFriendEntity
-        = FriendEntity.setAcceptOtherFriend(myFriendEntity);
-
-    // ArgumentCaptor를 사용하여 저장된 엔티티를 캡처합니다.
-    ArgumentCaptor<FriendEntity> friendEntityArgumentCaptor
-        = ArgumentCaptor.forClass(FriendEntity.class);
+    FriendDocument otherFriendDocument
+        = FriendDocument.setAcceptOtherFriend(myFriendDocument, 2L);
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
     // 자신의 친구가 10명이 있다고 가정
-    countsFriend(expectedApplyFriendEntity.getFriendUser().getId(),10);
+    countsFriend(expectedApplyFriendDocument.getFriendUser().getId(),10);
 
     // 상대방의 친구가 10명이 있다고 가정
-    countsFriend(expectedApplyFriendEntity.getUser().getId(),10);
+    countsFriend(expectedApplyFriendDocument.getUser().getId(),10);
 
-    when(friendRepository.save(myFriendEntity)).thenReturn(myFriendEntity);
+    when(friendRepository.count()).thenReturn(1L);
 
-    when(friendRepository.save(otherFriendEntity)).thenAnswer(invocation -> {
-      FriendEntity savedFriendEntity = invocation.getArgument(0);
-      savedFriendEntity.setId(2L); // friendId 동적 할당
-      savedFriendEntity.setAcceptedDateTime(fixedAcceptDateTime);
-      return savedFriendEntity;
-    });
+    when(friendRepository.save(myFriendDocument)).thenReturn(myFriendDocument);
+
+    when(friendRepository.save(otherFriendDocument)).thenReturn(otherFriendDocument);
 
     // when
     friendService.validAcceptFriend(request, friendUser1);
 
     // Then
-    verify(friendRepository, times(2))
-        .save(friendEntityArgumentCaptor.capture());
-
-    // 저장된 엔티티 캡처
-    FriendEntity savedFriendEntity =
-        friendEntityArgumentCaptor.getAllValues().get(1);
-
-    assertEquals(expectedMyAcceptFriendEntity, myFriendEntity);
-    assertEquals(expectedOtherAcceptFriendEntity, savedFriendEntity);
+    assertEquals(expectedMyAcceptFriendDocument, myFriendDocument);
+    assertEquals(expectedOtherAcceptFriendDocument, otherFriendDocument);
   }
 
   @Test
@@ -433,16 +412,16 @@ class FriendServiceTest {
   void testAcceptFriendFailIfNotSelfReceiveFriendApply() {
     // Given
     AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    expectedApplyFriendEntity = FriendEntity.builder()
-        .id(1L)
+    expectedApplyFriendDocument = FriendDocument.builder()
+        .id("1")
         .friendUser(user)
         .build();
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -458,14 +437,14 @@ class FriendServiceTest {
   void testAcceptFriendFailIfMyFriendFull() {
     // Given
     AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
     // 자신의 친구가 10명이 있다고 가정
-    countsFriend(expectedApplyFriendEntity.getFriendUser().getId(),30);
+    countsFriend(expectedApplyFriendDocument.getFriendUser().getId(),30);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -481,17 +460,17 @@ class FriendServiceTest {
   void testAcceptFriendFailIfOtherFriendFull() {
     // Given
     AcceptFriendDto.Request request = AcceptFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
     // 자신의 친구가 10명이 있다고 가정
-    countsFriend(expectedApplyFriendEntity.getFriendUser().getId(),10);
+    countsFriend(expectedApplyFriendDocument.getFriendUser().getId(),10);
 
     // 상대방의 친구가 10명이 있다고 가정
-    countsFriend(expectedApplyFriendEntity.getUser().getId(),30);
+    countsFriend(expectedApplyFriendDocument.getUser().getId(),30);
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -508,11 +487,11 @@ class FriendServiceTest {
   void testRejectFriendSuccess() {
     // Given
     RejectFriendDto.Request request = RejectFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    FriendEntity expectedRejectFriendEntity = FriendEntity.builder()
-        .id(expectedApplyFriendEntity.getId())
+    FriendDocument expectedRejectFriendDocument = FriendDocument.builder()
+        .id(expectedApplyFriendDocument.getId())
         .status(REJECT)
         .createdDateTime(fixedCreateDateTime)
         .rejectedDateTime(fixedRejectDateTime)
@@ -520,25 +499,24 @@ class FriendServiceTest {
         .friendUser(friendUser1)
         .build();
 
-    Instant fixedInstant = fixedRejectDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedRejectDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    FriendEntity rejectFriendEntity = FriendEntity.setReject(
-        expectedApplyFriendEntity, clock);
+    FriendDocument rejectFriendDocument = FriendDocument.setReject(
+        expectedApplyFriendDocument, clock);
 
     // 친구 신청 entity 조회
-    getFriendEntity(request.getFriendId());
+    getFriendDocument(request.getFriendId());
 
-    when(friendRepository.save(rejectFriendEntity)).thenReturn(rejectFriendEntity);
+    when(friendRepository.save(rejectFriendDocument)).thenReturn(rejectFriendDocument);
 
     // when
     friendService.validRejectFriend(request, friendUser1);
 
     // Then
-    assertEquals(expectedRejectFriendEntity, rejectFriendEntity);
+    assertEquals(expectedRejectFriendDocument, rejectFriendDocument);
   }
 
   @Test
@@ -546,16 +524,16 @@ class FriendServiceTest {
   void testRejectFriendFailIfNotSelfReceiveFriendApply() {
     // Given
     RejectFriendDto.Request request = RejectFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    expectedApplyFriendEntity = FriendEntity.builder()
-        .id(1L)
+    expectedApplyFriendDocument = FriendDocument.builder()
+        .id("1")
         .friendUser(user)
         .build();
 
     when(friendRepository.findByIdAndStatus(request.getFriendId(), APPLY))
-        .thenReturn(Optional.ofNullable(expectedApplyFriendEntity));
+        .thenReturn(Optional.ofNullable(expectedApplyFriendDocument));
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -571,11 +549,11 @@ class FriendServiceTest {
   void testDeleteFriendSuccess() {
     // Given
     DeleteFriendDto.Request request = DeleteFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    FriendEntity myFriendAcceptEntity = FriendEntity.builder()
-        .id(1L)
+    FriendDocument myFriendAcceptDocument = FriendDocument.builder()
+        .id("1")
         .status(ACCEPT)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -583,8 +561,8 @@ class FriendServiceTest {
         .friendUser(friendUser1)
         .build();
 
-    FriendEntity otherFriendAcceptEntity = FriendEntity.builder()
-        .id(2L)
+    FriendDocument otherFriendAcceptDocument = FriendDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -592,8 +570,8 @@ class FriendServiceTest {
         .friendUser(user)
         .build();
 
-    FriendEntity expectedMyDeleteFriendEntity = FriendEntity.builder()
-        .id(1L)
+    FriendDocument expectedMyDeleteFriendDocument = FriendDocument.builder()
+        .id("1")
         .status(DELETE)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -602,8 +580,8 @@ class FriendServiceTest {
         .friendUser(friendUser1)
         .build();
 
-    FriendEntity expectedOtherDeleteFriendEntity = FriendEntity.builder()
-        .id(2L)
+    FriendDocument expectedOtherDeleteFriendDocument = FriendDocument.builder()
+        .id("2")
         .status(DELETE)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -612,35 +590,34 @@ class FriendServiceTest {
         .friendUser(user)
         .build();
 
-    Instant fixedInstant = fixedRejectDateTime.atZone(ZoneId.systemDefault())
-        .toInstant();
-
+    Instant fixedInstant = fixedRejectDateTime.toInstant();
+    // Clock의 instant()와 getZone() 메서드를 설정
     when(clock.instant()).thenReturn(fixedInstant);
-    when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+    when(clock.getZone()).thenReturn(ZoneOffset.ofHours(9));
 
-    FriendEntity myDeleteFriendEntity =
-        FriendEntity.setDeleteMyFriend(myFriendAcceptEntity, clock);
+    FriendDocument myDeleteFriendDocument =
+        FriendDocument.setDeleteMyFriend(myFriendAcceptDocument, clock);
 
-    FriendEntity otherDeleteFriendEntity =
-        FriendEntity.setDeleteOtherFriend(myDeleteFriendEntity, otherFriendAcceptEntity);
+    FriendDocument otherDeleteFriendDocument =
+        FriendDocument.setDeleteOtherFriend(myDeleteFriendDocument, otherFriendAcceptDocument);
 
     when(friendRepository.findByIdAndStatus
         (request.getFriendId(), ACCEPT))
-        .thenReturn(Optional.of(myFriendAcceptEntity));
+        .thenReturn(Optional.of(myFriendAcceptDocument));
 
     when(friendRepository.findByFriendUserIdAndUserIdAndStatus(
-        user.getId(), myFriendAcceptEntity.getFriendUser().getId(), ACCEPT))
-        .thenReturn(Optional.of(otherFriendAcceptEntity));
+        user.getId(), myFriendAcceptDocument.getFriendUser().getId(), ACCEPT))
+        .thenReturn(Optional.of(otherFriendAcceptDocument));
 
-    when(friendRepository.save(myDeleteFriendEntity)).thenReturn(myDeleteFriendEntity);
-    when(friendRepository.save(otherDeleteFriendEntity)).thenReturn(otherDeleteFriendEntity);
+    when(friendRepository.save(myDeleteFriendDocument)).thenReturn(myDeleteFriendDocument);
+    when(friendRepository.save(otherDeleteFriendDocument)).thenReturn(otherDeleteFriendDocument);
 
     // when
     friendService.validDeleteFriend(request, user);
 
     // Then
-    assertEquals(expectedMyDeleteFriendEntity, myDeleteFriendEntity);
-    assertEquals(expectedOtherDeleteFriendEntity, otherDeleteFriendEntity);
+    assertEquals(expectedMyDeleteFriendDocument, myDeleteFriendDocument);
+    assertEquals(expectedOtherDeleteFriendDocument, otherDeleteFriendDocument);
   }
 
   @Test
@@ -648,11 +625,11 @@ class FriendServiceTest {
   void testDeleteFriendFailIfNotMyReceiveFriendAccept() {
     // Given
     DeleteFriendDto.Request request = DeleteFriendDto.Request.builder()
-        .friendId(1L)
+        .friendId("1")
         .build();
 
-    FriendEntity selfEntity = FriendEntity.builder()
-        .id(1L)
+    FriendDocument selfDocument = FriendDocument.builder()
+        .id("1")
         .status(ACCEPT)
         .createdDateTime(fixedCreateDateTime)
         .acceptedDateTime(fixedAcceptDateTime)
@@ -661,7 +638,7 @@ class FriendServiceTest {
         .build();
 
     when(friendRepository.findByIdAndStatus(request.getFriendId(), ACCEPT))
-        .thenReturn(Optional.ofNullable(selfEntity));
+        .thenReturn(Optional.ofNullable(selfDocument));
 
     // when
     CustomException exception = assertThrows(CustomException.class, () -> {
@@ -680,16 +657,16 @@ class FriendServiceTest {
     Pageable pageable = PageRequest.of(0, 4);
 
     SearchFriendListDto.Response friendListResponse1 = SearchFriendListDto.Response.builder()
-        .userId(2L)
+        .userId("2")
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test1")
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
-        .friendId(1L)
+        .friendId("1")
         .build();
 
     SearchFriendListDto.Response friendListResponse2 = SearchFriendListDto.Response.builder()
-        .userId(3L)
+        .userId("3")
         .birthday(LocalDate.of(1990, 1, 1))
         .nickName("test2")
         .playStyle(PlayStyleType.AGGRESSIVE)
@@ -736,18 +713,18 @@ class FriendServiceTest {
     // Given
     Pageable pageable = PageRequest.of(0, 1);
 
-    FriendEntity friendEntity1 = FriendEntity.builder()
-        .id(1L)
+    FriendDocument friendDocument1 = FriendDocument.builder()
+        .id("1")
         .status(ACCEPT)
         .user(user)
         .friendUser(friendUser1)
         .build();
 
-    List<FriendEntity> friendEntityList =
-        List.of(friendEntity1);
+    List<FriendDocument> friendDocumentList =
+        List.of(friendDocument1);
 
-    Page<FriendEntity> searchResponsePage =
-        new PageImpl<>(friendEntityList, pageable, 1);
+    Page<FriendDocument> searchResponsePage =
+        new PageImpl<>(friendDocumentList, pageable, 1);
 
     List<FriendListDto.Response> listResponseFriendList = searchResponsePage.stream()
         .map(FriendListDto.Response::toDto)
@@ -769,12 +746,12 @@ class FriendServiceTest {
   @DisplayName("경기 초대 친구 리스트 조회")
   void testGetMyInviteListSuccess() {
     // Given
-    Long gameId = 1L;
+    String gameId = "1";
     Pageable pageable = PageRequest.of(0, 1);
 
     InviteFriendListDto.Response inviteFriendListResponse = InviteFriendListDto
         .Response.builder()
-        .userId(2L)
+        .userId("2")
         .birthday(LocalDate.of(1990, 1, 1))
         .gender(GenderType.MALE)
         .nickName("test1")
@@ -808,34 +785,34 @@ class FriendServiceTest {
     // Given
     Pageable pageable = PageRequest.of(0, 1);
 
-    FriendEntity friendEntity1 = FriendEntity.builder()
-        .id(1L)
+    FriendDocument friendDocument1 = FriendDocument.builder()
+        .id("1")
         .status(ACCEPT)
         .user(friendUser1)
         .friendUser(user)
         .build();
 
-    FriendEntity friendEntity2 = FriendEntity.builder()
-        .id(2L)
+    FriendDocument friendDocument2 = FriendDocument.builder()
+        .id("2")
         .status(ACCEPT)
         .user(friendUser2)
         .friendUser(user)
         .build();
 
-    List<FriendEntity> friendEntityList =
-        List.of(friendEntity1, friendEntity2);
+    List<FriendDocument> friendDocumentList =
+        List.of(friendDocument1, friendDocument2);
 
-    Page<FriendEntity> friendEntityPage =
-        new PageImpl<>(friendEntityList, pageable, 1);
+    Page<FriendDocument> friendDocumentPage =
+        new PageImpl<>(friendDocumentList, pageable, 1);
 
     List<RequestFriendListDto.Response> expectedRequestFriendList
-        = friendEntityList.stream()
+        = friendDocumentList.stream()
         .map(RequestFriendListDto.Response::toDto)
         .toList();
 
     when(friendRepository.findByStatusAndFriendUserId
         (FriendStatus.APPLY, user.getId(), pageable))
-        .thenReturn(friendEntityPage);
+        .thenReturn(friendDocumentPage);
 
     // when
     List<RequestFriendListDto.Response> requestFriendList
@@ -846,27 +823,27 @@ class FriendServiceTest {
   }
 
   // 친구 신청, 수락 상태 검사
-  private void existsApplyOrAcceptFriend(Long userId, Long friendUserId,
+  private void existsApplyOrAcceptFriend(String userId, String friendUserId,
       boolean flag) {
     when(friendRepository.existsByUserIdAndFriendUserIdAndStatusIn(
         userId, friendUserId, List.of(APPLY, ACCEPT))).thenReturn(flag);
   }
 
   // 친구 몇명인지 계산
-  private void countsFriend(Long userId, int count) {
+  private void countsFriend(String userId, int count) {
     when(friendRepository.countByUserIdAndStatus(userId, ACCEPT))
         .thenReturn(count);
   }
 
   // 친구 조회
-  private void getFriendUser(Long userId, UserEntity user) {
+  private void getFriendUser(String userId, UserDocument user) {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
   }
 
   // 친구 신청 entity 조회
-  private void getFriendEntity(Long friendId) {
+  private void getFriendDocument(String friendId) {
     when(friendRepository.findByIdAndStatus(friendId, APPLY))
-        .thenReturn(Optional.of(expectedApplyFriendEntity));
+        .thenReturn(Optional.of(expectedApplyFriendDocument));
   }
 
 }

@@ -1,14 +1,12 @@
 package com.zerobase.hoops.manager.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 
 @Data
 public class BlackListDto {
 
-  @NotNull
-  @Min(1)
-  private Long reportedId;
+  @NotBlank
+  private String reportedId;
 }

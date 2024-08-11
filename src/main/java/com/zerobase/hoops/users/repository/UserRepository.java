@@ -1,12 +1,13 @@
 package com.zerobase.hoops.users.repository;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
+public interface UserRepository extends
+    ElasticsearchRepository<UserDocument, String> {
 
   boolean existsByLoginIdAndDeletedDateTimeNull(String loginId);
 
@@ -14,8 +15,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
   boolean existsByNickNameAndDeletedDateTimeNull(String nickName);
 
-  Optional<UserEntity> findByEmailAndDeletedDateTimeNull(String email);
+  Optional<UserDocument> findByEmailAndDeletedDateTimeNull(String email);
 
-  Optional<UserEntity> findByLoginIdAndDeletedDateTimeNull(String loginId);
+  Optional<UserDocument> findByLoginIdAndDeletedDateTimeNull(String loginId);
 
 }

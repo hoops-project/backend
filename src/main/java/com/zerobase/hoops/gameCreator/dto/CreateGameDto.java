@@ -1,7 +1,7 @@
 package com.zerobase.hoops.gameCreator.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,7 +71,7 @@ public class CreateGameDto {
         requiredMode = RequiredMode.REQUIRED)
     @NotNull(message = "시작 날짜는 필수 입력 값 입니다.")
     @ValidStartTime
-    private LocalDateTime startDateTime;
+    private OffsetDateTime startDateTime;
 
     @Schema(description = "친구 초대 여부",
         defaultValue = "true",
@@ -111,14 +113,17 @@ public class CreateGameDto {
     @NotNull(message = "경기 형식은 필수 입력 값 입니다.")
     private MatchFormat matchFormat;
 
-    public GameEntity toEntity(Request request, UserEntity user) {
-      return GameEntity.builder()
+    public GameDocument toDocument(Request request, UserDocument user,
+        long gameId, OffsetDateTime nowDateTime) {
+      return GameDocument.builder()
+          .id(Long.toString(gameId))
           .title(request.getTitle())
           .content(request.getContent())
           .headCount(request.getHeadCount())
           .fieldStatus(request.getFieldStatus())
           .gender(request.getGender())
           .startDateTime(request.getStartDateTime())
+          .createdDateTime(nowDateTime)
           .inviteYn(request.getInviteYn())
           .address(request.getAddress())
           .placeName(request.getPlaceName())

@@ -1,7 +1,8 @@
 package com.zerobase.hoops.alarm.domain;
 
-import com.zerobase.hoops.entity.NotificationEntity;
+import com.zerobase.hoops.document.NotificationDocument;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,21 +14,18 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NotificationDto {
 
-  private Long id;
-
+  private String id;
   private String content;
-
   private String type;
-  private LocalDateTime createdDateTime;
-
+  private OffsetDateTime createdDateTime;
 
   public static NotificationDto entityToDto(
-      NotificationEntity notificationEntity) {
+      NotificationDocument notification) {
     return NotificationDto.builder()
-        .id(notificationEntity.getId())
-        .type(notificationEntity.getNotificationType().toString())
-        .content(notificationEntity.getContent())
-        .createdDateTime(notificationEntity.getCreatedDateTime())
+        .id(notification.getId())
+        .type(notification.getNotificationType().toString())
+        .content(notification.getContent())
+        .createdDateTime(notification.getCreatedDateTime())
         .build();
   }
 }

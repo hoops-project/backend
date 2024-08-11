@@ -1,37 +1,38 @@
 package com.zerobase.hoops.friends.repository;
 
-import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.document.FriendDocument;
 import com.zerobase.hoops.friends.type.FriendStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
+public interface FriendRepository extends
+    ElasticsearchRepository<FriendDocument, String> {
 
-  Optional<FriendEntity> findByIdAndStatus(
-      Long friendId, FriendStatus friendStatus);
+  Optional<FriendDocument> findByIdAndStatus(
+      String friendId, FriendStatus friendStatus);
 
-  int countByUserIdAndStatus(Long userId, FriendStatus friendStatus);
+  int countByUserIdAndStatus(String userId, FriendStatus friendStatus);
 
-  Optional<FriendEntity> findByFriendUserIdAndUserIdAndStatus(
-      Long friendUserId, Long userId, FriendStatus friendStatus);
+  Optional<FriendDocument> findByFriendUserIdAndUserIdAndStatus(
+      String friendUserId, String userId, FriendStatus friendStatus);
 
-  Page<FriendEntity> findByStatusAndUserId(FriendStatus friendStatus,
-      Long userId, Pageable pageable);
+  Page<FriendDocument> findByStatusAndUserId(FriendStatus friendStatus,
+      String userId, Pageable pageable);
 
   boolean existsByUserIdAndFriendUserIdAndStatus(
-      Long userId, Long receiverUserId, FriendStatus friendStatus);
+      String userId, String receiverUserId, FriendStatus friendStatus);
 
-  List<FriendEntity> findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
-      Long userId, Long friendUserId, FriendStatus friendStatus);
+  List<FriendDocument> findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
+      String userId, String friendUserId, FriendStatus friendStatus);
 
-  Page<FriendEntity> findByStatusAndFriendUserId(FriendStatus friendStatus,
-      Long userId, Pageable pageable);
+  Page<FriendDocument> findByStatusAndFriendUserId(FriendStatus friendStatus,
+      String userId, Pageable pageable);
 
-  boolean existsByUserIdAndFriendUserIdAndStatusIn(Long userId,
-      Long friendUserId, List<FriendStatus> apply);
+  boolean existsByUserIdAndFriendUserIdAndStatusIn(String userId,
+      String friendUserId, List<FriendStatus> apply);
 }

@@ -81,7 +81,6 @@ public class ReportController {
       @ApiResponse(responseCode = "200", description = "신고 내역 조회",
           content = @Content(schema = @Schema(implementation = ReportContent.class)))
   })
-
   @PreAuthorize("hasRole('OWNER')")
   @GetMapping("/contents/{report_id}")
   public ResponseEntity<BasicApiResponse> reportContents(

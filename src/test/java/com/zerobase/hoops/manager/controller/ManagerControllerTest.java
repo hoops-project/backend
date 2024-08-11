@@ -61,7 +61,7 @@ class ManagerControllerTest {
   @Test
   void saveBlackListTest() throws Exception {
     BlackListDto request = new BlackListDto();
-    request.setReportedId(1L);
+    request.setReportedId("1");
 
     mockMvc.perform(MockMvcRequestBuilders.post("/api/manager/black-list")
             .with(csrf())

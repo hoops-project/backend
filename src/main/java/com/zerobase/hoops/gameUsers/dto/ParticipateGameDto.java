@@ -1,10 +1,11 @@
 package com.zerobase.hoops.gameUsers.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,33 +19,33 @@ import lombok.Setter;
 @Builder
 public class ParticipateGameDto {
 
-  private Long participantId;
+  private String participantId;
   private ParticipantGameStatus status;
-  private LocalDateTime createdDateTime;
-  private LocalDateTime acceptedDateTime;
-  private LocalDateTime rejectedDateTime;
-  private LocalDateTime canceledDateTime;
-  private LocalDateTime withdrewDateTime;
-  private LocalDateTime kickoutDateTime;
-  private LocalDateTime deletedDateTime;
+  private OffsetDateTime createdDateTime;
+  private OffsetDateTime acceptedDateTime;
+  private OffsetDateTime rejectedDateTime;
+  private OffsetDateTime canceledDateTime;
+  private OffsetDateTime withdrewDateTime;
+  private OffsetDateTime kickoutDateTime;
+  private OffsetDateTime deletedDateTime;
 
-  private GameEntity gameEntity;
-  private UserEntity userEntity;
+  private GameDocument gameDocument;
+  private UserDocument userDocument;
 
-  public static ParticipateGameDto fromEntity(
-      ParticipantGameEntity participantGameEntity) {
+  public static ParticipateGameDto fromDocument(
+      ParticipantGameDocument participantGameDocument) {
     return ParticipateGameDto.builder()
-        .participantId(participantGameEntity.getId())
-        .status(participantGameEntity.getStatus())
-        .createdDateTime(participantGameEntity.getCreatedDateTime())
-        .acceptedDateTime(participantGameEntity.getAcceptedDateTime())
-        .rejectedDateTime(participantGameEntity.getRejectedDateTime())
-        .canceledDateTime(participantGameEntity.getCanceledDateTime())
-        .withdrewDateTime(participantGameEntity.getWithdrewDateTime())
-        .kickoutDateTime(participantGameEntity.getKickoutDateTime())
-        .deletedDateTime(participantGameEntity.getDeletedDateTime())
-        .gameEntity(participantGameEntity.getGame())
-        .userEntity(participantGameEntity.getUser())
+        .participantId(participantGameDocument.getId())
+        .status(participantGameDocument.getStatus())
+        .createdDateTime(participantGameDocument.getCreatedDateTime())
+        .acceptedDateTime(participantGameDocument.getAcceptedDateTime())
+        .rejectedDateTime(participantGameDocument.getRejectedDateTime())
+        .canceledDateTime(participantGameDocument.getCanceledDateTime())
+        .withdrewDateTime(participantGameDocument.getWithdrewDateTime())
+        .kickoutDateTime(participantGameDocument.getKickoutDateTime())
+        .deletedDateTime(participantGameDocument.getDeletedDateTime())
+        .gameDocument(participantGameDocument.getGame())
+        .userDocument(participantGameDocument.getUser())
         .build();
   }
 

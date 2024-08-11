@@ -2,7 +2,7 @@ package com.zerobase.hoops.alarm.controller;
 
 import com.zerobase.hoops.alarm.domain.NotificationDto;
 import com.zerobase.hoops.alarm.service.NotificationService;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class NotificationController {
   @GetMapping(value = "/subscribe",
       produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public ResponseEntity<SseEmitter> subscribe(
-      @AuthenticationPrincipal UserEntity user,
+      @AuthenticationPrincipal UserDocument user,
       @RequestHeader(value = "lastEventId", required = false, defaultValue = "")
       String lastEventId
   ) {
@@ -41,7 +41,7 @@ public class NotificationController {
   @Operation(summary = "해당 사용자에게 온 알림 전체 조회")
   @GetMapping("/notifications")
   public ResponseEntity<List<NotificationDto>> notifications(
-      @AuthenticationPrincipal UserEntity user
+      @AuthenticationPrincipal UserDocument user
   ) {
     return ResponseEntity.ok().body(notificationService.findAllById(user));
   }

@@ -2,7 +2,7 @@ package com.zerobase.hoops.users.oauth2.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.users.dto.KakaoDto;
 import com.zerobase.hoops.users.dto.LogInDto;
@@ -61,6 +61,7 @@ public class OAuth2Service {
     Properties properties = kakaoUser.getProperties();
     KakaoAccount kakaoAccount = kakaoUser.getKakao_account();
     String id = "kakao_" + kakaoUser.getId().toString();
+    long userId = userRepository.count() + 1;
 
     log.info("카카오 유저 정보 등록");
     if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() == null
@@ -71,7 +72,7 @@ public class OAuth2Service {
           properties.getNickname()
           , "MALE");
 
-      userRepository.save(KakaoDto.Request.toEntity(user));
+      userRepository.save(KakaoDto.Request.toDocument(user, userId));
     } else if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() != null
         && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
@@ -80,7 +81,7 @@ public class OAuth2Service {
           properties.getNickname()
           , kakaoAccount.getGender());
 
-      userRepository.save(KakaoDto.Request.toEntity(user));
+      userRepository.save(KakaoDto.Request.toDocument(user, userId));
     } else if (kakaoAccount.getEmail() != null && kakaoAccount.getGender() == null
         && !userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
@@ -89,7 +90,7 @@ public class OAuth2Service {
           properties.getNickname()
           , "MALE");
 
-      userRepository.save(KakaoDto.Request.toEntity(user));
+      userRepository.save(KakaoDto.Request.toDocument(user, userId));
     } else if (!userRepository.existsByLoginIdAndDeletedDateTimeNull(id)) {
       KakaoDto.Request user = kakaoUserDto(
           id,
@@ -97,7 +98,7 @@ public class OAuth2Service {
           properties.getNickname()
           , kakaoAccount.getGender());
 
-      userRepository.save(KakaoDto.Request.toEntity(user));
+      userRepository.save(KakaoDto.Request.toDocument(user, userId));
     }
     log.info("카카오 유저 정보 등록 성공");
     LogInDto.Request logInDto = kakaoUserLogin(id);
@@ -186,8 +187,8 @@ public class OAuth2Service {
   }
 
   public void kakaoLogout(HttpServletRequest request,
-      UserEntity userEntity) {
-    String id = userEntity.getLoginId();
+      UserDocument user) {
+    String id = user.getLoginId();
     String kakaoId = id.substring(6);
 
     HttpHeaders headers = new HttpHeaders();
@@ -208,8 +209,8 @@ public class OAuth2Service {
         HttpMethod.POST, kakaoRequest, String.class);
   }
 
-  public void kakaoUnlink(HttpServletRequest request, UserEntity userEntity) {
-    String id = userEntity.getLoginId();
+  public void kakaoUnlink(HttpServletRequest request, UserDocument userDocument) {
+    String id = userDocument.getLoginId();
     String kakaoId = id.substring(6);
 
     HttpHeaders headers = new HttpHeaders();

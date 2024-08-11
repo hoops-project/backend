@@ -1,28 +1,28 @@
 package com.zerobase.hoops.gameCreator.repository;
 
-import com.zerobase.hoops.entity.GameEntity;
+import com.zerobase.hoops.document.GameDocument;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GameRepository extends
-    JpaRepository<GameEntity, Long> {
+    ElasticsearchRepository<GameDocument, String> {
 
-  Optional<GameEntity> findByIdAndDeletedDateTimeNull(Long gameId);
+  Optional<GameDocument> findByIdAndDeletedDateTimeNull(String gameId);
 
-  List<GameEntity> findByUserIdAndDeletedDateTimeNull(Long userId);
-
-
+  List<GameDocument> findByUserIdAndDeletedDateTimeNull(String userId);
 
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNull(
-      LocalDateTime beforeDatetime,
-      LocalDateTime afterDateTime, String address);
+      OffsetDateTime beforeDatetime,
+      OffsetDateTime afterDateTime, String address);
 
   boolean existsByStartDateTimeBetweenAndAddressAndDeletedDateTimeNullAndIdNot(
-      LocalDateTime beforeDatetime, LocalDateTime afterDateTime, String address, Long gameId);
+      OffsetDateTime beforeDatetime, OffsetDateTime afterDateTime,
+      String address, String gameId);
 
 }
 

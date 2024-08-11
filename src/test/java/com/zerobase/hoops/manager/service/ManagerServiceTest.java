@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.entity.BlackListUserEntity;
-import com.zerobase.hoops.entity.ReportEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.BlackListUserDocument;
+import com.zerobase.hoops.document.ReportDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.manager.dto.BlackListDto;
 import com.zerobase.hoops.manager.dto.UnLockBlackListDto;
@@ -48,16 +48,16 @@ class ManagerServiceTest {
     // Given
     String loginId = "testuser";
     LocalDate afterDate = LocalDate.now().plusDays(1);
-    BlackListUserEntity blackListUserEntity = BlackListUserEntity.builder()
-        .blackUser(new UserEntity())
+    BlackListUserDocument blackListUserDocument = BlackListUserDocument.builder()
+        .blackUser(new UserDocument())
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setLoginId(loginId);
+    blackListUserDocument.getBlackUser().setLoginId(loginId);
 
     // When
     when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
         LocalDate.now()))
-        .thenReturn(Optional.of(blackListUserEntity));
+        .thenReturn(Optional.of(blackListUserDocument));
 
     // Then
     assertDoesNotThrow(() -> managerService.getBlackList(loginId));
@@ -84,29 +84,29 @@ class ManagerServiceTest {
   void saveBlackListTest() {
     // Given
     BlackListDto request = new BlackListDto();
-    request.setReportedId(1L);
+    request.setReportedId("1");
 
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(2L);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("2");
 
-    UserEntity reportedUserEntity = new UserEntity();
-    reportedUserEntity.setLoginId("reportedUser");
-    reportedUserEntity.setId(1L);
+    UserDocument reportedUserDocument = new UserDocument();
+    reportedUserDocument.setLoginId("reportedUser");
+    reportedUserDocument.setId("1");
 
-    ReportEntity reportEntity = ReportEntity.builder()
-        .reportedUser(reportedUserEntity)
+    ReportDocument reportDocument = ReportDocument.builder()
+        .reportedUser(reportedUserDocument)
         .build();
 
     // Then
-    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
-    when(userRepository.findById(2L)).thenReturn(Optional.of(userEntity));
-    when(userRepository.findById(1L)).thenReturn(
-        Optional.of(reportedUserEntity));
+    when(jwtTokenExtract.currentUser()).thenReturn(userDocument);
+    when(userRepository.findById("2")).thenReturn(Optional.of(userDocument));
+    when(userRepository.findById("1")).thenReturn(
+        Optional.of(reportedUserDocument));
     when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
         "reportedUser", LocalDate.now()))
         .thenReturn(Optional.empty());
-    when(reportRepository.findByReportedUser_Id(1L)).thenReturn(
-        Optional.of(reportEntity));
+    when(reportRepository.findByReportedUser_Id("1")).thenReturn(
+        Optional.of(reportDocument));
 
     // When
     assertDoesNotThrow(() -> managerService.saveBlackList(request));
@@ -119,23 +119,23 @@ class ManagerServiceTest {
     LocalDate afterDate = LocalDate.now().plusDays(1);
 
     BlackListDto request = new BlackListDto();
-    request.setReportedId(1L);
+    request.setReportedId("1");
 
-    UserEntity userEntity = new UserEntity();
-    userEntity.setId(2L);
+    UserDocument userDocument = new UserDocument();
+    userDocument.setId("2");
 
-    UserEntity reportedUserEntity = new UserEntity();
-    reportedUserEntity.setLoginId("reportedUser");
-    reportedUserEntity.setId(1L);
+    UserDocument reportedUserDocument = new UserDocument();
+    reportedUserDocument.setLoginId("reportedUser");
+    reportedUserDocument.setId("1");
 
-    BlackListUserEntity blackListUserEntity = BlackListUserEntity.builder()
-        .blackUser(reportedUserEntity)
+    BlackListUserDocument blackListUserDocument = BlackListUserDocument.builder()
+        .blackUser(reportedUserDocument)
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setId(reportedUserEntity.getId());
+    blackListUserDocument.getBlackUser().setId(reportedUserDocument.getId());
 
     // When
-    when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
+    when(jwtTokenExtract.currentUser()).thenReturn(userDocument);
 
     // Then
     assertThrows(CustomException.class,
@@ -148,17 +148,17 @@ class ManagerServiceTest {
     // Given
     String blackUserId = "testuser";
     LocalDate afterDate = LocalDate.now().plusDays(1);
-    BlackListUserEntity blackListUserEntity = BlackListUserEntity.builder()
-        .blackUser(new UserEntity())
+    BlackListUserDocument blackListUserDocument = BlackListUserDocument.builder()
+        .blackUser(new UserDocument())
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setEmail(blackUserId);
+    blackListUserDocument.getBlackUser().setEmail(blackUserId);
 
     // When
     when(
         blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
             blackUserId, LocalDate.now()))
-        .thenReturn(Optional.of(blackListUserEntity));
+        .thenReturn(Optional.of(blackListUserDocument));
 
     // Then
     assertThrows(CustomException.class,
@@ -188,11 +188,11 @@ class ManagerServiceTest {
     // Given
     String blackUserId = "testuser";
     LocalDate afterDate = LocalDate.now().plusDays(1);
-    BlackListUserEntity blackListUserEntity = BlackListUserEntity.builder()
-        .blackUser(new UserEntity())
+    BlackListUserDocument blackListUserDocument = BlackListUserDocument.builder()
+        .blackUser(new UserDocument())
         .endDate(afterDate)
         .build();
-    blackListUserEntity.getBlackUser().setLoginId(blackUserId);
+    blackListUserDocument.getBlackUser().setLoginId(blackUserId);
 
     UnLockBlackListDto request = new UnLockBlackListDto();
     request.setBlackUserId(blackUserId);
@@ -200,7 +200,7 @@ class ManagerServiceTest {
     // When
     when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
         blackUserId, LocalDate.now()))
-        .thenReturn(Optional.of(blackListUserEntity));
+        .thenReturn(Optional.of(blackListUserDocument));
 
     // Then
     assertDoesNotThrow(() -> managerService.unLockBlackList(request));

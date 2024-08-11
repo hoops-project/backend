@@ -1,6 +1,6 @@
 package com.zerobase.hoops.config;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
@@ -67,7 +67,7 @@ public class WebSocketConnectionConfig implements
               "Authorization");
           String gameId = accessor.getFirstNativeHeader("gameId");
           if (!isValidUser(authToken, gameId)) {
-            UserEntity user = jwtTokenExtract.getUserFromToken(authToken);
+            UserDocument user = jwtTokenExtract.getUserFromToken(authToken);
             log.error("{} <- 채팅 참여 권한 없음", user.getId());
             throw new CustomException(ErrorCode.NOT_ACCEPT_USER_FOR_GAME);
           }
@@ -78,10 +78,9 @@ public class WebSocketConnectionConfig implements
   }
 
   private boolean isValidUser(String token, String gameId) {
-    Long gameIdNumber = Long.parseLong(gameId);
-    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    UserDocument user = jwtTokenExtract.getUserFromToken(token);
     log.info("{} <- 채팅 입장 유효한지 체크", user.getNickName());
     return participantGameRepository.existsByGame_IdAndUser_IdAndStatus(
-        gameIdNumber, user.getId(), ParticipantGameStatus.ACCEPT);
+        gameId, user.getId(), ParticipantGameStatus.ACCEPT);
   }
 }

@@ -1,13 +1,16 @@
 package com.zerobase.hoops.invite.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.InviteEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.InviteDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,24 +30,27 @@ public class RequestInviteDto {
         description = "경기 초대 받는 유저 pk",
         defaultValue = "3",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "받는 유저 아이디는 필수 입력 값 입니다.")
-    @Min(1)
-    private Long receiverUserId;
+    @NotBlank(message = "받는 유저 아이디는 필수 입력 값 입니다.")
+    private String receiverUserId;
 
     @Schema(
         description = "경기 pk",
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "경기 아이디는 필수 입력 값 입니다.")
-    @Min(1)
-    private Long gameId;
+    @NotBlank(message = "경기 아이디는 필수 입력 값 입니다.")
+    private String gameId;
 
-    public InviteEntity toEntity(
-        UserEntity user,
-        UserEntity receiverUser,
-        GameEntity game) {
-      return InviteEntity.builder()
+    public InviteDocument toDocument(
+        UserDocument user,
+        UserDocument receiverUser,
+        GameDocument game,
+        long inviteId,
+        Clock clock
+        ) {
+      return InviteDocument.builder()
+          .id(Long.toString(inviteId))
           .inviteStatus(InviteStatus.REQUEST)
+          .requestedDateTime(getNowDateTime(clock))
           .senderUser(user)
           .receiverUser(receiverUser)
           .game(game)

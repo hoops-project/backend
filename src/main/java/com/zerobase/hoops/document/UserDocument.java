@@ -1,24 +1,14 @@
-package com.zerobase.hoops.entity;
+package com.zerobase.hoops.document;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -28,9 +18,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,69 +33,61 @@ import org.springframework.security.core.userdetails.UserDetails;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity(name = "users")
-@EntityListeners(AuditingEntityListener.class)
-public class UserEntity implements UserDetails {
+@Document(indexName = "index_users")
+public class UserDocument implements UserDetails {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(nullable = false)
-  private Long id;
+  private String id;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String loginId;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String password;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String email;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String name;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Date, format = DateFormat.date, pattern = "yyyyMMdd")
   private LocalDate birthday;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Field(type = FieldType.Keyword)
   private GenderType gender;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String nickName;
 
-  @Enumerated(EnumType.STRING)
+  @Field(type = FieldType.Keyword)
   private PlayStyleType playStyle;
 
-  @Enumerated(EnumType.STRING)
+  @Field(type = FieldType.Keyword)
   private AbilityType ability;
 
-  @Builder.Default
-  @Column(name = "total_ratings")
-  private int totalRatings = 0;
+  @Field(type = FieldType.Integer)
+  private int totalRatings;
 
-  @Builder.Default
-  @Column(name = "total_ratings_count")
-  private int totalRatingsCount = 0;
+  @Field(type = FieldType.Integer)
+  private int totalRatingsCount;
 
-  @Builder.Default
-  @Column(name = "double_average_rating")
-  private double doubleAverageRating = 0.0;
+  @Field(type = FieldType.Double)
+  private double doubleAverageRating;
+
+  @Field(type = FieldType.Text)
   private String stringAverageRating;
 
-  @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(
-      name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @Field(type = FieldType.Keyword)
   private List<String> roles;
 
-  @CreatedDate
-  @Column(nullable = false)
-  private LocalDateTime createdDateTime;
+  @Field(type = FieldType.Date, format = DateFormat.date_time, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+  private OffsetDateTime createdDateTime;
 
-  private LocalDateTime deletedDateTime;
+  @Field(type = FieldType.Date, format = DateFormat.date_time, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+  private OffsetDateTime deletedDateTime;
 
-  @ColumnDefault("false")
-  @Column(nullable = false)
+  @Field(type = FieldType.Boolean)
   private boolean emailAuth;
 
   public void confirm() {
@@ -112,8 +97,7 @@ public class UserEntity implements UserDetails {
   public void saveMannerPoint(int point) {
     this.totalRatings += point;
     this.totalRatingsCount++;
-    this.doubleAverageRating =
-        (double) this.totalRatings / this.totalRatingsCount;
+    this.doubleAverageRating = (double) this.totalRatings / this.totalRatingsCount;
     DecimalFormat df = new DecimalFormat("#.#");
     this.stringAverageRating = df.format(doubleAverageRating);
   }
@@ -154,13 +138,9 @@ public class UserEntity implements UserDetails {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    UserEntity that = (UserEntity) o;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    UserDocument that = (UserDocument) o;
     return Objects.equals(loginId, that.loginId);
   }
 
@@ -176,21 +156,21 @@ public class UserEntity implements UserDetails {
 
   @Override
   public boolean isAccountNonExpired() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isAccountNonLocked() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isCredentialsNonExpired() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isEnabled() {
-    return false;
+    return true;
   }
 }

@@ -1,6 +1,6 @@
 package com.zerobase.hoops.friends.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.friends.dto.AcceptFriendDto;
 import com.zerobase.hoops.friends.dto.ApplyFriendDto;
 import com.zerobase.hoops.friends.dto.CancelFriendDto;
@@ -53,7 +53,7 @@ public class FriendController {
   @PostMapping("/apply")
   public ResponseEntity<ApplyFriendDto.Response> applyFriend(
       @RequestBody @Validated ApplyFriendDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} applyFriend start", user.getLoginId());
     ApplyFriendDto.Response result = friendService.validApplyFriend
         (request, user);
@@ -68,7 +68,7 @@ public class FriendController {
   @PatchMapping("/cancel")
   public ResponseEntity<CancelFriendDto.Response> cancelFriend(
       @RequestBody @Validated CancelFriendDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} cancelFriend start", user.getLoginId());
     CancelFriendDto.Response result = friendService.validCancelFriend
         (request, user);
@@ -83,7 +83,7 @@ public class FriendController {
   @PatchMapping("/accept")
   public ResponseEntity<AcceptFriendDto.Response> acceptFriend(
       @RequestBody @Validated AcceptFriendDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} acceptFriend start", user.getLoginId());
     AcceptFriendDto.Response result = friendService.validAcceptFriend
         (request, user);
@@ -98,7 +98,7 @@ public class FriendController {
   @PatchMapping("/reject")
   public ResponseEntity<RejectFriendDto.Response> rejectFriend(
       @RequestBody @Validated RejectFriendDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} rejectFriend start", user.getLoginId());
     RejectFriendDto.Response result = friendService.validRejectFriend
         (request, user);
@@ -113,7 +113,7 @@ public class FriendController {
   @PatchMapping("/delete")
   public ResponseEntity<DeleteFriendDto.Response> deleteFriend(
       @RequestBody @Validated DeleteFriendDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} deleteFriend start", user.getLoginId());
     DeleteFriendDto.Response result = friendService.validDeleteFriend
         (request, user);
@@ -136,7 +136,7 @@ public class FriendController {
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
 
     log.info("loginId = {} searchFriend start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size);
@@ -159,7 +159,7 @@ public class FriendController {
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
 
     log.info("loginId = {} getMyFriendList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size);
@@ -176,7 +176,7 @@ public class FriendController {
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/invite/list")
   public ResponseEntity<Page<InviteFriendListDto.Response>> getMyInviteFriendList(
-      @RequestParam Long gameId,
+      @RequestParam String gameId,
 
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
@@ -184,7 +184,7 @@ public class FriendController {
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
 
     log.info("loginId = {} getMyInviteFriendList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size);
@@ -207,7 +207,7 @@ public class FriendController {
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
 
     log.info("loginId = {} getRequestFriendList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size, Direction.ASC,

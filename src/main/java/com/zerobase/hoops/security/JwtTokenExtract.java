@@ -1,6 +1,6 @@
 package com.zerobase.hoops.security;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.users.repository.UserRepository;
@@ -22,7 +22,7 @@ public class JwtTokenExtract {
   private final JwtParser jwtParser;
   private final UserRepository userRepository;
 
-  public UserEntity currentUser() {
+  public UserDocument currentUser() {
     Authentication authentication = SecurityContextHolder.getContext()
         .getAuthentication();
     log.info("JwtTokenExtract - currentUser value = {}", authentication);
@@ -30,14 +30,14 @@ public class JwtTokenExtract {
         || authentication.getPrincipal() == null) {
       throw new CustomException(ErrorCode.EXPIRED_TOKEN);
     }
-    if (authentication.getPrincipal() instanceof UserEntity) {
-      return (UserEntity) authentication.getPrincipal();
+    if (authentication.getPrincipal() instanceof UserDocument) {
+      return (UserDocument) authentication.getPrincipal();
     } else {
       throw new CustomException(ErrorCode.EXPIRED_TOKEN);
     }
   }
 
-  public UserEntity getUserFromToken(String authorizationHeader) {
+  public UserDocument getUserFromToken(String authorizationHeader) {
     log.info("JwtTokenExtract - getUserFromToken value = {}",
         authorizationHeader);
     if (authorizationHeader == null || !authorizationHeader.startsWith(
@@ -48,14 +48,14 @@ public class JwtTokenExtract {
     try {
       Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
       String userLoginId = claimsJws.getBody().getSubject();
-      UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(
+      UserDocument userDocument = userRepository.findByLoginIdAndDeletedDateTimeNull(
               userLoginId)
           .orElseThrow(
               () -> new CustomException(ErrorCode.USER_NOT_FOUND));
-      if (userEntity == null) {
+      if (userDocument == null) {
         throw new CustomException(ErrorCode.EXPIRED_TOKEN);
       }
-      return userEntity;
+      return userDocument;
     } catch (JwtException e) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }

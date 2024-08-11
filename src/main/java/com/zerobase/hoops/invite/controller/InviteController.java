@@ -1,6 +1,6 @@
 package com.zerobase.hoops.invite.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.invite.dto.AcceptInviteDto;
 import com.zerobase.hoops.invite.dto.CancelInviteDto;
 import com.zerobase.hoops.invite.dto.RejectInviteDto;
@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,7 +48,7 @@ public class InviteController {
   @PostMapping("/request")
   public ResponseEntity<RequestInviteDto.Response> requestInvite(
       @RequestBody @Validated RequestInviteDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} requestInvite start", user.getLoginId());
     RequestInviteDto.Response result = inviteService.validRequestInvite
         (request, user);
@@ -64,7 +63,7 @@ public class InviteController {
   @PatchMapping("/cancel")
   public ResponseEntity<CancelInviteDto.Response> cancelInvite(
       @RequestBody @Validated CancelInviteDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} cancelInvite start", user.getLoginId());
     CancelInviteDto.Response result = inviteService.validCancelInvite
         (request, user);
@@ -85,7 +84,7 @@ public class InviteController {
   @PatchMapping("/receive/accept")
   public ResponseEntity<AcceptInviteDto.Response> acceptInvite(
       @RequestBody @Validated AcceptInviteDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} acceptInvite start", user.getLoginId());
     AcceptInviteDto.Response result = inviteService.validAcceptInvite
         (request, user);
@@ -100,7 +99,7 @@ public class InviteController {
   @PatchMapping("/receive/reject")
   public ResponseEntity<RejectInviteDto.Response> rejectInvite(
       @RequestBody @Validated RejectInviteDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} rejectInvite start", user.getLoginId());
     RejectInviteDto.Response result = inviteService.validRejectInvite
         (request, user);
@@ -120,7 +119,7 @@ public class InviteController {
       @Parameter(name = "size", description = "페이지 크기", example = "10",
           required = true)
       @RequestParam(defaultValue = "10") int size,
-      @AuthenticationPrincipal UserEntity user
+      @AuthenticationPrincipal UserDocument user
   ) {
 
     log.info("loginId = {} getInviteRequestList start", user.getLoginId());

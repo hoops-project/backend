@@ -1,9 +1,11 @@
 package com.zerobase.hoops.gameCreator.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.GameDocument;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -25,11 +27,11 @@ public class DeleteGameDto {
         description = "경기 pk",
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "게임 아이디는 필수 입력 값 입니다.")
-    private Long gameId;
+    @NotBlank(message = "게임 아이디는 필수 입력 값 입니다.")
+    private String gameId;
 
-    public GameEntity toEntity(GameEntity game, Clock clock) {
-      return GameEntity.builder()
+    public GameDocument toDocument(GameDocument game, Clock clock) {
+      return GameDocument.builder()
           .id(game.getId())
           .title(game.getTitle())
           .content(game.getContent())
@@ -38,7 +40,7 @@ public class DeleteGameDto {
           .gender(game.getGender())
           .startDateTime(game.getStartDateTime())
           .createdDateTime(game.getCreatedDateTime())
-          .deletedDateTime(LocalDateTime.now(clock))
+          .deletedDateTime(getNowDateTime(clock))
           .inviteYn(game.getInviteYn())
           .address(game.getAddress())
           .placeName(game.getPlaceName())

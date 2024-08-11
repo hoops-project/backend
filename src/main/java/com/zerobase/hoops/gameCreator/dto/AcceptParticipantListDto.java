@@ -1,6 +1,6 @@
 package com.zerobase.hoops.gameCreator.dto;
 
-import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.document.ParticipantGameDocument;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
@@ -23,7 +23,7 @@ public class AcceptParticipantListDto {
   public static class Response {
 
     @Schema(description = "참여 pk", example = "1")
-    private Long participantId;
+    private String participantId;
 
     @Schema(description = "경기 참가자 유저 생년월일", example = "2003-03-03")
     private LocalDate birthday;
@@ -43,15 +43,15 @@ public class AcceptParticipantListDto {
     @Schema(description = "경기 참가자 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
-    public static Response toDto(ParticipantGameEntity participantGameEntity){
+    public static Response toDto(ParticipantGameDocument participantGameDocument){
       return Response.builder()
-          .participantId(participantGameEntity.getId())
-          .birthday(participantGameEntity.getUser().getBirthday())
-          .gender(participantGameEntity.getUser().getGender())
-          .nickName(participantGameEntity.getUser().getNickName())
-          .playStyle(participantGameEntity.getUser().getPlayStyle())
-          .ability(participantGameEntity.getUser().getAbility())
-          .mannerPoint(participantGameEntity.getUser().getStringAverageRating())
+          .participantId(participantGameDocument.getId())
+          .birthday(participantGameDocument.getUser().getBirthday())
+          .gender(participantGameDocument.getUser().getGender())
+          .nickName(participantGameDocument.getUser().getNickName())
+          .playStyle(participantGameDocument.getUser().getPlayStyle())
+          .ability(participantGameDocument.getUser().getAbility())
+          .mannerPoint(participantGameDocument.getUser().getStringAverageRating())
           .build();
     }
 

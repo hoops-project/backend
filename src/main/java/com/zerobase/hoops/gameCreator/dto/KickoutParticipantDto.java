@@ -2,8 +2,7 @@ package com.zerobase.hoops.gameCreator.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,9 +22,8 @@ public class KickoutParticipantDto {
         description = "참여 pk",
         defaultValue = "1",
         requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "참여 아이디는 필수 값입니다.")
-    @Min(1)
-    private Long participantId;
+    @NotBlank(message = "참여 아이디는 필수 값입니다.")
+    private String participantId;
   }
 
   @Getter

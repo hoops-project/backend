@@ -1,5 +1,6 @@
 package com.zerobase.hoops.friends.dto;
 
+import com.zerobase.hoops.document.InviteDocument;
 import com.zerobase.hoops.invite.type.InviteStatus;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
@@ -23,7 +24,7 @@ public class InviteFriendListDto {
   public static class Response {
 
     @Schema(description = "경기 초대 친구 리스트 유저 pk", example = "3")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "경기 초대 친구 리스트 유저 생년월일", example = "1999-01-01")
     private LocalDate birthday;
@@ -46,6 +47,19 @@ public class InviteFriendListDto {
     @Schema(description = "초대 상태(요청)", example = "REQUEST")
     private InviteStatus status;
 
+    public static Response toDto(InviteDocument inviteDocument) {
+      return Response.builder()
+          .userId(inviteDocument.getReceiverUser().getId())
+          .birthday(inviteDocument.getReceiverUser().getBirthday())
+          .gender(inviteDocument.getReceiverUser().getGender())
+          .nickName(inviteDocument.getReceiverUser().getNickName())
+          .playStyle(inviteDocument.getReceiverUser().getPlayStyle())
+          .ability(inviteDocument.getReceiverUser().getAbility())
+          .mannerPoint(inviteDocument.getReceiverUser().getStringAverageRating())
+          .status(inviteDocument.getInviteStatus())
+          .build();
+    }
+
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
@@ -66,6 +80,7 @@ public class InviteFriendListDto {
       return Objects.hash(userId, birthday, gender, nickName, playStyle,
           ability, mannerPoint, status);
     }
+
 
   }
 

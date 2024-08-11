@@ -1,6 +1,6 @@
 package com.zerobase.hoops.gameCreator.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.gameCreator.dto.CreateGameDto;
 import com.zerobase.hoops.gameCreator.dto.DeleteGameDto;
 import com.zerobase.hoops.gameCreator.dto.DetailGameDto;
@@ -45,7 +45,7 @@ public class GameController {
   @PostMapping("/game/create")
   public ResponseEntity<CreateGameDto.Response> createGame(
       @RequestBody @Validated CreateGameDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} createGame start", user.getLoginId());
     CreateGameDto.Response result = gameService.validCreateGame(request, user);
     log.info("loginId = {} createGame end", user.getLoginId());
@@ -60,7 +60,7 @@ public class GameController {
   public ResponseEntity<DetailGameDto.Response> getGameDetail(
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 아이디",
-          example = "1", required = true) Long gameId) {
+          example = "1", required = true) String gameId) {
     log.info("getGameDetail start");
     DetailGameDto.Response result = gameService.validGetGameDetail(gameId);
     log.info("getGameDetail start");
@@ -74,7 +74,7 @@ public class GameController {
   @PutMapping("/game/update")
   public ResponseEntity<UpdateGameDto.Response> updateGame(
       @RequestBody @Validated UpdateGameDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} updateGame start", user.getLoginId());
     UpdateGameDto.Response result = gameService.validUpdateGame(request, user);
     log.info("loginId = {} updateGame end", user.getLoginId());
@@ -94,7 +94,7 @@ public class GameController {
   @PatchMapping("/game/delete")
   public ResponseEntity<DeleteGameDto.Response> deleteGameOrWithdrewGame(
       @RequestBody @Validated DeleteGameDto.Request request,
-      @AuthenticationPrincipal UserEntity user) {
+      @AuthenticationPrincipal UserDocument user) {
     log.info("loginId = {} deleteGameOrWithdrewGame start", user.getLoginId());
     DeleteGameDto.Response result = gameService.validDeleteGame(request, user);
     log.info("loginId = {} deleteGameOrWithdrewGame end", user.getLoginId());

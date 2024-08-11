@@ -5,10 +5,10 @@ import com.zerobase.hoops.chat.dto.MessageConvertDto;
 import com.zerobase.hoops.chat.dto.MessageDto;
 import com.zerobase.hoops.chat.repository.ChatRoomRepository;
 import com.zerobase.hoops.chat.repository.MessageRepository;
-import com.zerobase.hoops.entity.ChatRoomEntity;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.MessageEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.ChatRoomDocument;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.MessageDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.gameCreator.repository.GameRepository;
@@ -34,21 +34,22 @@ public class ChatService {
   public void sendMessage(ChatMessage chatMessage, String gameId,
       String token) {
     log.info("sendMessage 시작");
-    Long gameIdNumber = Long.parseLong(gameId);
     log.info("메세지 보내기 토큰 Check={}", token);
-    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    UserDocument user = jwtTokenExtract.getUserFromToken(token);
     log.info("메세지 보내기 유저 닉네임={}", user.getNickName());
-    List<ChatRoomEntity> chatRoomEntityList = chatRoomRepository.findByGameEntity_Id(
-        gameIdNumber);
+    List<ChatRoomDocument> chatRoomDocuments =
+        chatRoomRepository.findByGameDocument_Id(gameId);
 
-    for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
-      String nickName = chatRoomEntity.getUserEntity().getNickName();
+    for (ChatRoomDocument chatRoomDocument : chatRoomDocuments) {
+      String nickName = chatRoomDocument.getUserDocument().getNickName();
+
+      long messageId = messageRepository.count() + 1;
 
       MessageDto message = MessageDto.builder()
           .content(chatMessage.getContent())
           .build();
 
-      messageRepository.save(message.toEntity(user, chatRoomEntity));
+      messageRepository.save(message.toDocument(user, chatRoomDocument, messageId));
       messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
           chatMessage);
     }
@@ -58,28 +59,30 @@ public class ChatService {
   public void addUser(ChatMessage chatMessage, String gameId,
       String token) {
     log.info("addUser 시작");
-    Long gameIdNumber = Long.parseLong(gameId);
-    UserEntity user = jwtTokenExtract.getUserFromToken(token);
-    GameEntity game = gameRepository.findById(gameIdNumber)
+    UserDocument user = jwtTokenExtract.getUserFromToken(token);
+    GameDocument game = gameRepository.findById(gameId)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
-    boolean userChatRoom = chatRoomRepository.existsByGameEntity_IdAndUserEntity_Id(
+    boolean userChatRoom = chatRoomRepository.existsByGameDocument_IdAndUserDocument_Id(
         game.getId(), user.getId());
 
     if (!userChatRoom) {
       log.info("{} 새로운 채팅방 생성", user.getNickName());
-      ChatRoomEntity chatRoom = new ChatRoomEntity();
+      long chatRoomId = chatRoomRepository.count() + 1;
+
+      ChatRoomDocument chatRoom = new ChatRoomDocument();
+      chatRoom.saveId(chatRoomId);
       chatRoom.saveGameInfo(game);
       chatRoom.saveUserInfo(user);
       chatRoomRepository.save(chatRoom);
     }
 
-    List<ChatRoomEntity> chatRoomEntityList = chatRoomRepository.findByGameEntity_Id(
-        gameIdNumber);
+    List<ChatRoomDocument> chatRoomDocumentList =
+        chatRoomRepository.findByGameDocument_Id(gameId);
 
-    for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
+    for (ChatRoomDocument chatRoomDocument : chatRoomDocumentList) {
       log.info("{} 채팅방 입장 메세지 전파", user.getNickName());
-      String nickName = chatRoomEntity.getUserEntity().getNickName();
+      String nickName = chatRoomDocument.getUserDocument().getNickName();
       messagingTemplate.convertAndSend("/topic/" + gameId + "/" + nickName,
           chatMessage);
     }
@@ -89,17 +92,16 @@ public class ChatService {
 
   public void loadMessagesAndSend(String gameId, String token) {
     log.info("loadMessagesAndSend 시작");
-    Long gameIdNumber = Long.parseLong(gameId);
-    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    UserDocument user = jwtTokenExtract.getUserFromToken(token);
 
     log.info("메세지 로딩 Check => userNickName={}", user.getNickName());
 
-    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_IdAndUserEntity_Id(
-            gameIdNumber, user.getId())
+    ChatRoomDocument chatRoom = chatRoomRepository.findByGameDocument_IdAndUserDocument_Id(
+            gameId, user.getId())
         .orElseThrow(
             () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
 
-    List<MessageEntity> messages = messageRepository.findByChatRoomEntity(
+    List<MessageDocument> messages = messageRepository.findByChatRoom(
         chatRoom);
 
     List<MessageConvertDto> messageDto = messages.stream()
@@ -112,11 +114,11 @@ public class ChatService {
   }
 
   private MessageConvertDto convertToChatMessage(
-      MessageEntity messageEntity) {
+      MessageDocument messageDocument) {
     return MessageConvertDto.builder()
-        .id(messageEntity.getId())
-        .sender(messageEntity.getUser().getNickName())
-        .content(messageEntity.getContent())
+        .id(messageDocument.getId())
+        .sender(messageDocument.getUser().getNickName())
+        .content(messageDocument.getContent())
         .build();
   }
 }

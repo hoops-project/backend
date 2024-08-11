@@ -4,13 +4,14 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.DELETE;
 import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.WITHDRAW;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
 
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
-import com.zerobase.hoops.entity.FriendEntity;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.InviteEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.FriendDocument;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.InviteDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.friends.repository.FriendRepository;
@@ -30,6 +31,9 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +63,7 @@ public class AuthService {
 
   public UserDto logInUser(LogInDto.Request request) {
     log.info("로그인 시작 : {}", request.getLoginId());
-    UserEntity user =
+    UserDocument user =
         userRepository.findByLoginIdAndDeletedDateTimeNull(request.getLoginId())
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -77,7 +81,7 @@ public class AuthService {
     }
 
     log.info("로그인 성공 : {}", user.getLoginId());
-    return UserDto.fromEntity(user);
+    return UserDto.fromDocument(user);
   }
 
   public TokenDto getToken(UserDto userDto) {
@@ -95,7 +99,7 @@ public class AuthService {
 
   @Transactional
   public TokenDto refreshToken(
-      HttpServletRequest request, UserEntity userEntity
+      HttpServletRequest request, UserDocument UserDocument
   ) {
     log.info("토큰 갱신 시작");
     String refreshToken = validateAccessTokenExistHeader(request);
@@ -103,7 +107,7 @@ public class AuthService {
     Claims claims = tokenProvider.parseClaims(refreshToken);
     String loginId = claims.get("sub", String.class);
 
-    if (!userEntity.getLoginId().equals(loginId)) {
+    if (!UserDocument.getLoginId().equals(loginId)) {
       log.error("토큰 갱신 에러 : {}", ErrorCode.INVALID_TOKEN.getDescription());
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
@@ -115,7 +119,7 @@ public class AuthService {
       throw new CustomException(ErrorCode.NOT_FOUND_TOKEN);
     }
 
-    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
+    UserDocument user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     String responseAccessToken =
@@ -146,7 +150,7 @@ public class AuthService {
   }
 
   public void logOutUser(
-      HttpServletRequest request, UserEntity userEntity) {
+      HttpServletRequest request, UserDocument UserDocument) {
     log.info("로그아웃 시작");
     String accessToken = validateAccessTokenExistHeader(request);
     log.info("Access Token 확인");
@@ -157,7 +161,7 @@ public class AuthService {
     String loginId = claims.get("sub", String.class);
 
     if (tokenUserMatch(accessToken, refreshToken) &&
-        loginId.equals(userEntity.getLoginId())) {
+        loginId.equals(UserDocument.getLoginId())) {
       log.info("Refresh Token 삭제");
       authRepository.deleteByLoginId(loginId);
     } else {
@@ -166,9 +170,9 @@ public class AuthService {
     }
 
     emitterRepository.deleteAllStartWithUserId(
-        String.valueOf(userEntity.getLoginId()));
+        String.valueOf(UserDocument.getLoginId()));
     emitterRepository.deleteAllEventCacheStartWithUserId(
-        String.valueOf(userEntity.getLoginId()));
+        String.valueOf(UserDocument.getLoginId()));
 
     tokenProvider.addToLogOutList(accessToken);
     log.info("로그아웃 완료");
@@ -183,13 +187,13 @@ public class AuthService {
     return accessId.equals(refreshId);
   }
 
-  public UserDto getUserInfo(HttpServletRequest request, UserEntity user) {
+  public UserDto getUserInfo(HttpServletRequest request, UserDocument user) {
     isSameLoginId(request, user);
-    return UserDto.fromEntity(user);
+    return UserDto.fromDocument(user);
   }
 
   public UserDto editUserInfo(HttpServletRequest request,
-      EditDto.Request editDto, UserEntity user) {
+      EditDto.Request editDto, UserDocument user) {
     log.info("회원 정보 수정 시작");
     isSameLoginId(request, user);
     validateAccessTokenExistHeader(request);
@@ -203,10 +207,10 @@ public class AuthService {
     userRepository.save(user);
 
     log.info("회원 정보 수정 완료");
-    return UserDto.fromEntity(user);
+    return UserDto.fromDocument(user);
   }
 
-  private void isSameLoginId(HttpServletRequest request, UserEntity user) {
+  private void isSameLoginId(HttpServletRequest request, UserDocument user) {
     String accessToken = validateAccessTokenExistHeader(request);
 
     Claims claims = tokenProvider.parseClaims(accessToken);
@@ -219,7 +223,7 @@ public class AuthService {
   }
 
   @Transactional
-  public void deactivateUser(HttpServletRequest request, UserEntity user) {
+  public void deactivateUser(HttpServletRequest request, UserDocument user) {
     log.info("회원 탈퇴 시작");
     isSameLoginId(request, user);
     String accessToken = validateAccessTokenExistHeader(request);
@@ -229,36 +233,35 @@ public class AuthService {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
-    LocalDateTime now = LocalDateTime.now();
 
     log.info("경기 테이블 삭제");
-    List<GameEntity> gameList =
+    List<GameDocument> gameList =
         gameRepository
             .findByUserIdAndDeletedDateTimeNull(user.getId());
     gameList.stream().forEach(game -> {
-      game.setDeletedDateTime(now);
+      game.setDeletedDateTime(getNowDateTime());
       gameRepository.save(game);
 
       log.info("참가 테이블 삭제");
-      List<ParticipantGameEntity> participantList =
+      List<ParticipantGameDocument> participantList =
           participantGameRepository
               .findByGameIdAndStatusNotAndDeletedDateTimeNull(
                   game.getId(), WITHDRAW);
       participantList.stream().forEach(
           participantGame -> {
-            participantGame.setDeletedDateTime(now);
+            participantGame.setDeletedDateTime(getNowDateTime());
             participantGame.setStatus(DELETE);
             participantGameRepository.save(participantGame);
           });
 
       log.info("초대 테이블 삭제");
-      List<InviteEntity> inviteList = inviteRepository
+      List<InviteDocument> inviteList = inviteRepository
           .findByInviteStatusAndGameId(
               InviteStatus.REQUEST, game.getId());
       inviteList.stream().forEach(
           invite -> {
             invite.setInviteStatus(InviteStatus.DELETE);
-            invite.setDeletedDateTime(now);
+            invite.setDeletedDateTime(getNowDateTime());
             inviteRepository.save(invite);
           }
       );
@@ -266,45 +269,45 @@ public class AuthService {
     });
 
     log.info("참가 테이블 탈퇴");
-    List<ParticipantGameEntity> participantList =
+    List<ParticipantGameDocument> participantList =
         participantGameRepository
             .findByUserIdAndStatusInAndWithdrewDateTimeNull(
                 user.getId(), List.of(APPLY, ACCEPT));
     participantList.stream().forEach(
         participantGame -> {
-          participantGame.setWithdrewDateTime(now);
+          participantGame.setWithdrewDateTime(getNowDateTime());
           participantGame.setStatus(WITHDRAW);
           participantGameRepository.save(participantGame);
         });
 
     log.info("초대 테이블 삭제");
-    List<InviteEntity> inviteList =
+    List<InviteDocument> inviteList =
         inviteRepository
             .findByInviteStatusAndSenderUserIdOrReceiverUserId(
                 InviteStatus.REQUEST, user.getId(), user.getId());
     inviteList.stream().forEach(
         invite -> {
           invite.setInviteStatus(InviteStatus.DELETE);
-          invite.setDeletedDateTime(now);
+          invite.setDeletedDateTime(getNowDateTime());
           inviteRepository.save(invite);
         }
     );
 
     log.info("친구 목록 삭제");
-    List<FriendEntity> friendList =
+    List<FriendDocument> friendList =
         friendRepository
             .findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(
                 user.getId(), user.getId(), FriendStatus.DELETE);
     friendList.stream().forEach(friend -> {
       friend.setStatus(FriendStatus.DELETE);
-      friend.setDeletedDateTime(now);
+      friend.setDeletedDateTime(getNowDateTime());
       friendRepository.save(friend);
     });
 
     log.info("로그아웃");
     logOutUser(request, user);
 
-    user.setDeletedDateTime(now);
+    user.setDeletedDateTime(getNowDateTime());
     userRepository.save(user);
     log.info("회원 탈퇴 완료");
   }

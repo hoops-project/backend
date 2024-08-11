@@ -1,8 +1,8 @@
 package com.zerobase.hoops.manager.service;
 
-import com.zerobase.hoops.entity.BlackListUserEntity;
-import com.zerobase.hoops.entity.ReportEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.BlackListUserDocument;
+import com.zerobase.hoops.document.ReportDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.manager.dto.BlackListDto;
@@ -13,6 +13,9 @@ import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,44 +42,49 @@ public class ManagerService {
 
   public void saveBlackList(BlackListDto request) {
     log.info("saveBlackList 시작");
-    Long userId = jwtTokenExtract.currentUser().getId();
-    Long reportedId = request.getReportedId();
+    String userId = jwtTokenExtract.currentUser().getId();
+    String reportedId = request.getReportedId();
     log.info(
         String.format("[user_pk] = %s = / [reported_pk] = %s",
             userId,
             reportedId
         ));
-    startBlackListCheckFromReportEntity(request);
+    startBlackListCheckFromReportDocument(request);
     validateBlackList(userId, reportedId);
     log.info("saveBlackList 종료");
   }
 
-  private void startBlackListCheckFromReportEntity(BlackListDto request) {
-    ReportEntity reportEntity = reportRepository.findByReportedUser_Id(
+  private void startBlackListCheckFromReportDocument(BlackListDto request) {
+    ReportDocument reportDocument = reportRepository.findByReportedUser_Id(
             request.getReportedId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    reportEntity.saveBlackListStartDateTime(LocalDateTime.now());
-    reportRepository.save(reportEntity);
+    reportDocument.saveBlackListStartDateTime(OffsetDateTime.now());
+    reportRepository.save(reportDocument);
   }
 
-  private void validateBlackList(Long userId, Long reportedId) {
-    UserEntity userEntity = userRepository.findById(userId)
+  private void validateBlackList(String userId, String reportedId) {
+    UserDocument userDocument = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    UserEntity reportedUserEntity = userRepository.findById(reportedId)
+    UserDocument reportedUserDocument = userRepository.findById(reportedId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    Optional<BlackListUserEntity> alreadyBlackUser =
+    Optional<BlackListUserDocument> alreadyBlackUser =
         blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
-            reportedUserEntity.getLoginId(), LocalDate.now());
+            reportedUserDocument.getLoginId(), LocalDate.now());
 
     if (alreadyBlackUser.isEmpty()) {
-      blackListUserRepository.save(BlackListUserEntity.builder()
-          .blackUser(reportedUserEntity)
-          .endDate(LocalDate.now().plusDays(10))
-          .build());
+
+      long blackListId = blackListUserRepository.count() + 1;
+
+      blackListUserRepository.save(BlackListUserDocument.builder()
+              .id(Long.toString(blackListId))
+              .blackUser(reportedUserDocument)
+              .startDate(LocalDate.now())
+              .endDate(LocalDate.now().plusDays(10))
+              .build());
     } else {
       throw new CustomException(ErrorCode.ALREADY_BLACKLIST);
     }
@@ -84,7 +92,7 @@ public class ManagerService {
 
   public void checkBlackList(String blackUserId) {
     log.info("checkBlackList 시작");
-    Optional<BlackListUserEntity> blackUser = blackListUserRepository
+    Optional<BlackListUserDocument> blackUser = blackListUserRepository
         .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
             blackUserId, LocalDate.now());
     if (blackUser.isEmpty()) {
@@ -108,7 +116,7 @@ public class ManagerService {
 
   public void unLockBlackList(UnLockBlackListDto request) {
     log.info("unLockBlackList 시작");
-    BlackListUserEntity blackUser = blackListUserRepository
+    BlackListUserDocument blackUser = blackListUserRepository
         .findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
             request.getBlackUserId(), LocalDate.now())
         .orElseThrow(() -> new CustomException(ErrorCode.NOT_BLACKLIST));

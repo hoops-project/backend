@@ -1,13 +1,16 @@
 package com.zerobase.hoops.alarm.service;
 
+import static com.zerobase.hoops.util.Common.getNowDateTime;
 
-import com.zerobase.hoops.alarm.domain.NotificationType;
-import com.zerobase.hoops.entity.NotificationEntity;
 import com.zerobase.hoops.alarm.domain.NotificationDto;
+import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
 import com.zerobase.hoops.alarm.repository.NotificationRepository;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.NotificationDocument;
+import com.zerobase.hoops.document.UserDocument;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.io.IOException;
 
 @Service
 @Slf4j
@@ -39,7 +40,7 @@ public class NotificationService {
    * @param user
    * @return
    */
-  public SseEmitter subscribe(UserEntity user, String lastEventId) {
+  public SseEmitter subscribe(UserDocument user, String lastEventId) {
 
     String emitterId = user.getId() + "_" + System.currentTimeMillis();
 
@@ -84,35 +85,40 @@ public class NotificationService {
   }
 
   @Transactional
-  public void send(NotificationType type, UserEntity receiver, String content) {
-    NotificationEntity notificationEntity = createNotification(
-        type, receiver, content);
-    notificationRepository.save(notificationEntity);
+  public void send(NotificationType type, UserDocument receiver, String content) {
+
+    long notificationId = notificationRepository.count() + 1;
+
+    NotificationDocument notification = createNotification(
+        notificationId, type, receiver, content);
+    notificationRepository.save(notification);
     Map<String, SseEmitter> sseEmitters =
         emitterRepository.findAllStartWithByUserId(
             String.valueOf(receiver.getId())
         );
     sseEmitters.forEach(
         (key, emitter) -> {
-          emitterRepository.saveEventCache(key, notificationEntity);
+          emitterRepository.saveEventCache(key, notification);
           sendToClient(emitter, key, NotificationDto.entityToDto(
-              notificationEntity));
+              notification));
         }
     );
   }
 
-  private NotificationEntity createNotification(NotificationType type,
-      UserEntity receiver, String content) {
-    return NotificationEntity.builder()
+  private NotificationDocument createNotification(
+      long notificationId, NotificationType type,
+      UserDocument receiver, String content) {
+    return NotificationDocument.builder()
+        .id(Long.toString(notificationId))
         .receiver(receiver)
         .notificationType(type)
         .content(content)
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(getNowDateTime())
         .build();
   }
 
 
-  public List<NotificationDto> findAllById(UserEntity loginUser) {
+  public List<NotificationDto> findAllById(UserDocument loginUser) {
     List<NotificationDto> responses =
         notificationRepository
             .findAllByReceiverIdOrderByCreatedDateTimeDesc(loginUser.getId())

@@ -1,11 +1,15 @@
 package com.zerobase.hoops.gameUsers.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.MannerPointEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.MannerPointDocument;
+import com.zerobase.hoops.document.UserDocument;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,23 +17,24 @@ import lombok.Data;
 @Builder
 public class MannerPointDto {
 
-  @NotNull
-  @Min(1)
-  private Long receiverId;
+  @NotBlank
+  private String receiverId;
 
-  @NotNull
-  @Min(1)
-  private Long gameId;
+  @NotBlank
+  private String gameId;
 
   @NotNull
   @Min(1)
   @Max(5)
   private int point;
 
-  public MannerPointEntity toEntity(
-      UserEntity user, UserEntity receiver, GameEntity game) {
-    return MannerPointEntity.builder()
+  public MannerPointDocument toDocument(
+      UserDocument user, UserDocument receiver, GameDocument game,
+      long mannerPointId) {
+    return MannerPointDocument.builder()
+        .id(Long.toString(mannerPointId))
         .point(this.point)
+        .createdDateTime(getNowDateTime())
         .user(user)
         .receiver(receiver)
         .game(game)

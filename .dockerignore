@@ -1,0 +1,7 @@
+target
+.git
+.idea
+.gradle
+build.gradle
+settings.gradle
+README.md

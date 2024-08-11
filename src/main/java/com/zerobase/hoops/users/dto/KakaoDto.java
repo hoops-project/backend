@@ -1,12 +1,15 @@
 package com.zerobase.hoops.users.dto;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.users.type.GenderType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -41,9 +44,23 @@ public class KakaoDto {
     @NotBlank(message = "별명을 입력하세요.")
     private String nickName;
 
-    public static UserEntity toEntity(Request request) {
+    public static UserDocument toDocument(Request request, long userId) {
       BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-      return UserEntity.builder()
+      // 포맷 정의 (타임존 오프셋 포함)
+      DateTimeFormatter formatter = DateTimeFormatter
+          .ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+
+      // 현재 시간을 OffsetDateTime으로 생성
+      OffsetDateTime now = OffsetDateTime.now(ZoneOffset.ofHours(9)); // KST는 UTC+9
+
+      // 문자열로 포맷
+      String formattedDateTime = now.format(formatter);
+
+      // 문자열을 OffsetDateTime으로 파싱
+      OffsetDateTime dateTime = OffsetDateTime.parse(formattedDateTime, formatter);
+
+      return UserDocument.builder()
+          .id(Long.toString(userId))
           .loginId(request.getLoginId())
           .password(encoder.encode("kakao"))
           .email(request.getEmail())
@@ -52,6 +69,7 @@ public class KakaoDto {
           .gender(GenderType.valueOf(request.getGender()))
           .nickName(request.getNickName())
           .roles(new ArrayList<>(List.of(("ROLE_USER"))))
+          .createdDateTime(dateTime)
           .emailAuth(true)
           .build();
     }
@@ -64,7 +82,7 @@ public class KakaoDto {
   public static class Response {
 
     @Schema(description = "PK", example = "1", defaultValue = "1")
-    private Long id;
+    private String id;
 
     @Schema(description = "아이디", example = "hoops", defaultValue = "hoops")
     private String loginId;
@@ -86,9 +104,9 @@ public class KakaoDto {
     @Schema(description = "별명", example = "농구의신", defaultValue = "농구의신")
     private String nickName;
 
-    @Schema(description = "가입 일시", example = "2024-06-04T13:31:24.255686",
-        defaultValue = "2024-06-04T13:31:24.255686")
-    private LocalDateTime crateDate;
+    @Schema(description = "가입 일시", example = "2024-06-04T13:31:24+09:00",
+        defaultValue = "2024-06-04T13:31:24+09:00")
+    private OffsetDateTime crateDate;
 
     @Schema(description = "플레이 스타일", example = "AGGRESSIVE",
         defaultValue = "AGGRESSIVE")

@@ -22,7 +22,6 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -41,6 +40,10 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
 
+	// elastic-search
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch' // Elasticsearch를 사용하는 경우
+	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.10.2'
+
 	// swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
 	implementation 'org.springframework.data:spring-data-envers'
@@ -58,13 +61,6 @@ dependencies {
 	implementation 'org.webjars:bootstrap:5.2.3'
 	implementation 'org.webjars:jquery:3.6.4'
 
-	// queryDsl 관련 코드생성 기능 제공
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-	// queryDsl 라이브러리
-	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-
 }
 
 tasks.named('bootBuildImage') {
@@ -73,22 +69,4 @@ tasks.named('bootBuildImage') {
 
 tasks.named('test') {
 	useJUnitPlatform()
-}
-
-///// Querydsl 빌드 옵션 (옵셔널)
-def generated = 'src/main/generated'
-
-///// querydsl QClass 파일 생성 위치를 지정
-tasks.withType(JavaCompile).configureEach {
-	options.getGeneratedSourceOutputDirectory().set(file(generated))
-}
-
-///// java source set 에 querydsl QClass 위치 추가
-sourceSets {
-	main.java.srcDirs += [ generated ]
-}
-
-///// gradle clean 시에 QClass 디렉토리 삭제
-clean {
-	delete file(generated)
 }

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.alarm.repository.EmitterRepository;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.friends.repository.FriendRepository;
@@ -40,6 +40,8 @@ import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -87,13 +89,13 @@ class AuthServiceTest {
   @Spy
   BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-  UserEntity user;
-  UserEntity notConfirmedUser;
+  UserDocument user;
+  UserDocument notConfirmedUser;
 
   @BeforeEach
   void setUp() {
-    user = UserEntity.builder()
-        .id(1L)
+    user = UserDocument.builder()
+        .id("1")
         .loginId("test")
         .password(passwordEncoder.encode("test"))
         .email("test@hoops.com")
@@ -104,13 +106,13 @@ class AuthServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)))
         .emailAuth(true)
         .build();
     userRepository.save(user);
 
-    notConfirmedUser = UserEntity.builder()
-        .id(1L)
+    notConfirmedUser = UserDocument.builder()
+        .id("1")
         .loginId("notConfirmedTest")
         .password(passwordEncoder.encode("test"))
         .email("notConfirmedTest@hoops.com")
@@ -121,7 +123,7 @@ class AuthServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)))
         .emailAuth(false)
         .build();
     userRepository.save(user);
@@ -202,7 +204,7 @@ class AuthServiceTest {
   @DisplayName("Auth_GetToken_Success")
   void getTokenTest_Success() {
     // given
-    UserDto userDto = UserDto.fromEntity(user);
+    UserDto userDto = UserDto.fromDocument(user);
     String accessToken = "accessToken";
     String refreshToken = "refreshToken";
 
@@ -411,7 +413,7 @@ class AuthServiceTest {
   void getUserInfoTest_InvalidToken() {
     // given
     String invalidAccessToken = "invalidAccessToken";
-    UserEntity user = new UserEntity();
+    UserDocument user = new UserDocument();
     user.setLoginId("testUser");
 
     // when
@@ -464,9 +466,9 @@ class AuthServiceTest {
     when(tokenProvider.parseClaims(accessToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
     when(tokenProvider.parseClaims(refreshToken)).thenReturn(Jwts.claims().setSubject(user.getLoginId()));
     lenient().when(gameRepository.findByUserIdAndDeletedDateTimeNull(user.getId())).thenReturn(new ArrayList<>());
-    lenient().when(participantGameRepository.findByGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyLong()), WITHDRAW)).thenReturn(new ArrayList<>());
+    lenient().when(participantGameRepository.findByGameIdAndStatusNotAndDeletedDateTimeNull(eq(anyString()), WITHDRAW)).thenReturn(new ArrayList<>());
     lenient().when(participantGameRepository.findByUserIdAndStatusInAndWithdrewDateTimeNull(user.getId(), List.of(APPLY, ACCEPT))).thenReturn(new ArrayList<>());
-    lenient().when(inviteRepository.findByInviteStatusAndGameId(InviteStatus.REQUEST, eq(anyLong()))).thenReturn(new ArrayList<>());
+    lenient().when(inviteRepository.findByInviteStatusAndGameId(InviteStatus.REQUEST, eq(anyString()))).thenReturn(new ArrayList<>());
     when(inviteRepository.findByInviteStatusAndSenderUserIdOrReceiverUserId(
         InviteStatus.REQUEST, user.getId(), user.getId())).thenReturn(new ArrayList<>());
     lenient().when(friendRepository.findByUserIdOrFriendUserIdAndStatusNotAndDeletedDateTimeNull(user.getId(), user.getId(), FriendStatus.DELETE)).thenReturn(new ArrayList<>());

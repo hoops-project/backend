@@ -1,7 +1,7 @@
 package com.zerobase.hoops.gameCreator.dto;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
@@ -29,7 +29,7 @@ public class DetailGameDto {
   public static class Response {
 
     @Schema(description = "경기 pk", example = "1")
-    private Long gameId;
+    private String gameId;
 
     @Schema(description = "제목", example = "이촌한강공원 농구장에서 3:3 할사람 모여라")
     private String title;
@@ -72,29 +72,29 @@ public class DetailGameDto {
     private String nickName;
 
     @Schema(description = "경기 개설자 유저 pk", example = "2")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "경기 참가자 리스트")
     private List<ParticipantUser> participantUserList;
 
-    public Response toDto(GameEntity gameEntity,
+    public Response toDto(GameDocument gameDocument,
         List<ParticipantUser> participantUserList) {
       return Response.builder()
-          .gameId(gameEntity.getId())
-          .title(gameEntity.getTitle())
-          .content(gameEntity.getContent())
-          .headCount(gameEntity.getHeadCount())
-          .fieldStatus(gameEntity.getFieldStatus())
-          .gender(gameEntity.getGender())
-          .inviteYn(gameEntity.getInviteYn())
-          .address(gameEntity.getAddress())
-          .placeName(gameEntity.getPlaceName())
-          .latitude(gameEntity.getLatitude())
-          .longitude(gameEntity.getLongitude())
-          .cityName(gameEntity.getCityName())
-          .matchFormat(gameEntity.getMatchFormat())
-          .nickName(gameEntity.getUser().getNickName())
-          .userId(gameEntity.getUser().getId())
+          .gameId(gameDocument.getId())
+          .title(gameDocument.getTitle())
+          .content(gameDocument.getContent())
+          .headCount(gameDocument.getHeadCount())
+          .fieldStatus(gameDocument.getFieldStatus())
+          .gender(gameDocument.getGender())
+          .inviteYn(gameDocument.getInviteYn())
+          .address(gameDocument.getAddress())
+          .placeName(gameDocument.getPlaceName())
+          .latitude(gameDocument.getLatitude())
+          .longitude(gameDocument.getLongitude())
+          .cityName(gameDocument.getCityName())
+          .matchFormat(gameDocument.getMatchFormat())
+          .nickName(gameDocument.getUser().getNickName())
+          .userId(gameDocument.getUser().getId())
           .participantUserList(participantUserList)
           .build();
     }
@@ -140,7 +140,7 @@ public class DetailGameDto {
   public static class ParticipantUser {
 
     @Schema(description = "경기 참가자 유저 pk", example = "2")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "경기 참가자 유저 생년월일", example = "2000-01-01")
     private LocalDate birthday;
@@ -160,7 +160,7 @@ public class DetailGameDto {
     @Schema(description = "경기 참가자 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
-    public static ParticipantUser toDto(ParticipantGameEntity participantGame) {
+    public static ParticipantUser toDto(ParticipantGameDocument participantGame) {
       return ParticipantUser.builder()
           .userId(participantGame.getUser().getId())
           .birthday(participantGame.getUser().getBirthday())

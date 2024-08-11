@@ -1,8 +1,10 @@
 package com.zerobase.hoops.gameUsers.service;
 
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import static com.zerobase.hoops.util.Common.getNowDateTime;
+
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.gameCreator.type.CityName;
@@ -15,14 +17,13 @@ import com.zerobase.hoops.gameUsers.dto.MannerPointDto;
 import com.zerobase.hoops.gameUsers.dto.MannerPointListResponse;
 import com.zerobase.hoops.gameUsers.dto.ParticipateGameDto;
 import com.zerobase.hoops.gameUsers.repository.GameCheckOutRepository;
-import com.zerobase.hoops.gameUsers.repository.GameCheckOutSpecifications;
 import com.zerobase.hoops.gameUsers.repository.GameUserRepository;
 import com.zerobase.hoops.gameUsers.repository.MannerPointRepository;
+import com.zerobase.hoops.gameUsers.repository.impl.GameCustomRepositoryImpl;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import com.zerobase.hoops.users.type.GenderType;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +41,7 @@ public class GameUserService {
 
   private final GameCheckOutRepository gameCheckOutRepository;
   private final GameUserRepository gameUserRepository;
+  private final GameCustomRepositoryImpl gameCustomRepository;
   private final MannerPointRepository mannerPointRepository;
   private final UserRepository userRepository;
   private final JwtTokenExtract jwtTokenExtract;
@@ -48,36 +49,39 @@ public class GameUserService {
   @Transactional
   public void saveMannerPoint(MannerPointDto request) {
     log.info("saveMannerPoint 시작");
-    Long userId = jwtTokenExtract.currentUser().getId();
-    Long receiverId = request.getReceiverId();
-    Long gameId = request.getGameId();
+    String userId = jwtTokenExtract.currentUser().getId();
+    String receiverId = request.getReceiverId();
+    String gameId = request.getGameId();
     log.info(
         String.format("[user_pk] = %s -> [receiverId] = %s / [gameId] = %s",
             userId,
             receiverId,
             gameId));
-    UserEntity userEntity = userRepository.findById(userId)
+    UserDocument userDocument = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    UserEntity receiverEntity = userRepository.findById(
+    UserDocument receiverDocument = userRepository.findById(
             receiverId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    GameEntity gameEntity = gameUserRepository.findByIdAndStartDateTimeBefore(
-            gameId, LocalDateTime.now())
+    GameDocument gameDocument = gameUserRepository.findByIdAndStartDateTimeBefore(
+            gameId, getNowDateTime())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     checkExistRate(request, userId, gameId);
-    receiverEntity.saveMannerPoint(request.getPoint());
+    receiverDocument.saveMannerPoint(request.getPoint());
+
+    long mannerPointId = mannerPointRepository.count() + 1;
+
     mannerPointRepository.save(
-        request.toEntity(userEntity, receiverEntity, gameEntity));
+        request.toDocument(userDocument, receiverDocument, gameDocument, mannerPointId));
     log.info("saveMannerPoint 종료");
   }
 
-  private void checkExistRate(MannerPointDto request, Long userId,
-      Long gameId) {
+  private void checkExistRate(MannerPointDto request, String userId,
+      String gameId) {
     boolean checking = mannerPointRepository.existsByUser_IdAndReceiver_IdAndGame_Id(
         userId, request.getReceiverId(), gameId);
 
@@ -86,12 +90,11 @@ public class GameUserService {
     }
   }
 
-
   public List<MannerPointListResponse> getMannerPoint(
       String gameId) {
     log.info("getMannerPoint 시작");
-    Long currentUserId = jwtTokenExtract.currentUser().getId();
-    List<ParticipantGameEntity> userList = checkMannerPointList(gameId);
+    String currentUserId = jwtTokenExtract.currentUser().getId();
+    List<ParticipantGameDocument> userList = checkMannerPointList(gameId);
     List<MannerPointListResponse> mannerPointUserList = new ArrayList<>();
 
     userList.stream()
@@ -110,27 +113,25 @@ public class GameUserService {
     return mannerPointUserList;
   }
 
-  private List<ParticipantGameEntity> checkMannerPointList(
+  private List<ParticipantGameDocument> checkMannerPointList(
       String gameId) {
-    Long userId = jwtTokenExtract.currentUser().getId();
+    String userId = jwtTokenExtract.currentUser().getId();
     userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    Long gameLongId = Long.valueOf(gameId);
-
     gameUserRepository.findByIdAndStartDateTimeBefore(
-            gameLongId, LocalDateTime.now())
+            gameId, getNowDateTime())
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     boolean finalCheck = gameCheckOutRepository.existsByGame_IdAndUser_IdAndStatus(
-        gameLongId, userId, ParticipantGameStatus.ACCEPT);
+        gameId, userId, ParticipantGameStatus.ACCEPT);
 
     if (!finalCheck) {
       throw new CustomException(ErrorCode.GAME_NOT_FOUND);
     }
     return gameCheckOutRepository.findByStatusAndGame_Id(
-            ParticipantGameStatus.ACCEPT, gameLongId)
+            ParticipantGameStatus.ACCEPT, gameId)
         .orElseThrow(
             () -> new CustomException(ErrorCode.GAME_NOT_FOUND));
   }
@@ -138,15 +139,15 @@ public class GameUserService {
 
   public Page<GameSearchResponse> myCurrentGameList(int page, int size) {
     log.info("myCurrentGameList 시작");
-    List<ParticipantGameEntity> userGameList = checkMyGameList();
+    List<ParticipantGameDocument> userGameList = checkMyGameList();
 
-    List<GameEntity> games = userGameList.stream()
-        .map(ParticipantGameEntity::getGame)
+    List<GameDocument> games = userGameList.stream()
+        .map(ParticipantGameDocument::getGame)
         .filter(
-            game -> game.getStartDateTime().isAfter(LocalDateTime.now()))
+            game -> game.getStartDateTime().isAfter(getNowDateTime()))
         .toList();
 
-    Long userId = jwtTokenExtract.currentUser().getId();
+    String userId = jwtTokenExtract.currentUser().getId();
 
     log.info(
         String.format("[user_pk] = %s ->  [gameList] = [%s]",
@@ -160,15 +161,15 @@ public class GameUserService {
 
   public Page<GameSearchResponse> myLastGameList(int page, int size) {
     log.info("myLastGameList 시작");
-    List<ParticipantGameEntity> userGameList = checkMyGameList();
+    List<ParticipantGameDocument> userGameList = checkMyGameList();
 
-    List<GameEntity> games = userGameList.stream()
-        .map(ParticipantGameEntity::getGame)
+    List<GameDocument> games = userGameList.stream()
+        .map(ParticipantGameDocument::getGame)
         .filter(
-            game -> game.getStartDateTime().isBefore(LocalDateTime.now()))
+            game -> game.getStartDateTime().isBefore(getNowDateTime()))
         .toList();
 
-    Long userId = jwtTokenExtract.currentUser().getId();
+    String userId = jwtTokenExtract.currentUser().getId();
 
     log.info(
         String.format("[user_pk] = %s ->  [gameList] = [%s]",
@@ -192,33 +193,33 @@ public class GameUserService {
         gender,
         matchFormat
     );
-    Specification<GameEntity> spec = getGameEntitySpecification(
-        localDate, cityName, fieldStatus, gender, matchFormat);
 
-    List<GameEntity> gameListNow = gameUserRepository.findAll(spec);
+    List<GameDocument> gameListNow =
+        gameCustomRepository
+        .findAllGameDocuments(localDate, cityName, fieldStatus, gender, matchFormat);
 
-    Long userId = null;
+    String userId = null;
     log.info("findFilteredGames 종료");
     return getPageGameSearchResponses(gameListNow, userId, page, size);
   }
 
   public List<GameSearchResponse> searchAddress(String address) {
     log.info("searchAddress 시작");
-    List<GameEntity> allFromDateToday =
+    List<GameDocument> allFromDateToday =
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
-            address, LocalDateTime.now());
+            address, getNowDateTime());
     log.info(
         String.format("[사용자 주소 입력값] = %s / [실제 존재하는 경기값 조회 결과] = %s",
             address,
             allFromDateToday
         ));
-    Long userId = null;
+    String userId = null;
     log.info("searchAddress 종료");
     return getGameSearchResponses(allFromDateToday, userId);
   }
 
   private static Page<GameSearchResponse> getPageGameSearchResponses(
-      List<GameEntity> gameListNow, Long userId, int page, int size) {
+      List<GameDocument> gameListNow, String userId, int page, int size) {
     List<GameSearchResponse> gameList = new ArrayList<>();
     gameListNow.forEach(
         (e) -> gameList.add(GameSearchResponse.of(e, userId)));
@@ -240,7 +241,7 @@ public class GameUserService {
   }
 
   private static List<GameSearchResponse> getGameSearchResponses(
-      List<GameEntity> gameListNow, Long userId) {
+      List<GameDocument> gameListNow, String userId) {
     List<GameSearchResponse> gameList = new ArrayList<>();
     gameListNow.forEach(
         (e) -> gameList.add(GameSearchResponse.of(e, userId)));
@@ -248,15 +249,15 @@ public class GameUserService {
   }
 
   @Transactional
-  public ParticipateGameDto participateInGame(Long gameId) {
+  public ParticipateGameDto participateInGame(String gameId) {
     log.info("participateInGame 시작");
-    Long userId = jwtTokenExtract.currentUser().getId();
+    String userId = jwtTokenExtract.currentUser().getId();
 
-    UserEntity user = userRepository.findById(userId)
+    UserDocument user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
-    GameEntity game = gameUserRepository.findById(gameId)
+    GameDocument game = gameUserRepository.findById(gameId)
         .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
 
     log.info(
@@ -265,17 +266,22 @@ public class GameUserService {
             game
         ));
     checkValidated(gameId, game, user);
+
+    long participantId = gameCheckOutRepository.count() + 1;
+
     log.info("participateInGame 종료");
-    return ParticipateGameDto.fromEntity(gameCheckOutRepository.save(
-        ParticipantGameEntity.builder()
+    return ParticipateGameDto.fromDocument(gameCheckOutRepository.save(
+        ParticipantGameDocument.builder()
+            .id(Long.toString(participantId))
             .status(ParticipantGameStatus.APPLY)
+            .createdDateTime(getNowDateTime())
             .game(game)
             .user(user)
             .build()));
   }
 
-  private void checkValidated(Long gameId, GameEntity game,
-      UserEntity user) {
+  private void checkValidated(String gameId, GameDocument game,
+      UserDocument user) {
     if (gameCheckOutRepository.existsByGame_IdAndUser_Id(
         gameId,
         user.getId())) {
@@ -285,7 +291,7 @@ public class GameUserService {
         ParticipantGameStatus.ACCEPT, gameId) >= game.getHeadCount()) {
       throw new CustomException(ErrorCode.FULL_PEOPLE_GAME);
     }
-    if (game.getStartDateTime().isBefore(LocalDateTime.now())) {
+    if (game.getStartDateTime().isBefore(getNowDateTime())) {
       throw new CustomException(ErrorCode.OVER_TIME_GAME);
     }
     if (game.getGender().equals(Gender.FEMALEONLY) && user.getGender()
@@ -297,36 +303,10 @@ public class GameUserService {
     }
   }
 
+  private List<ParticipantGameDocument> checkMyGameList() {
+    String userId = jwtTokenExtract.currentUser().getId();
 
-  private static Specification<GameEntity> getGameEntitySpecification(
-      LocalDate localDate, CityName cityName, FieldStatus fieldStatus,
-      Gender gender, MatchFormat matchFormat) {
-    Specification<GameEntity> spec = Specification.where(
-        GameCheckOutSpecifications.notDeleted());
-
-    spec = spec.and(GameCheckOutSpecifications.startDate(localDate));
-
-    if (cityName != null) {
-      spec = spec.and(GameCheckOutSpecifications.withCityName(cityName));
-    }
-    if (fieldStatus != null) {
-      spec = spec.and(
-          GameCheckOutSpecifications.withFieldStatus(fieldStatus));
-    }
-    if (gender != null) {
-      spec = spec.and(GameCheckOutSpecifications.withGender(gender));
-    }
-    if (matchFormat != null) {
-      spec = spec.and(
-          GameCheckOutSpecifications.withMatchFormat(matchFormat));
-    }
-    return spec;
-  }
-
-  private List<ParticipantGameEntity> checkMyGameList() {
-    Long userId = jwtTokenExtract.currentUser().getId();
-
-    UserEntity user = userRepository.findById(userId)
+    UserDocument user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 

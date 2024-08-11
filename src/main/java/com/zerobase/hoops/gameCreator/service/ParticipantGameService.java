@@ -11,9 +11,9 @@ import static com.zerobase.hoops.gameCreator.type.ParticipantGameStatus.APPLY;
 
 import com.zerobase.hoops.alarm.domain.NotificationType;
 import com.zerobase.hoops.alarm.service.NotificationService;
-import com.zerobase.hoops.entity.GameEntity;
-import com.zerobase.hoops.entity.ParticipantGameEntity;
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.GameDocument;
+import com.zerobase.hoops.document.ParticipantGameDocument;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.gameCreator.dto.AcceptParticipantDto;
 import com.zerobase.hoops.gameCreator.dto.ApplyParticipantListDto;
@@ -25,6 +25,7 @@ import com.zerobase.hoops.gameCreator.repository.ParticipantGameRepository;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -49,14 +50,14 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 리스트 조회 전 validation
    */
-  public List<ApplyParticipantListDto.Response> validApplyParticipantList(Long gameId,
-      Pageable pageable, UserEntity user) {
+  public List<ApplyParticipantListDto.Response> validApplyParticipantList(String gameId,
+      Pageable pageable, UserDocument user) {
     log.info("loginId = {} validApplyParticipantList start", user.getLoginId());
 
     List<ApplyParticipantListDto.Response> result = null;
 
     try {
-      GameEntity game = getGame(gameId);
+      GameDocument game = getGame(gameId);
 
       checkCreator(user, game);
 
@@ -80,9 +81,9 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 리스트 조회
    */
-  private List<ApplyParticipantListDto.Response> getApplyParticipantList(Long gameId,
-      Pageable pageable, UserEntity user) {
-    Page<ParticipantGameEntity> page =
+  private List<ApplyParticipantListDto.Response> getApplyParticipantList(String gameId,
+      Pageable pageable, UserDocument user) {
+    Page<ParticipantGameDocument> page =
         getParticipantList(APPLY, gameId, pageable, user);
 
     return page.stream()
@@ -93,14 +94,14 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 리스트 조회 전 validation
    */
-  public List<AcceptParticipantListDto.Response> validAcceptParticipantList(Long gameId,
-      Pageable pageable, UserEntity user) {
+  public List<AcceptParticipantListDto.Response> validAcceptParticipantList(String gameId,
+      Pageable pageable, UserDocument user) {
     log.info("loginId = {} validAcceptParticipantList start", user.getLoginId());
 
     List<AcceptParticipantListDto.Response> result = null;
 
     try {
-      GameEntity game = getGame(gameId);
+      GameDocument game = getGame(gameId);
 
       result = getAcceptParticipantList(game.getId(), pageable, user);
       log.info("loginId = {} AcceptParticipantList got", user.getLoginId());
@@ -122,9 +123,9 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 리스트 조회
    */
-  public List<AcceptParticipantListDto.Response> getAcceptParticipantList(Long gameId,
-      Pageable pageable, UserEntity user) {
-    Page<ParticipantGameEntity> page =
+  public List<AcceptParticipantListDto.Response> getAcceptParticipantList(String gameId,
+      Pageable pageable, UserDocument user) {
+    Page<ParticipantGameDocument> page =
         getParticipantList(ACCEPT, gameId, pageable, user);
 
     return page.stream()
@@ -136,18 +137,18 @@ public class ParticipantGameService {
    * 경기 지원자 수락 전 validation
    */
   public AcceptParticipantDto.Response validAcceptParticipant(
-      AcceptParticipantDto.Request request, UserEntity user) {
+      AcceptParticipantDto.Request request, UserDocument user) {
     log.info("loginId = {} validAcceptParticipant start", user.getLoginId());
 
     AcceptParticipantDto.Response response = null;
 
     try {
-      ParticipantGameEntity participantGame =
+      ParticipantGameDocument participantGame =
           getParticipantGame(request.getParticipantId(), APPLY);
 
       checkIsNotCreatorParticipantGame(user, participantGame);
 
-      GameEntity game = getGame(participantGame.getGame().getId());
+      GameDocument game = getGame(participantGame.getGame().getId());
 
       checkCreator(user, game);
 
@@ -180,11 +181,11 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 수락
    */
-  private AcceptParticipantDto.Response acceptParticipant(ParticipantGameEntity participantGame,
-      UserEntity user) {
+  private AcceptParticipantDto.Response acceptParticipant(ParticipantGameDocument participantGame,
+      UserDocument user) {
 
-    ParticipantGameEntity result =
-        new ParticipantGameEntity().setAccept(participantGame, clock);
+    ParticipantGameDocument result =
+        new ParticipantGameDocument().setAccept(participantGame, clock);
 
     participantGameRepository.save(result);
     log.info("loginId = {} participantGame accepted", user.getLoginId());
@@ -201,18 +202,18 @@ public class ParticipantGameService {
    * 경기 지원자 거절 전 validation
    */
   public RejectParticipantDto.Response validRejectParticipant(
-      RejectParticipantDto.Request request, UserEntity user) {
+      RejectParticipantDto.Request request, UserDocument user) {
     log.info("loginId = {} validRejectParticipant start", user.getLoginId());
 
     RejectParticipantDto.Response response = null;
 
     try {
-      ParticipantGameEntity participantGame =
+      ParticipantGameDocument participantGame =
           getParticipantGame(request.getParticipantId(), APPLY);
 
       checkIsNotCreatorParticipantGame(user, participantGame);
 
-      GameEntity game = getGame(participantGame.getGame().getId());
+      GameDocument game = getGame(participantGame.getGame().getId());
 
       checkCreator(user, game);
 
@@ -235,10 +236,10 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 거절
    */
-  private RejectParticipantDto.Response rejectParticipant(ParticipantGameEntity participantGame,
-      UserEntity user) {
-    ParticipantGameEntity result =
-        new ParticipantGameEntity().setReject(participantGame, clock);
+  private RejectParticipantDto.Response rejectParticipant(ParticipantGameDocument participantGame,
+      UserDocument user) {
+    ParticipantGameDocument result =
+        new ParticipantGameDocument().setReject(participantGame, clock);
 
     participantGameRepository.save(result);
     log.info("loginId = {} participantGame rejected", user.getLoginId());
@@ -257,18 +258,18 @@ public class ParticipantGameService {
    * 경기 참가자 강퇴 전 validation
    */
   public KickoutParticipantDto.Response validKickoutParticipant(
-      KickoutParticipantDto.Request request, UserEntity user) {
+      KickoutParticipantDto.Request request, UserDocument user) {
     log.info("loginId = {} validKickoutParticipant start", user.getLoginId());
 
     KickoutParticipantDto.Response response = null;
 
     try {
-      ParticipantGameEntity participantGame =
+      ParticipantGameDocument participantGame =
           getParticipantGame(request.getParticipantId(), ACCEPT);
 
       checkIsNotCreatorParticipantGame(user, participantGame);
 
-      GameEntity game = getGame(participantGame.getGame().getId());
+      GameDocument game = getGame(participantGame.getGame().getId());
 
       checkCreator(user, game);
 
@@ -293,10 +294,10 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 강퇴
    */
-  private KickoutParticipantDto.Response kickoutParticipant(ParticipantGameEntity participantGame,
-      UserEntity user) {
-    ParticipantGameEntity result =
-        new ParticipantGameEntity().setKickout(participantGame, clock);
+  private KickoutParticipantDto.Response kickoutParticipant(ParticipantGameDocument participantGame,
+      UserDocument user) {
+    ParticipantGameDocument result =
+        new ParticipantGameDocument().setKickout(participantGame, clock);
 
     participantGameRepository.save(result);
     log.info("loginId = {} participantGame kickouted", user.getLoginId());
@@ -309,36 +310,36 @@ public class ParticipantGameService {
   }
 
   // 리스트 조회
-  private Page<ParticipantGameEntity> getParticipantList(
-      ParticipantGameStatus status, Long gameId, Pageable pageable,
-      UserEntity user) {
+  private Page<ParticipantGameDocument> getParticipantList(
+      ParticipantGameStatus status, String gameId, Pageable pageable,
+      UserDocument user) {
     return participantGameRepository.findByStatusAndGameId(status, gameId, pageable);
   }
   
   // 경기 조회
-  private GameEntity getGame(Long gameId) {
+  private GameDocument getGame(String gameId) {
     return gameRepository.findByIdAndDeletedDateTimeNull(gameId)
         .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
   }
 
   // 경기 개설자만 참가 희망자 리스트 조회, 경기 (수락,거절,강퇴) 가능
-  public void checkCreator(UserEntity user, GameEntity game) {
+  public void checkCreator(UserDocument user, GameDocument game) {
     if (!Objects.equals(user.getId(), game.getUser().getId())) {
       throw new CustomException(NOT_GAME_CREATOR);
     }
   }
 
   // 경기가 이미 시작하면 수락,강퇴 불가능
-  private void checkGameStart(GameEntity game) {
+  private void checkGameStart(GameDocument game) {
 
-    LocalDateTime nowDateTime = LocalDateTime.now();
+    OffsetDateTime nowDateTime = OffsetDateTime.now();
     if (game.getStartDateTime().isBefore(nowDateTime)) {
       throw new CustomException(ALREADY_GAME_START);
     }
   }
 
   // 경기 참가 조회
-  private ParticipantGameEntity getParticipantGame(Long participantId,
+  private ParticipantGameDocument getParticipantGame(String participantId,
       ParticipantGameStatus status) {
     return participantGameRepository
         .findByIdAndStatus(participantId, status)
@@ -346,8 +347,8 @@ public class ParticipantGameService {
   }
 
   // 경기 개설자는 ACCEPT 상태로 나둬야함
-  private void checkIsNotCreatorParticipantGame(UserEntity user,
-      ParticipantGameEntity participantGame) {
+  private void checkIsNotCreatorParticipantGame(UserDocument user,
+      ParticipantGameDocument participantGame) {
 
     if (Objects.equals(user.getId(),
         participantGame.getUser().getId())) {

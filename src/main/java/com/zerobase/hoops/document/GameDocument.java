@@ -1,20 +1,11 @@
-package com.zerobase.hoops.entity;
+package com.zerobase.hoops.document;
 
 import com.zerobase.hoops.gameCreator.type.CityName;
 import com.zerobase.hoops.gameCreator.type.FieldStatus;
 import com.zerobase.hoops.gameCreator.type.Gender;
 import com.zerobase.hoops.gameCreator.type.MatchFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,82 +13,77 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
-@Entity(name = "game")
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EntityListeners(AuditingEntityListener.class)
-public class GameEntity {
+@Document(indexName = "index_game")
+public class GameDocument {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(nullable = false)
-  private Long id;
+  private String id;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String title;
 
-  @Column(nullable = false, columnDefinition = "TEXT")
+  @Field(type = FieldType.Text)
   private String content;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Long)
   private Long headCount;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Field(type = FieldType.Keyword)
   private FieldStatus fieldStatus;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Field(type = FieldType.Keyword)
   private Gender gender;
 
-  @Column(nullable = false)
-  private LocalDateTime startDateTime;
+  @Field(type = FieldType.Date, format = DateFormat.date_time, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+  private OffsetDateTime startDateTime;
 
-  @CreatedDate
-  @Column(nullable = false)
-  private LocalDateTime createdDateTime;
+  @Field(type = FieldType.Date, format = DateFormat.date_time, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+  private OffsetDateTime createdDateTime;
 
-  private LocalDateTime deletedDateTime;
+  @Field(type = FieldType.Date, format = DateFormat.date_time, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+  private OffsetDateTime deletedDateTime;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Boolean)
   private Boolean inviteYn;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String address;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Text)
   private String placeName;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Double)
   private Double latitude;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Double)
   private Double longitude;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Field(type = FieldType.Keyword)
   private CityName cityName;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Field(type = FieldType.Keyword)
   private MatchFormat matchFormat;
 
-  @ManyToOne
-  @JoinColumn(nullable = false)
-  private UserEntity user;
+  @Field(type = FieldType.Nested)
+  private UserDocument user;
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    GameEntity that = (GameEntity) o;
+    GameDocument that = (GameDocument) o;
     return Objects.equals(id, that.id) &&
         Objects.equals(title, that.title) &&
         Objects.equals(content, that.content) &&

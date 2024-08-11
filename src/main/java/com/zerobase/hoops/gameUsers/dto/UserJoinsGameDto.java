@@ -2,9 +2,9 @@ package com.zerobase.hoops.gameUsers.dto;
 
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,9 +19,8 @@ public class UserJoinsGameDto {
   @AllArgsConstructor
   public static class Request {
 
-    @NotNull
-    @Min(1)
-    private Long gameId;
+    @NotBlank
+    private String gameId;
   }
 
   @Getter
@@ -32,19 +31,19 @@ public class UserJoinsGameDto {
   public static class Response {
 
     @Schema(description = "유저 pk", example = "4")
-    private Long userId;
+    private String userId;
     @Schema(description = "게임 엔티티 pk", example = "12")
-    private Long gameId;
+    private String gameId;
     @Schema(description = "경기 주소", example = "서울특별시 강남구 강남대로 328 농구경기장")
     private String gameAddress;
     private ParticipantGameStatus participantGameStatus;
-    private LocalDateTime createdDateTime;
+    private OffsetDateTime createdDateTime;
 
     public static Response from(ParticipateGameDto participateGameDto) {
       return Response.builder()
-          .userId(participateGameDto.getUserEntity().getId())
-          .gameId(participateGameDto.getGameEntity().getId())
-          .gameAddress(participateGameDto.getGameEntity().getAddress())
+          .userId(participateGameDto.getUserDocument().getId())
+          .gameId(participateGameDto.getUserDocument().getId())
+          .gameAddress(participateGameDto.getGameDocument().getAddress())
           .participantGameStatus(ParticipantGameStatus.APPLY)
           .createdDateTime(participateGameDto.getCreatedDateTime())
           .build();

@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.users.dto.SignUpDto;
 import com.zerobase.hoops.users.dto.UserDto;
@@ -19,6 +19,8 @@ import com.zerobase.hoops.users.type.PlayStyleType;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +52,13 @@ class UserServiceTest {
   @Mock
   EmailRepository emailRepository;
 
-  UserEntity user;
+  UserDocument user;
 
   @BeforeEach
   void setUp() {
     // Initialize your test setup here if needed
-    user = UserEntity.builder()
-        .id(1L)
+    user = UserDocument.builder()
+        .id("1")
         .loginId("test")
         .password("Hoops!@#456")
         .email("test@hoops.com")
@@ -67,7 +69,7 @@ class UserServiceTest {
         .playStyle(PlayStyleType.AGGRESSIVE)
         .ability(AbilityType.SHOOT)
         .roles(new ArrayList<>(List.of("ROLE_USER")))
-        .createdDateTime(LocalDateTime.now())
+        .createdDateTime(OffsetDateTime.now(ZoneOffset.ofHours(9)))
         .emailAuth(false)
         .build();
   }
@@ -91,11 +93,11 @@ class UserServiceTest {
         .ability("DRIBBLE")
         .build();
 
-    UserEntity user = SignUpDto.Request.toEntity(request);
+    UserDocument user = SignUpDto.Request.toDocument(request, 1L);
 
     doNothing().when(emailProvider).sendCertificationMail(any(), any(), any());
 
-    when(userRepository.save(any(UserEntity.class))).thenReturn(user);
+    when(userRepository.save(any(UserDocument.class))).thenReturn(user);
 
     // when
     UserDto sinUpUser = userService.signUpUser(request);
@@ -394,7 +396,7 @@ class UserServiceTest {
     String nonExistingEmail = "nonExistingEmail@test.com";
     String expectedId = "expectedId";
 
-    UserEntity existingUser = UserEntity.builder().loginId(expectedId).build();
+    UserDocument existingUser = UserDocument.builder().loginId(expectedId).build();
 
     // when
     when(userRepository.findByEmailAndDeletedDateTimeNull(
@@ -430,7 +432,7 @@ class UserServiceTest {
     // given
     String existingId = "existingId";
 
-    UserEntity existingUser = UserEntity.builder().loginId(existingId)
+    UserDocument existingUser = UserDocument.builder().loginId(existingId)
         .email("existingEmail@test.com").build();
 
     // when

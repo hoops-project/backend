@@ -3,7 +3,7 @@ package com.zerobase.hoops.config;
 import com.zerobase.hoops.chat.chat.ChatMessage;
 import com.zerobase.hoops.chat.chat.MessageType;
 import com.zerobase.hoops.chat.repository.ChatRoomRepository;
-import com.zerobase.hoops.entity.ChatRoomEntity;
+import com.zerobase.hoops.document.ChatRoomDocument;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,14 +58,14 @@ public class WebSocketConnectionEventListener {
     if (sessionAttributes != null) {
       String username = (String) sessionAttributes.get("nickName");
       String gameId = (String) sessionAttributes.get("gameId");
-      Long gameIdNumber = Long.parseLong(gameId);
       log.info("username={}", username);
-      log.info("gameId={}", gameIdNumber);
+      log.info("gameId={}", gameId);
       if (username != null) {
-        List<ChatRoomEntity> chatRoomEntityList = chatRoomRepository.findByGameEntity_Id(
-            gameIdNumber);
-        for (ChatRoomEntity chatRoomEntity : chatRoomEntityList) {
-          String nickName = chatRoomEntity.getUserEntity().getNickName();
+        List<ChatRoomDocument> chatRoomDocuments =
+            chatRoomRepository.findByGameDocument_Id(
+            gameId);
+        for (ChatRoomDocument chatRoomDocument : chatRoomDocuments) {
+          String nickName = chatRoomDocument.getUserDocument().getNickName();
           ChatMessage chatMessage = ChatMessage.builder()
               .type(MessageType.LEAVE)
               .sender(username)

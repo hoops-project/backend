@@ -1,30 +1,29 @@
 package com.zerobase.hoops.gameUsers.repository;
 
-import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.document.ParticipantGameDocument;
 import com.zerobase.hoops.gameCreator.type.ParticipantGameStatus;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GameCheckOutRepository extends
-    JpaRepository<ParticipantGameEntity, Long> {
+    ElasticsearchRepository<ParticipantGameDocument, String> {
 
   int countByStatusAndGameId(
-      ParticipantGameStatus participantGameStatus, Long id);
+      ParticipantGameStatus participantGameStatus, String id);
 
-  Optional<List<ParticipantGameEntity>> findByUser_IdAndStatus(Long userId,
+  Optional<List<ParticipantGameDocument>> findByUser_IdAndStatus(String userId,
       ParticipantGameStatus status);
 
-  boolean existsByGame_IdAndUser_Id(Long gameId,
-      Long userId);
+  boolean existsByGame_IdAndUser_Id(String gameId, String userId);
 
-  Optional<List<ParticipantGameEntity>> findByStatusAndGame_Id(
-      ParticipantGameStatus status, Long gameId);
+  Optional<List<ParticipantGameDocument>> findByStatusAndGame_Id(
+      ParticipantGameStatus status, String gameId);
 
   boolean existsByGame_IdAndUser_IdAndStatus(
-      Long gameId, Long userId, ParticipantGameStatus status);
+      String gameId, String userId, ParticipantGameStatus status);
 
 
 }

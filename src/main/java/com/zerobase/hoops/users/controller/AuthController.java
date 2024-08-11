@@ -1,6 +1,6 @@
 package com.zerobase.hoops.users.controller;
 
-import com.zerobase.hoops.entity.UserEntity;
+import com.zerobase.hoops.document.UserDocument;
 import com.zerobase.hoops.manager.service.ManagerService;
 import com.zerobase.hoops.users.dto.EditDto;
 import com.zerobase.hoops.users.dto.LogInDto;
@@ -81,11 +81,11 @@ public class AuthController {
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<Response> refreshToken(
       HttpServletRequest request,
-      @AuthenticationPrincipal UserEntity userEntity
+      @AuthenticationPrincipal UserDocument user
   ) {
     log.info("토큰 갱신 요청");
-    TokenDto tokenDto = authService.refreshToken(request, userEntity);
-    UserDto userDto = authService.getUserInfo(request, userEntity);
+    TokenDto tokenDto = authService.refreshToken(request, user);
+    UserDto userDto = authService.getUserInfo(request, user);
 
     HttpHeaders responseAccessToken = new HttpHeaders();
     responseAccessToken.set("Authorization", tokenDto.getAccessToken());
@@ -105,15 +105,15 @@ public class AuthController {
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<HttpStatus> logOut(
       HttpServletRequest request,
-      @AuthenticationPrincipal UserEntity userEntity
+      @AuthenticationPrincipal UserDocument user
   ) {
     log.info("로그아웃 요청");
-    if (userEntity.getLoginId().startsWith("kakao_")) {
+    if (user.getLoginId().startsWith("kakao_")) {
       log.info("카카오 로그아웃");
-      oAuth2Service.kakaoLogout(request, userEntity);
+      oAuth2Service.kakaoLogout(request, user);
     }
-    authService.logOutUser(request, userEntity);
-    log.info("로그아웃 성공 : {}", userEntity.getLoginId());
+    authService.logOutUser(request, user);
+    log.info("로그아웃 성공 : {}", user.getLoginId());
 
     return ResponseEntity.ok(HttpStatus.OK);
   }
@@ -129,7 +129,7 @@ public class AuthController {
   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<UserDto> getUserInfo(
       HttpServletRequest request,
-      @AuthenticationPrincipal UserEntity user
+      @AuthenticationPrincipal UserDocument user
   ) {
     log.info("회원 정보 조회 요청");
     UserDto userDto = authService.getUserInfo(request, user);
@@ -150,7 +150,7 @@ public class AuthController {
   public ResponseEntity<EditDto.Response> editUserInfo(
       HttpServletRequest request,
       @RequestBody @Validated EditDto.Request editDto,
-      @AuthenticationPrincipal UserEntity user
+      @AuthenticationPrincipal UserDocument user
   ) {
     log.info("회원 정보 수정 요청");
     UserDto userDto = authService.editUserInfo(request, editDto, user);
@@ -174,7 +174,7 @@ public class AuthController {
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<HttpStatus> deactivateUser(
       HttpServletRequest request,
-      @AuthenticationPrincipal UserEntity user
+      @AuthenticationPrincipal UserDocument user
   ) {
     log.info("회원 탈퇴 요청");
     if (user != null && user.getLoginId().startsWith("kakao")) {

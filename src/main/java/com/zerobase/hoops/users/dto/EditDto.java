@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,7 +61,7 @@ public class EditDto {
   public static class Response {
 
     @Schema(description = "PK", example = "1", defaultValue = "1")
-    private Long id;
+    private String id;
 
     @Schema(description = "아이디", example = "hoops", defaultValue = "hoops")
     private String loginId;
@@ -82,9 +83,9 @@ public class EditDto {
     @Schema(description = "별명", example = "농구의신", defaultValue = "농구의신")
     private String nickName;
 
-    @Schema(description = "가입 일시", example = "2024-06-04T13:31:24.255686",
-        defaultValue = "2024-06-04T13:31:24.255686")
-    private LocalDateTime crateDate;
+    @Schema(description = "가입 일시", example = "2024-06-04T13:31:24+09:00",
+        defaultValue = "2024-06-04T13:31:24+09:00")
+    private OffsetDateTime crateDate;
 
     @Schema(description = "플레이 스타일", example = "AGGRESSIVE",
         defaultValue = "AGGRESSIVE")
