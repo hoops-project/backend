@@ -3,7 +3,7 @@ name: Backend Build and Push
 on:
   push:
     branches:
-      - yohan-test-cicd
+      - yohan-main
 
 jobs:
   build-and-push:
