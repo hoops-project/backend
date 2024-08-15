@@ -5,6 +5,7 @@ on:
     branches:
       - yohan-main
       - develop-1.2
+      - yohan-swagger
 
 jobs:
   build-and-push:
