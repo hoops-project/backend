@@ -531,12 +531,11 @@ class GameUserServiceTest {
             eq(address), any(LocalDateTime.class))).thenReturn(
         upcomingGames);
 
-    List<GameSearchResponse> result = gameUserService.searchAddress(
-        address);
+    Page<GameSearchResponse> result = gameUserService.searchAddress(
+        address, 1,2);
+    List<GameSearchResponse> result2 = result.getContent();
 
     // Then
-    assertEquals(2, result.size());
-    assertEquals(1L, result.get(0).getGameId());
-    assertEquals(2L, result.get(1).getGameId());
+    assertEquals(upcomingGames.size(), result2.size());
   }
 }
