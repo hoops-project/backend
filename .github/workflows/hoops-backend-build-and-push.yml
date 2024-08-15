@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - yohan-main
+      - develop-1.2
 
 jobs:
   build-and-push:
