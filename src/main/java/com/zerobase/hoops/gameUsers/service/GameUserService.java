@@ -202,7 +202,7 @@ public class GameUserService {
     return getPageGameSearchResponses(gameListNow, userId, page, size);
   }
 
-  public List<GameSearchResponse> searchAddress(String address) {
+  public Page<GameSearchResponse> searchAddress(String address, int page, int size) {
     log.info("searchAddress 시작");
     List<GameEntity> allFromDateToday =
         gameUserRepository.findByAddressContainingIgnoreCaseAndStartDateTimeAfterOrderByStartDateTimeAsc(
@@ -214,7 +214,7 @@ public class GameUserService {
         ));
     Long userId = null;
     log.info("searchAddress 종료");
-    return getGameSearchResponses(allFromDateToday, userId);
+    return getPageGameSearchResponses(allFromDateToday, userId, page, size);
   }
 
   private static Page<GameSearchResponse> getPageGameSearchResponses(

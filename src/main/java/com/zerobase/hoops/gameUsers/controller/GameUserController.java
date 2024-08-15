@@ -69,10 +69,12 @@ public class GameUserController {
   @Operation(summary = "경기 검색 (주소)")
   @ApiResponse(responseCode = "200", description = "경기장 주소 일부만 입력해도 검색가능")
   @GetMapping("/search-address")
-  public ResponseEntity<List<GameSearchResponse>> searchAddress(
+  public ResponseEntity<Page<GameSearchResponse>> searchAddress(
       @Parameter(name = "address ", description = "경기장 주소", required = true)
+      @RequestParam(value = "page", defaultValue = "0") @Positive int page,
+      @RequestParam(value = "size", defaultValue = "5") @Positive int size,
       @RequestParam String address) {
-    return ResponseEntity.ok(gameUserService.searchAddress(address));
+    return ResponseEntity.ok(gameUserService.searchAddress(address, page, size));
   }
 
   @Operation(summary = "경기 참가 여부")
