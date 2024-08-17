@@ -6,6 +6,7 @@ on:
       - yohan-main
       - develop-1.2
 
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
