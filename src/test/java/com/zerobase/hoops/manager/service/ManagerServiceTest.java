@@ -2,6 +2,9 @@ package com.zerobase.hoops.manager.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.zerobase.hoops.entity.BlackListUserEntity;
@@ -15,6 +18,8 @@ import com.zerobase.hoops.reports.repository.ReportRepository;
 import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,8 +60,10 @@ class ManagerServiceTest {
     blackListUserEntity.getBlackUser().setLoginId(loginId);
 
     // When
-    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
-        LocalDate.now()))
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            loginId,
+            LocalDate.now()))
         .thenReturn(Optional.of(blackListUserEntity));
 
     // Then
@@ -70,8 +77,10 @@ class ManagerServiceTest {
     String loginId = "testUser";
 
     // When
-    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(loginId,
-        LocalDate.now()))
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            loginId,
+            LocalDate.now()))
         .thenReturn(Optional.empty());
 
     // Then
@@ -97,19 +106,27 @@ class ManagerServiceTest {
         .reportedUser(reportedUserEntity)
         .build();
 
-    // Then
+    List<ReportEntity> reportEntityList = Collections.singletonList(
+        reportEntity);
+
+    // When
     when(jwtTokenExtract.currentUser()).thenReturn(userEntity);
     when(userRepository.findById(2L)).thenReturn(Optional.of(userEntity));
     when(userRepository.findById(1L)).thenReturn(
         Optional.of(reportedUserEntity));
-    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
-        "reportedUser", LocalDate.now()))
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            "reportedUser", LocalDate.now()))
         .thenReturn(Optional.empty());
     when(reportRepository.findByReportedUser_Id(1L)).thenReturn(
-        Optional.of(reportEntity));
+        Optional.of(reportEntityList));
 
-    // When
+    // Then
     assertDoesNotThrow(() -> managerService.saveBlackList(request));
+
+    // Verify
+    verify(reportRepository, times(1)).findByReportedUser_Id(1L);
+    verify(reportRepository, times(1)).save(any(ReportEntity.class));
   }
 
   @Test
@@ -198,8 +215,9 @@ class ManagerServiceTest {
     request.setBlackUserId(blackUserId);
 
     // When
-    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
-        blackUserId, LocalDate.now()))
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            blackUserId, LocalDate.now()))
         .thenReturn(Optional.of(blackListUserEntity));
 
     // Then
@@ -215,8 +233,9 @@ class ManagerServiceTest {
     unLockBlackListDto.setBlackUserId(blackUser);
 
     // When
-    when(blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
-        blackUser, LocalDate.now()))
+    when(
+        blackListUserRepository.findByBlackUser_loginIdAndBlackUser_DeletedDateTimeNullAndEndDateAfter(
+            blackUser, LocalDate.now()))
         .thenReturn(Optional.empty());
 
     // Then

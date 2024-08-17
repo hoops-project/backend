@@ -64,6 +64,7 @@ public class ReportService {
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
 
+
     checkExist(request, user);
 
     notificationService.send(NotificationType.REPORT, findManger(),
@@ -81,6 +82,10 @@ public class ReportService {
   private void checkExist(ReportDto request, UserEntity user) {
     boolean existReported = reportRepository.existsByUser_IdAndReportedUser_Id(
         user.getId(), request.getReportedUserId());
+    if (existReported){
+      throw new CustomException(ErrorCode.AlREADY_REPORTED);
+    }
+
   }
 
   private UserEntity findManger() {

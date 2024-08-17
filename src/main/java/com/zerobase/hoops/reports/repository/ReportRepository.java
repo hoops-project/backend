@@ -1,6 +1,7 @@
 package com.zerobase.hoops.reports.repository;
 
 import com.zerobase.hoops.entity.ReportEntity;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,6 @@ public interface ReportRepository extends
   boolean existsByUser_IdAndReportedUser_Id(Long userId,
       Long userId1);
 
-  Optional<ReportEntity> findByReportedUser_Id(Long userId);
+  Optional<List<ReportEntity>> findByReportedUser_Id(Long id);
 
 }

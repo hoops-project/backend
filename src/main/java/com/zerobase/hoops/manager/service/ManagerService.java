@@ -13,6 +13,7 @@ import com.zerobase.hoops.security.JwtTokenExtract;
 import com.zerobase.hoops.users.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,14 +53,19 @@ public class ManagerService {
   }
 
   private void startBlackListCheckFromReportEntity(BlackListDto request) {
-    ReportEntity reportEntity = reportRepository.findByReportedUser_Id(
+    log.info("startBlackListCheckFromReportEntity 시작");
+    List<ReportEntity> reportEntityList = reportRepository.findByReportedUser_Id(
             request.getReportedId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    reportEntity.saveBlackListStartDateTime(LocalDateTime.now());
-    reportRepository.save(reportEntity);
+    for(ReportEntity reportEntity:reportEntityList){
+      reportEntity.saveBlackListStartDateTime(LocalDateTime.now());
+      reportRepository.save(reportEntity);
+    }
+    log.info("startBlackListCheckFromReportEntity 완료");
   }
 
   private void validateBlackList(Long userId, Long reportedId) {
+    log.info("validateBlackList 시작");
     UserEntity userEntity = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(
             ErrorCode.USER_NOT_FOUND));
@@ -77,7 +83,9 @@ public class ManagerService {
           .blackUser(reportedUserEntity)
           .endDate(LocalDate.now().plusDays(10))
           .build());
+      log.info("validateBlackList 정상 종료");
     } else {
+      log.info("validateBlackList -> ALREADY_BLACKLIST");
       throw new CustomException(ErrorCode.ALREADY_BLACKLIST);
     }
   }

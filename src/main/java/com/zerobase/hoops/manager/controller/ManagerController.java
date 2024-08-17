@@ -48,7 +48,7 @@ public class ManagerController {
       @RequestBody @Valid BlackListDto request) {
     managerService.saveBlackList(request);
     return ResponseEntity.ok().body(
-        apiResponseFactory.createSuccessResponse("블랙리스트"));
+        apiResponseFactory.createSuccessResponse("블랙리스트 등록"));
   }
 
   @Operation(summary = "블랙리스트 여부 체크")
@@ -79,7 +79,7 @@ public class ManagerController {
       @RequestBody UnLockBlackListDto request) {
     managerService.unLockBlackList(request);
     return ResponseEntity.ok().body(
-        apiResponseFactory.createSuccessResponse("블랙리스트"));
+        apiResponseFactory.createSuccessResponse("블랙리스트 해제"));
   }
 
 }
