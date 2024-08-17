@@ -426,16 +426,17 @@ class GameUserControllerTest {
         GameSearchResponse.builder().gameId(1L).address(address).build(),
         GameSearchResponse.builder().gameId(2L).address(address).build()
     );
-    when(gameUserService.searchAddress(address)).thenReturn(upcomingGames);
+    Page<GameSearchResponse> expectedPage = new PageImpl<>(upcomingGames);
+    when(gameUserService.searchAddress(eq(address),eq(0),eq(5))).thenReturn(
+        expectedPage);
 
     // When, Then
     mockMvc.perform(get("/api/game-user/search-address")
             .param("address", address)
             .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].gameId").value(1L))
-        .andExpect(jsonPath("$[0].address").value(address))
-        .andExpect(jsonPath("$[1].gameId").value(2L))
-        .andExpect(jsonPath("$[1].address").value(address));
+        .andExpect(jsonPath("$.content[0].gameId").value(1L))
+        .andExpect(jsonPath("$.content[0].address").value(address))
+        .andExpect(jsonPath("$.content[1].gameId").value(2L))
+        .andExpect(jsonPath("$.content[1].address").value(address));
   }
 }

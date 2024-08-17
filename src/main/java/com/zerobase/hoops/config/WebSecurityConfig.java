@@ -77,6 +77,8 @@ public class WebSecurityConfig {
     corsConfiguration.addAllowedOrigin(
         "https://hoops-frontend-jet.vercel.app");
     corsConfiguration.addAllowedOrigin("https://hoops.services");
+    corsConfiguration.addAllowedOrigin("https://yohanyohan.com");
+    corsConfiguration.addAllowedOrigin("http://yohanyohan.com");
     corsConfiguration.addAllowedMethod("*");
     corsConfiguration.addAllowedHeader("*");
     corsConfiguration.addExposedHeader("Authorization");
