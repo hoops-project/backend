@@ -1,11 +1,13 @@
 package com.zerobase.hoops.friends.dto;
 
 import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.friends.dto.RequestFriendListDto.RequestFriend;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +23,19 @@ public class FriendListDto {
   @AllArgsConstructor
   @Builder
   public static class Response {
+
+    @Schema(description = "내 친구 리스트")
+    private List<MyFriend> myFriendList;
+
+
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class MyFriend {
 
     @Schema(description = "친구 리스트 조회 유저 pk", example = "3")
     private Long userId;
@@ -46,8 +61,8 @@ public class FriendListDto {
     @Schema(description = "친구 pk", example = "1")
     private Long friendId;
 
-    public static Response toDto(FriendEntity friendEntity) {
-      return Response.builder()
+    public static MyFriend toDto(FriendEntity friendEntity) {
+      return MyFriend.builder()
           .userId(friendEntity.getFriendUser().getId())
           .birthday(friendEntity.getFriendUser().getBirthday())
           .gender(friendEntity.getFriendUser().getGender())
@@ -63,7 +78,7 @@ public class FriendListDto {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      Response that = (Response) o;
+      MyFriend that = (MyFriend) o;
       return Objects.equals(userId, that.userId) &&
           Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&

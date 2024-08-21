@@ -52,10 +52,9 @@ public class GameController {
     return ResponseEntity.ok(result);
   }
 
-  @Operation(summary = "경기 상세 조회", security = {})
+  @Operation(summary = "경기 상세 조회")
   @ApiResponse(responseCode = "200", description = "경기 상세 조회 성공", content =
   @Content(schema = @Schema(implementation = DetailGameDto.Response.class)))
-
   @GetMapping("/game/detail")
   public ResponseEntity<DetailGameDto.Response> getGameDetail(
       @RequestParam("gameId")

@@ -10,6 +10,7 @@ import com.zerobase.hoops.friends.dto.InviteFriendListDto;
 import com.zerobase.hoops.friends.dto.RejectFriendDto;
 import com.zerobase.hoops.friends.dto.RequestFriendListDto;
 import com.zerobase.hoops.friends.dto.SearchFriendListDto;
+import com.zerobase.hoops.friends.dto.SearchFriendResponse;
 import com.zerobase.hoops.friends.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -123,7 +124,8 @@ public class FriendController {
 
   @Operation(summary = "친구 검색")
   @ApiResponse(responseCode = "200", description = "친구 검색 성공",
-      content = @Content(schema = @Schema(implementation = SearchFriendListDto.Response.class)))
+      content = @Content(schema = @Schema(implementation =
+          SearchFriendResponse.SearchFriendPage.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/search")
   public ResponseEntity<Page<SearchFriendListDto.Response>> searchFriend(
@@ -152,7 +154,7 @@ public class FriendController {
       content = @Content(schema = @Schema(implementation = FriendListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myfriends")
-  public ResponseEntity<Map<String, List<FriendListDto.Response>>> getMyFriendList(
+  public ResponseEntity<FriendListDto.Response> getMyFriendList(
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
@@ -163,11 +165,11 @@ public class FriendController {
 
     log.info("loginId = {} getMyFriendList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size);
-    List<FriendListDto.Response> result =
+    FriendListDto.Response result =
         friendService.validGetMyFriendList(pageable, user);
     log.info("loginId = {} getMyFriendList end", user.getLoginId());
 
-    return ResponseEntity.ok(Map.of("myFriendList", result));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 초대 친구 리스트 조회")
@@ -200,7 +202,7 @@ public class FriendController {
       content = @Content(schema = @Schema(implementation = RequestFriendListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/requestFriendList")
-  public ResponseEntity<Map<String, List<RequestFriendListDto.Response>>> getRequestFriendList(
+  public ResponseEntity<RequestFriendListDto.Response> getRequestFriendList(
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
@@ -212,10 +214,10 @@ public class FriendController {
     log.info("loginId = {} getRequestFriendList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size, Direction.ASC,
         "createdDateTime");
-    List<RequestFriendListDto.Response> result =
+    RequestFriendListDto.Response result =
         friendService.validGetRequestFriendList(pageable, user);
     log.info("loginId = {} getRequestFriendList end", user.getLoginId());
-    return ResponseEntity.ok(Map.of("requestFriendList", result));
+    return ResponseEntity.ok(result);
   }
 
 }

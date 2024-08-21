@@ -1,11 +1,13 @@
 package com.zerobase.hoops.gameCreator.dto;
 
+import com.zerobase.hoops.commonResponse.swaggerSchema.ReportResponse.ReportUsersList;
 import com.zerobase.hoops.entity.ParticipantGameEntity;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +23,18 @@ public class ApplyParticipantListDto {
   @AllArgsConstructor
   @Builder
   public static class Response {
+
+    @Schema(description = "경기 지원자 리스트")
+    private List<ApplyParticipant> applyParticipantGameList;
+
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class ApplyParticipant {
 
     @Schema(description = "참여 pk", example = "2")
     private Long participantId;
@@ -43,9 +57,9 @@ public class ApplyParticipantListDto {
     @Schema(description = "경기 지원자 유저 매너점수", example = "3.5")
     private String mannerPoint;
 
-    public static ApplyParticipantListDto.Response toDto(
+    public static ApplyParticipantListDto.ApplyParticipant toDto(
         ParticipantGameEntity participantGameEntity){
-      return ApplyParticipantListDto.Response.builder()
+      return ApplyParticipantListDto.ApplyParticipant.builder()
           .participantId(participantGameEntity.getId())
           .birthday(participantGameEntity.getUser().getBirthday())
           .gender(participantGameEntity.getUser().getGender())
@@ -60,7 +74,7 @@ public class ApplyParticipantListDto {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      ApplyParticipantListDto.Response that = (ApplyParticipantListDto.Response) o;
+      ApplyParticipantListDto.ApplyParticipant that = (ApplyParticipantListDto.ApplyParticipant) o;
       return Objects.equals(participantId, that.participantId) &&
           Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&
@@ -76,6 +90,8 @@ public class ApplyParticipantListDto {
           playStyle, ability, mannerPoint);
     }
 
+
   }
+
 
 }

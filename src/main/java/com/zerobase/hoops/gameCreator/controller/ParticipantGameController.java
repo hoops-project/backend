@@ -48,7 +48,7 @@ public class ParticipantGameController {
       content = @Content(schema = @Schema(implementation = ApplyParticipantListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/apply/list")
-  public ResponseEntity<Map<String, List<ApplyParticipantListDto.Response>>> getApplyParticipantList(
+  public ResponseEntity<ApplyParticipantListDto.Response> getApplyParticipantList(
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 pk",
           example = "1", required = true) Long gameId,
@@ -62,12 +62,11 @@ public class ParticipantGameController {
     log.info("loginId = {} getApplyParticipantList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size,
         Direction.ASC, "createdDateTime");
-    List<ApplyParticipantListDto.Response> result =
+    ApplyParticipantListDto.Response result =
         participantGameService.validApplyParticipantList(gameId, pageable, user);
 
     log.info("loginId = {} getApplyParticipantList end", user.getLoginId());
-    return ResponseEntity.ok(Collections.singletonMap(
-        "applyParticipantGameList", result));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 참가자 리스트 조회")
@@ -75,7 +74,7 @@ public class ParticipantGameController {
       content = @Content(schema = @Schema(implementation = AcceptParticipantListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/accept/list")
-  public ResponseEntity<Map<String, List<AcceptParticipantListDto.Response>>> getAcceptParticipantList(
+  public ResponseEntity<AcceptParticipantListDto.Response> getAcceptParticipantList(
       @RequestParam("gameId")
       @Parameter(name = "gameId", description = "경기 pk",
           example = "1", required = true) Long gameId,
@@ -89,12 +88,11 @@ public class ParticipantGameController {
     log.info("loginId = {} getAcceptParticipantList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size,
         Direction.ASC, "createdDateTime");
-    List<AcceptParticipantListDto.Response> result =
+    AcceptParticipantListDto.Response result =
         participantGameService.validAcceptParticipantList(gameId, pageable, user);
 
     log.info("loginId = {} getAcceptParticipantList end", user.getLoginId());
-    return ResponseEntity.ok(Collections.singletonMap(
-        "acceptParticipantGameList", result));
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "경기 지원자 수락")

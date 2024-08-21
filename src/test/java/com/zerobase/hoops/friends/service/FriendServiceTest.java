@@ -749,8 +749,8 @@ class FriendServiceTest {
     Page<FriendEntity> searchResponsePage =
         new PageImpl<>(friendEntityList, pageable, 1);
 
-    List<FriendListDto.Response> listResponseFriendList = searchResponsePage.stream()
-        .map(FriendListDto.Response::toDto)
+    List<FriendListDto.MyFriend> listResponseFriendList = searchResponsePage.stream()
+        .map(FriendListDto.MyFriend::toDto)
         .toList();
 
     when(friendRepository.findByStatusAndUserId
@@ -758,11 +758,11 @@ class FriendServiceTest {
         .thenReturn(searchResponsePage);
 
     // when
-    List<FriendListDto.Response> result =
+    FriendListDto.Response result =
         friendService.validGetMyFriendList(pageable, user);
 
     // Then
-    assertEquals(listResponseFriendList, result);
+    assertEquals(listResponseFriendList, result.getMyFriendList());
   }
 
   @Test
@@ -828,9 +828,9 @@ class FriendServiceTest {
     Page<FriendEntity> friendEntityPage =
         new PageImpl<>(friendEntityList, pageable, 1);
 
-    List<RequestFriendListDto.Response> expectedRequestFriendList
+    List<RequestFriendListDto.RequestFriend> expectedRequestFriendList
         = friendEntityList.stream()
-        .map(RequestFriendListDto.Response::toDto)
+        .map(RequestFriendListDto.RequestFriend::toDto)
         .toList();
 
     when(friendRepository.findByStatusAndFriendUserId
@@ -838,11 +838,11 @@ class FriendServiceTest {
         .thenReturn(friendEntityPage);
 
     // when
-    List<RequestFriendListDto.Response> requestFriendList
+    RequestFriendListDto.Response requestFriendList
         = friendService.validGetRequestFriendList(pageable, user);
 
     // Then
-    assertEquals(expectedRequestFriendList, requestFriendList);
+    assertEquals(expectedRequestFriendList, requestFriendList.getRequestFriendList());
   }
 
   // 친구 신청, 수락 상태 검사
