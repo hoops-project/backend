@@ -6,6 +6,7 @@ import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,18 @@ public class RequestFriendListDto {
   @AllArgsConstructor
   @Builder
   public static class Response {
+
+    @Schema(description = "내가 친구 요청 받은 리스트")
+    private List<RequestFriend> requestFriendList;
+
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class RequestFriend {
 
     @Schema(description = "내가 친구 요청 받은 리스트 유저 pk", example = "2")
     private Long userId;
@@ -46,8 +59,8 @@ public class RequestFriendListDto {
     @Schema(description = "친구 pk", example = "1")
     private Long friendId;
 
-    public static Response toDto(FriendEntity friendEntity) {
-      return Response.builder()
+    public static RequestFriend toDto(FriendEntity friendEntity) {
+      return RequestFriend.builder()
           .userId(friendEntity.getUser().getId())
           .birthday(friendEntity.getUser().getBirthday())
           .gender(friendEntity.getUser().getGender())
@@ -63,7 +76,7 @@ public class RequestFriendListDto {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      Response that = (Response) o;
+      RequestFriend that = (RequestFriend) o;
       return Objects.equals(userId, that.userId) &&
           Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&

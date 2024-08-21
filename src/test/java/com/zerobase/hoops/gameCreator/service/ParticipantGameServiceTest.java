@@ -201,8 +201,9 @@ class ParticipantGameServiceTest {
     Page<ParticipantGameEntity> expectedPage =
         new PageImpl<>(applyParticipantGameList, pageable, applyParticipantGameList.size());
 
-    List<ApplyParticipantListDto.Response> expectedList = expectedPage.stream()
-        .map(ApplyParticipantListDto.Response::toDto)
+    List<ApplyParticipantListDto.ApplyParticipant> expectedList =
+        expectedPage.stream()
+        .map(ApplyParticipantListDto.ApplyParticipant::toDto)
         .toList();
 
     getGame(gameId, expectedCreatedGame);
@@ -210,11 +211,11 @@ class ParticipantGameServiceTest {
     getParticipantPage(APPLY, gameId, pageable, expectedPage);
 
     // when
-    List<ApplyParticipantListDto.Response> result = participantGameService
+    ApplyParticipantListDto.Response result = participantGameService
         .validApplyParticipantList(gameId, pageable, createdUser);
 
     // Then
-    assertEquals(expectedList, result);
+    assertEquals(expectedList, result.getApplyParticipantGameList());
   }
 
   @Test
@@ -259,8 +260,8 @@ class ParticipantGameServiceTest {
     Page<ParticipantGameEntity> expectedPage =
         new PageImpl<>(acceptParticipantGameList, pageable, acceptParticipantGameList.size());
 
-    List<AcceptParticipantListDto.Response> expectedList = expectedPage.stream()
-        .map(AcceptParticipantListDto.Response::toDto)
+    List<AcceptParticipantListDto.AcceptParticipant> expectedList = expectedPage.stream()
+        .map(AcceptParticipantListDto.AcceptParticipant::toDto)
         .toList();
     
     getGame(gameId, expectedCreatedGame);
@@ -268,11 +269,11 @@ class ParticipantGameServiceTest {
     getParticipantPage(ACCEPT, gameId, pageable, expectedPage);
 
     // when
-    List<AcceptParticipantListDto.Response> result = participantGameService
+    AcceptParticipantListDto.Response result = participantGameService
         .validAcceptParticipantList(gameId, pageable, createdUser);
 
     // Then
-    assertEquals(expectedList, result);
+    assertEquals(expectedList, result.getAcceptParticipantGameList());
   }
 
   @Test

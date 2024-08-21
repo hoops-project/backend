@@ -370,6 +370,7 @@ public class FriendService {
     }
 
     log.info("loginId = {} validSearchFriend end", user.getLoginId());
+
     return result;
   }
 
@@ -384,11 +385,11 @@ public class FriendService {
   /**
    * 친구 리스트 조회 전 validation
    */
-  public List<FriendListDto.Response> validGetMyFriendList(Pageable pageable,
+  public FriendListDto.Response validGetMyFriendList(Pageable pageable,
       UserEntity user) {
     log.info("loginId = {} validGetMyFriendList start", user.getLoginId());
 
-    List<FriendListDto.Response> result = null;
+    FriendListDto.Response result = null;
 
     try {
 
@@ -411,16 +412,20 @@ public class FriendService {
   /**
    * 친구 리스트 조회
    */
-  private List<FriendListDto.Response> getMyFriendList(UserEntity user,
+  private FriendListDto.Response getMyFriendList(UserEntity user,
       Pageable pageable) {
     Page<FriendEntity> friendEntityPage =
         friendRepository.findByStatusAndUserId
             (FriendStatus.ACCEPT, user.getId(), pageable);
     log.info("loginId = {} myFriendList got", user.getLoginId());
 
-    return friendEntityPage.stream()
-        .map(FriendListDto.Response::toDto)
+    List<FriendListDto.MyFriend> result = friendEntityPage.stream()
+        .map(FriendListDto.MyFriend::toDto)
         .toList();
+
+    return FriendListDto.Response.builder()
+        .myFriendList(result)
+        .build();
   }
 
   /**
@@ -462,11 +467,11 @@ public class FriendService {
   /**
    * 내가 친구 요청 받은 리스트 조회 전 validation
    */
-  public List<RequestFriendListDto.Response> validGetRequestFriendList
+  public RequestFriendListDto.Response validGetRequestFriendList
   (Pageable pageable, UserEntity user) {
     log.info("loginId = {} validGetRequestFriendList start", user.getLoginId());
 
-    List<RequestFriendListDto.Response> result = null;
+    RequestFriendListDto.Response result = null;
 
     try {
 
@@ -489,16 +494,20 @@ public class FriendService {
   /**
    * 내가 친구 요청 받은 리스트 조회
    */
-  private List<RequestFriendListDto.Response> getRequestFriendList(UserEntity user,
+  private RequestFriendListDto.Response getRequestFriendList(UserEntity user,
       Pageable pageable) {
     Page<FriendEntity> friendEntityList =
         friendRepository.findByStatusAndFriendUserId
             (FriendStatus.APPLY, user.getId(), pageable);
     log.info("loginId = {} requestFriendList got", user.getLoginId());
 
-    return friendEntityList.stream()
-        .map(RequestFriendListDto.Response::toDto)
+    List<RequestFriendListDto.RequestFriend> result = friendEntityList.stream()
+        .map(RequestFriendListDto.RequestFriend::toDto)
         .toList();
+
+    return RequestFriendListDto.Response.builder()
+        .requestFriendList(result)
+        .build();
   }
 
   // 내 친구 최대 체크

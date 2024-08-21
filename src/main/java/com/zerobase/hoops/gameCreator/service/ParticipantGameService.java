@@ -49,11 +49,11 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 리스트 조회 전 validation
    */
-  public List<ApplyParticipantListDto.Response> validApplyParticipantList(Long gameId,
+  public ApplyParticipantListDto.Response validApplyParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     log.info("loginId = {} validApplyParticipantList start", user.getLoginId());
 
-    List<ApplyParticipantListDto.Response> result = null;
+    ApplyParticipantListDto.Response result = null;
 
     try {
       GameEntity game = getGame(gameId);
@@ -80,24 +80,29 @@ public class ParticipantGameService {
   /**
    * 경기 지원자 리스트 조회
    */
-  private List<ApplyParticipantListDto.Response> getApplyParticipantList(Long gameId,
+  private ApplyParticipantListDto.Response getApplyParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     Page<ParticipantGameEntity> page =
         getParticipantList(APPLY, gameId, pageable, user);
 
-    return page.stream()
-        .map(ApplyParticipantListDto.Response::toDto)
+    List<ApplyParticipantListDto.ApplyParticipant> result = page.stream()
+        .map(ApplyParticipantListDto.ApplyParticipant::toDto)
         .toList();
+
+    return ApplyParticipantListDto.Response
+        .builder()
+        .applyParticipantGameList(result)
+        .build();
   }
 
   /**
    * 경기 참가자 리스트 조회 전 validation
    */
-  public List<AcceptParticipantListDto.Response> validAcceptParticipantList(Long gameId,
+  public AcceptParticipantListDto.Response validAcceptParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     log.info("loginId = {} validAcceptParticipantList start", user.getLoginId());
 
-    List<AcceptParticipantListDto.Response> result = null;
+    AcceptParticipantListDto.Response result = null;
 
     try {
       GameEntity game = getGame(gameId);
@@ -122,14 +127,19 @@ public class ParticipantGameService {
   /**
    * 경기 참가자 리스트 조회
    */
-  public List<AcceptParticipantListDto.Response> getAcceptParticipantList(Long gameId,
+  public AcceptParticipantListDto.Response getAcceptParticipantList(Long gameId,
       Pageable pageable, UserEntity user) {
     Page<ParticipantGameEntity> page =
         getParticipantList(ACCEPT, gameId, pageable, user);
 
-    return page.stream()
-        .map(AcceptParticipantListDto.Response::toDto)
+    List<AcceptParticipantListDto.AcceptParticipant> result = page.stream()
+        .map(AcceptParticipantListDto.AcceptParticipant::toDto)
         .toList();
+
+    return AcceptParticipantListDto.Response
+        .builder()
+        .acceptParticipantGameList(result)
+        .build();
   }
 
   /**

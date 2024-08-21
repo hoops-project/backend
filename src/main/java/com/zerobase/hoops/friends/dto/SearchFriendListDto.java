@@ -1,11 +1,15 @@
 package com.zerobase.hoops.friends.dto;
 
 import com.zerobase.hoops.entity.FriendEntity;
+import com.zerobase.hoops.entity.ParticipantGameEntity;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantListDto;
+import com.zerobase.hoops.gameCreator.dto.AcceptParticipantListDto.AcceptParticipant;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,8 +65,10 @@ public class SearchFriendListDto {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
       Response that = (Response) o;
       return Objects.equals(userId, that.userId) &&
           Objects.equals(birthday, that.birthday) &&
