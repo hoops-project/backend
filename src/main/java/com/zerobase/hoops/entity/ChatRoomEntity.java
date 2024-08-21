@@ -1,10 +1,12 @@
 package com.zerobase.hoops.entity;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 import lombok.*;
 
-@Entity(name = "chatting_room")
+@Entity(name = "chat_room")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,12 +14,33 @@ public class ChatRoomEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "room_id")
-  private Long roomId;
+  private Long id;
 
+  @Builder.Default
+  @Column(nullable = false)
+  private Long sessionId = 0L;
 
   @OneToOne
-  @JoinColumn(name = "game_id")
   private GameEntity gameEntity;
 
+  public void saveGameInfo(GameEntity game){
+    this.gameEntity = game;
+  }
+  public void changeNewSessionId(Long newSessionId){
+    this.sessionId = newSessionId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ChatRoomEntity that = (ChatRoomEntity) o;
+    return Objects.equals(id, that.id) &&
+        Objects.equals(gameEntity, that.gameEntity);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, gameEntity);
+  }
 }

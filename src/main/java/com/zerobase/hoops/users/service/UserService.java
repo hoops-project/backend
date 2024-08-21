@@ -7,7 +7,7 @@ import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
 import com.zerobase.hoops.users.provider.CertificationProvider;
 import com.zerobase.hoops.users.provider.EmailProvider;
-import com.zerobase.hoops.users.repository.EmailRepository;
+import com.zerobase.hoops.users.repository.redis.EmailRepository;
 import com.zerobase.hoops.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.security.NoSuchAlgorithmException;
@@ -32,7 +32,9 @@ public class UserService implements UserDetailsService {
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
   public UserDto signUpUser(Request request) {
+    log.info("회원 가입 시작: {}", request.getLoginId());
     if (!request.getPassword().equals(request.getPasswordCheck())) {
+      log.error("회원가입 에러 : {}", ErrorCode.NOT_MATCHED_PASSWORD.getDescription());
       throw new CustomException(ErrorCode.NOT_MATCHED_PASSWORD);
     }
 
@@ -41,96 +43,97 @@ public class UserService implements UserDetailsService {
     request.setPassword(encodedPassword);
 
     try {
-      String id = request.getId();
+      String loginId = request.getLoginId();
       String email = request.getEmail();
       String nickName = request.getNickName();
 
-      boolean isExistId = idCheck(id);
-      boolean isExistEmail = emailCheck(email);
-      boolean isExistNickName = nickNameCheck(nickName);
-
-      if (!isExistId) {
-        throw new CustomException(ErrorCode.DUPLICATED_ID);
-      } else if (!isExistEmail) {
-        throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
-      } else if (!isExistNickName) {
-        throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
-      }
+      idCheck(loginId);
+      emailCheck(email);
+      nickNameCheck(nickName);
 
       String certificationNumber =
           CertificationProvider.createCertificationNumber();
-      boolean isSuccess =
-          emailProvider.sendCertificationMail(id, email,
-              certificationNumber);
-      if (!isSuccess) {
-        throw new CustomException(ErrorCode.MAIL_SEND_FAIL);
+      log.info("인증 번호 생성: {}", certificationNumber);
+      try {
+        emailProvider.sendCertificationMail(loginId, email,
+            certificationNumber);
+      } catch (Exception e) {
+        e.printStackTrace();
       }
       emailRepository.saveCertificationNumber(email, certificationNumber);
 
       UserEntity signUpUser =
           userRepository.save(Request.toEntity(request));
 
+      log.info("회원 가입 완료: {}", signUpUser.getLoginId());
+
       return UserDto.fromEntity(signUpUser);
     } catch (NoSuchAlgorithmException e) {
+      log.error("암호화 에러 : {}", e);
       throw new RuntimeException(e);
     }
   }
 
-  public boolean idCheck(String id) {
-    boolean isExistId = userRepository.existsById(id);
+  public boolean idCheck(String loginId) {
+    log.info("ID 중복 검사 시작: {}", loginId);
+    boolean isExistId = userRepository.existsByLoginIdAndDeletedDateTimeNull(loginId);
     if (isExistId) {
+      log.error("ID 중복");
       throw new CustomException(ErrorCode.DUPLICATED_ID);
     }
 
+    log.info("ID 중복 검사 완료: {}", loginId);
     return true;
   }
 
   public boolean emailCheck(String email) {
-    try {
-      boolean isExistEmail =
-          userRepository.existsByEmail(email);
-      if (isExistEmail) {
-        throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
-      }
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
+    log.info("EMAIL 중복 검사 시작: {}", email);
+    boolean isExistEmail =
+        userRepository.existsByEmailAndDeletedDateTimeNull(email);
+    if (isExistEmail) {
+      log.error("EMAIL 중복");
+      throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
     }
 
+    log.info("EMAIL 중복 검사 완료: {}", email);
     return true;
   }
 
   public boolean nickNameCheck(String nickName) {
-    try {
-      boolean isExistNickname =
-          userRepository.existsByNickName(nickName);
-      if (isExistNickname) {
-        throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
-      }
-    } catch (CustomException e) {
-      throw new CustomException(e.getErrorCode(), e.getErrorMessage());
+    log.info("별명 중복 검사 시작: {}", nickName);
+    boolean isExistNickname =
+        userRepository.existsByNickNameAndDeletedDateTimeNull(nickName);
+    if (isExistNickname) {
+      log.error("별명 중복");
+      throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
     }
 
+    log.info("별명 중복 검사 완료: {}", nickName);
     return true;
   }
 
   public void confirmEmail(
-      String id, String email, String certificationNumber) {
+      String loginId, String email, String certificationNumber) {
+    log.info("이메일 인증 시작: {}, {}", loginId, email);
     if (!checkCertificationNumber(email, certificationNumber)) {
-      throw new CustomException(ErrorCode.INVALID_NUMBER);
+      log.error("인증 번호 불일치");
+      throw new CustomException(ErrorCode.NOT_MATCHED_NUMBER);
     }
 
-    UserEntity user = userRepository.findByIdAndDeletedDateTimeNull(id)
+    UserEntity user = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     user.confirm();
 
     emailRepository.removeCertificationNumber(email);
     userRepository.save(user);
+    log.info("이메일 인증 완료: {}, {}", loginId, email);
   }
 
   private boolean checkCertificationNumber(
       String email, String certificationNumber) {
     boolean validatedEmail = emailRepository.hasKey(email);
     if (!validatedEmail) {
+      log.error("인증 번호 만료");
       throw new CustomException(ErrorCode.WRONG_EMAIL);
     }
 
@@ -139,32 +142,29 @@ public class UserService implements UserDetailsService {
         .equals(certificationNumber);
   }
 
-  public UserDto getUserInfo(String userId) {
-    UserEntity userEntity = userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    return UserDto.fromEntity(userEntity);
-  }
-
   @Override
-  public UserDetails loadUserByUsername(String email)
+  public UserDetails loadUserByUsername(String loginId)
       throws UsernameNotFoundException {
-    return userRepository.findByEmail(email)
+    return userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
 
-  public String findId(String email) {
+  public String findLoginId(String email) {
+    log.info("ID 찾기 시작: {}", email);
     UserEntity user =
-        userRepository.findByEmail(email)
+        userRepository.findByEmailAndDeletedDateTimeNull(email)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    return user.getId();
+    log.info("ID 찾기 완료: {}", email);
+    return user.getLoginId();
   }
 
-  public boolean findPassword(String id) throws NoSuchAlgorithmException {
+  public boolean findPassword(String loginId) throws NoSuchAlgorithmException {
+    log.info("비밀번호 찾기 시작: {}", loginId);
     UserEntity user =
-        userRepository.findById(id)
+        userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
             .orElseThrow(
                 () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -176,12 +176,14 @@ public class UserService implements UserDetailsService {
 
     String email = user.getEmail();
 
-    boolean isSuccess =
-        emailProvider.sendTemporaryPasswordMail(email, newPassword);
-    if (!isSuccess) {
-      throw new CustomException(ErrorCode.MAIL_SEND_FAIL);
+    try {
+      emailProvider.sendTemporaryPasswordMail(email, newPassword);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
     }
 
-    return isSuccess;
+    log.info("비밀번호 찾기 완료: {}", loginId);
+    return true;
   }
 }

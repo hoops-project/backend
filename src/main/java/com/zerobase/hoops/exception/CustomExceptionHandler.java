@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class CustomExceptionHandler {
 
   @ExceptionHandler(CustomException.class)
-  protected ErrorResponse handleMyException(CustomException e) {
-    return new ErrorResponse(e.getErrorCode());
+  protected ResponseEntity<ErrorResponse> handleMyException(CustomException e) {
+    ErrorResponse errorResponse = new ErrorResponse(e.getErrorCode());
+    HttpStatus httpStatus = HttpStatus.valueOf(e.getErrorCode().getStatusCode());
+    return new ResponseEntity<>(errorResponse, httpStatus);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,70 +1,125 @@
 package com.zerobase.hoops.chat.service;
 
-
-import com.zerobase.hoops.chat.domain.dto.ChatRoomDTO;
-import com.zerobase.hoops.chat.domain.dto.Content;
-import com.zerobase.hoops.chat.domain.dto.MessageDTO;
-import com.zerobase.hoops.chat.domain.repository.ChatRoomRepository;
-import com.zerobase.hoops.chat.domain.repository.MessageRepository;
+import com.zerobase.hoops.chat.chat.ChatMessage;
+import com.zerobase.hoops.chat.dto.MessageConvertDto;
+import com.zerobase.hoops.chat.dto.MessageDto;
+import com.zerobase.hoops.chat.repository.ChatRoomRepository;
+import com.zerobase.hoops.chat.repository.MessageRepository;
 import com.zerobase.hoops.entity.ChatRoomEntity;
-import com.zerobase.hoops.entity.GameEntity;
 import com.zerobase.hoops.entity.MessageEntity;
 import com.zerobase.hoops.entity.UserEntity;
 import com.zerobase.hoops.exception.CustomException;
 import com.zerobase.hoops.exception.ErrorCode;
-import com.zerobase.hoops.gameCreator.repository.GameRepository;
-import com.zerobase.hoops.users.repository.UserRepository;
-import java.time.LocalDateTime;
+import com.zerobase.hoops.security.JwtTokenExtract;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
   private final ChatRoomRepository chatRoomRepository;
+  private final SimpMessagingTemplate messagingTemplate;
+  private final JwtTokenExtract jwtTokenExtract;
   private final MessageRepository messageRepository;
-  private final UserRepository userRepository;
-  private final GameRepository gameRepository;
 
-  /**
-   * 채팅방 생성 및 DB에 저장하는 메서드
-   *
-   * @param gameId
-   * @return
-   */
-  public ChatRoomDTO createChatRoom(Long gameId) {
-    GameEntity gameEntity = gameRepository.findById(gameId)
-            .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
+  public void sendMessage(ChatMessage chatMessage, String gameId,
+      String token) {
+    Long gameIdNumber = Long.parseLong(gameId);
+    log.info("메세지 보내기 토큰확인" + token);
+    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    log.info("메세지 보내기 토큰확인 + 유저 닉네임" + user.getNickName());
+    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
+            gameIdNumber)
+        .orElseThrow(
+            () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
 
-    ChatRoomEntity chattingRoom = ChatRoomEntity.builder()
-            .gameEntity(gameEntity)
-            .build();
+    Long sessionId = chatRoom.getSessionId();
 
-    return ChatRoomDTO.entityToDto(
-        chatRoomRepository.save(chattingRoom));
-  }
+    if (sessionId == null) {
+      throw new CustomException(ErrorCode.NOT_EXIST_CHATROOM_SESSION);
+    }
 
-  public MessageDTO createMessage(Long gameId, Content content, String senderId) {
-    ChatRoomEntity chatRoomEntity = chatRoomRepository.findById(gameId)
-        .orElseThrow(() -> new CustomException(ErrorCode.GAME_NOT_FOUND));
-
-    UserEntity user = this.findUser(senderId);
-
-    MessageEntity messageEntity = MessageEntity.builder()
-        .content(String.valueOf(content))
-        .sendDateTime(LocalDateTime.now())
-        .user(user)
-        .chatRoomEntity(chatRoomEntity)
+    MessageDto message = MessageDto.builder()
+        .content(chatMessage.getContent())
+        .sessionId(sessionId)
         .build();
 
-    return MessageDTO.entityToDto(messageRepository.save(messageEntity));
-
+    messageRepository.save(message.toEntity(user, chatRoom));
+    chatMessage.changeNewSessionId(sessionId);
+    messagingTemplate.convertAndSend("/topic/" + gameId, chatMessage);
   }
 
-  public UserEntity findUser(String senderId) {
-    return userRepository.findById(senderId)
-        .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+  public void addUser(ChatMessage chatMessage, String gameId,
+      String token) {
+    Long gameIdNumber = Long.parseLong(gameId);
+
+    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
+            gameIdNumber)
+        .orElseThrow(
+            () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
+
+    Long activeSessionId = chatRoom.getSessionId();
+
+    if (activeSessionId == null) {
+      activeSessionId = generateSessionId();
+      chatRoom.changeNewSessionId(activeSessionId);
+    }
+
+    chatMessage.changeNewSessionId(activeSessionId);
+    messagingTemplate.convertAndSend("/topic/" + gameId, chatMessage);
   }
 
+  public void loadMessagesAndSend(String gameId, String token) {
+    Long gameIdNumber = Long.parseLong(gameId);
+    UserEntity user = jwtTokenExtract.getUserFromToken(token);
+    log.info("메세지 로딩 확인 => 닉네임 나와야함" + user.getNickName());
+    ChatRoomEntity chatRoom = chatRoomRepository.findByGameEntity_Id(
+            gameIdNumber)
+        .orElseThrow(
+            () -> new CustomException(ErrorCode.NOT_EXIST_CHATROOM));
+    Long sessionId = chatRoom.getSessionId();
+
+    if (sessionId == null) {
+      throw new CustomException(ErrorCode.NOT_EXIST_CHATROOM_SESSION);
+    }
+
+    List<MessageEntity> messages = messageRepository.findByChatRoomEntity_IdAndSessionId(
+            chatRoom.getId(), sessionId)
+        .orElseThrow(() -> new CustomException(
+            ErrorCode.NOT_EXIST_MESSAGE_FOR_CHATROOM));
+
+    List<MessageConvertDto> messageDto = messages.stream()
+        .map(this::convertToChatMessage)
+        .collect(Collectors.toList());
+
+    boolean isNewUser = messages.stream()
+        .noneMatch(m -> m.getUser().getId().equals(user.getId()));
+    if (isNewUser) {
+      messagingTemplate.convertAndSend("/topic/" + gameId + "/newUser",
+          messageDto);
+      return;
+    }
+    messagingTemplate.convertAndSend("/topic/" + gameId, messageDto);
+  }
+
+  private MessageConvertDto convertToChatMessage(
+      MessageEntity messageEntity) {
+    return MessageConvertDto.builder()
+        .id(messageEntity.getId())
+        .sender(messageEntity.getUser().getNickName())
+        .content(messageEntity.getContent())
+        .sessionId(messageEntity.getSessionId())
+        .build();
+  }
+
+  private Long generateSessionId() {
+    return UUID.randomUUID().getMostSignificantBits();
+  }
 }

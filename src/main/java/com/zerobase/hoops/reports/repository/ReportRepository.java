@@ -12,9 +12,9 @@ public interface ReportRepository extends
   Page<ReportEntity> findByBlackListStartDateTimeIsNull(
       Pageable pageable);
 
-  boolean existsByUser_UserIdAndReportedUser_UserId(Long userId,
+  boolean existsByUser_IdAndReportedUser_Id(Long userId,
       Long userId1);
 
-  Optional<ReportEntity> findByReportedUser_UserId(Long userId);
+  Optional<ReportEntity> findByReportedUser_Id(Long userId);
 
 }

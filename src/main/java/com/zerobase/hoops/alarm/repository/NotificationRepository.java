@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
-List<NotificationEntity> findAllByReceiverUserId(Long userId);
+List<NotificationEntity> findAllByReceiverIdOrderByCreatedDateTimeDesc(Long userId);
 }
