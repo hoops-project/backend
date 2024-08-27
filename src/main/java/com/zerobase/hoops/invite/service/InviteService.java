@@ -321,10 +321,10 @@ public class InviteService {
   /**
    * 내가 초대 요청 받은 리스트 조회 전 validation
    */
-  public List<RequestInviteListDto.Response> validGetRequestInviteList(Pageable pageable, UserEntity user) {
+  public RequestInviteListDto.Response validGetRequestInviteList(Pageable pageable, UserEntity user) {
     log.info("loginId = {} validGetRequestInviteList start", user.getLoginId());
 
-    List<RequestInviteListDto.Response> result = null;
+    RequestInviteListDto.Response result = null;
 
     try {
 
@@ -347,7 +347,7 @@ public class InviteService {
   /**
    * 내가 초대 요청 받은 리스트 조회
    */
-  private List<RequestInviteListDto.Response> getRequestInviteList(UserEntity user,
+  private RequestInviteListDto.Response getRequestInviteList(UserEntity user,
       Pageable pageable) {
     Page<InviteEntity> inviteEntityList =
         inviteRepository.findByInviteStatusAndReceiverUserId
@@ -355,9 +355,14 @@ public class InviteService {
 
     log.info("loginId = {} requestInviteList got", user.getLoginId());
 
-    return inviteEntityList.stream()
-        .map(RequestInviteListDto.Response::toDto)
+    List<RequestInviteListDto.RequestInvite> requestInviteList =
+        inviteEntityList.stream()
+        .map(RequestInviteListDto.RequestInvite::toDto)
         .toList();
+
+    return RequestInviteListDto.Response.builder()
+        .inviteList(requestInviteList)
+        .build();
   }
 
   

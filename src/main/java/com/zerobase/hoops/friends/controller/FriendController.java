@@ -7,6 +7,7 @@ import com.zerobase.hoops.friends.dto.CancelFriendDto;
 import com.zerobase.hoops.friends.dto.DeleteFriendDto;
 import com.zerobase.hoops.friends.dto.FriendListDto;
 import com.zerobase.hoops.friends.dto.InviteFriendListDto;
+import com.zerobase.hoops.friends.dto.InviteFriendResponse;
 import com.zerobase.hoops.friends.dto.RejectFriendDto;
 import com.zerobase.hoops.friends.dto.RequestFriendListDto;
 import com.zerobase.hoops.friends.dto.SearchFriendListDto;
@@ -174,7 +175,8 @@ public class FriendController {
 
   @Operation(summary = "경기 초대 친구 리스트 조회")
   @ApiResponse(responseCode = "200", description = "경기 초대 친구 리스트 성공",
-      content = @Content(schema = @Schema(implementation = InviteFriendListDto.Response.class)))
+      content = @Content(schema = @Schema(implementation =
+          InviteFriendResponse.InviteFriendPage.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/invite/list")
   public ResponseEntity<Page<InviteFriendListDto.Response>> getMyInviteFriendList(

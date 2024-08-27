@@ -113,7 +113,7 @@ public class InviteController {
       content = @Content(schema = @Schema(implementation = RequestInviteListDto.Response.class)))
   @PreAuthorize("hasRole('USER')")
   @GetMapping("/myList")
-  public ResponseEntity<Map<String, List<RequestInviteListDto.Response>>> getInviteRequestList(
+  public ResponseEntity<RequestInviteListDto.Response> getInviteRequestList(
       @Parameter(name = "page", description = "페이지 번호", example = "0",
           required = true)
       @RequestParam(defaultValue = "0") int page,
@@ -125,11 +125,11 @@ public class InviteController {
 
     log.info("loginId = {} getInviteRequestList start", user.getLoginId());
     Pageable pageable = PageRequest.of(page, size, Direction.ASC, "requestedDateTime");
-    List<RequestInviteListDto.Response> result =
+    RequestInviteListDto.Response result =
         inviteService.validGetRequestInviteList(pageable, user);
     log.info("loginId = {} getInviteRequestList end", user.getLoginId());
 
-    return ResponseEntity.ok(Map.of("inviteList", result));
+    return ResponseEntity.ok(result);
   }
 
 }

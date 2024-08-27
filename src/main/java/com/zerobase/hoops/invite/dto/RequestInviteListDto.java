@@ -1,11 +1,15 @@
 package com.zerobase.hoops.invite.dto;
 
+import com.zerobase.hoops.entity.FriendEntity;
 import com.zerobase.hoops.entity.InviteEntity;
+import com.zerobase.hoops.friends.dto.RequestFriendListDto;
+import com.zerobase.hoops.friends.dto.RequestFriendListDto.RequestFriend;
 import com.zerobase.hoops.users.type.AbilityType;
 import com.zerobase.hoops.users.type.GenderType;
 import com.zerobase.hoops.users.type.PlayStyleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +25,18 @@ public class RequestInviteListDto {
   @AllArgsConstructor
   @Builder
   public static class Response {
+
+    @Schema(description = "내가 초대 요청 받은 리스트")
+    private List<RequestInvite> inviteList;
+
+  }
+
+  @Getter
+  @ToString
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class RequestInvite {
 
     @Schema(description = "내가 초대 요청 받은 리스트 경기 초대 pk", example = "1")
     private Long inviteId;
@@ -51,7 +67,7 @@ public class RequestInviteListDto {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      Response that = (Response) o;
+      RequestInvite that = (RequestInvite) o;
       return Objects.equals(inviteId, that.inviteId) &&
           Objects.equals(birthday, that.birthday) &&
           Objects.equals(gender, that.gender) &&
@@ -68,8 +84,8 @@ public class RequestInviteListDto {
           playStyle, ability, mannerPoint, gameId);
     }
 
-    public static Response toDto(InviteEntity inviteEntity) {
-      return Response.builder()
+    public static RequestInvite toDto(InviteEntity inviteEntity) {
+      return RequestInvite.builder()
           .inviteId(inviteEntity.getId())
           .birthday(inviteEntity.getSenderUser().getBirthday())
           .gender(inviteEntity.getSenderUser().getGender())
@@ -80,6 +96,7 @@ public class RequestInviteListDto {
           .gameId(inviteEntity.getGame().getId())
           .build();
     }
+
   }
 
 }
