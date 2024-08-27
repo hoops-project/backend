@@ -919,8 +919,8 @@ class InviteServiceTest {
     Page<InviteEntity> inviteEntityPage =
         new PageImpl<>(inviteEntityList, pageable, 2);
 
-    List<RequestInviteListDto.Response> expectList = inviteEntityList.stream()
-        .map(RequestInviteListDto.Response::toDto)
+    List<RequestInviteListDto.RequestInvite> expectList = inviteEntityList.stream()
+        .map(RequestInviteListDto.RequestInvite::toDto)
         .toList();
 
     when(inviteRepository.findByInviteStatusAndReceiverUserId
@@ -928,11 +928,11 @@ class InviteServiceTest {
         .thenReturn(inviteEntityPage);
 
     // when
-    List<RequestInviteListDto.Response> result =
+    RequestInviteListDto.Response result =
         inviteService.validGetRequestInviteList(pageable, otherUser);
 
     // Then
-    assertEquals(expectList, result);
+    assertEquals(expectList, result.getInviteList());
   }
 
   // 해당 경기 조회
